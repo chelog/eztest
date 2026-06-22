@@ -206,6 +206,7 @@ export function TestCasesListCard({
       key: 'select',
       label: '',
       width: '40px',
+      hideable: false,
       render: (_, row: ResultRow) => (
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox
@@ -229,6 +230,7 @@ export function TestCasesListCard({
       key: 'tcId',
       label: 'ID',
       width: '90px',
+      minWidth: 80,
       render: (_, row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate" title={row.testCase.tcId || '-'}>
           {row.testCase.tcId || '-'}
@@ -239,6 +241,7 @@ export function TestCasesListCard({
       key: 'testCase',
       label: 'Тест-кейс',
       width: '3fr',
+      minWidth: 200,
       render: (_, row: ResultRow) => (
         <div className="min-w-0 overflow-hidden">
           <p
@@ -259,6 +262,7 @@ export function TestCasesListCard({
       key: 'priority',
       label: 'Приоритет',
       width: '1fr',
+      minWidth: 100,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.testCase.priority, priorityOptions);
         const priorityLabel =
@@ -269,7 +273,7 @@ export function TestCasesListCard({
         return (
           <Badge
             variant="outline"
-            className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
+            className={`text-xs px-2 py-0.5 truncate ${badgeProps.className}`}
             style={badgeProps.style}
           >
             {priorityLabel}
@@ -281,6 +285,7 @@ export function TestCasesListCard({
       key: 'status',
       label: 'Статус',
       width: '1.4fr',
+      minWidth: 130,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = getStatusLabel(row.status);
@@ -288,11 +293,11 @@ export function TestCasesListCard({
 
         if (!canChangeStatus) {
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               {getResultIcon(row.status)}
               <Badge
                 variant="outline"
-                className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
+                className={`text-xs px-2 py-0.5 truncate ${badgeProps.className}`}
                 style={badgeProps.style}
               >
                 {label}
@@ -306,7 +311,7 @@ export function TestCasesListCard({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs transition-colors cursor-pointer ${badgeProps.className} hover:opacity-80`}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs transition-colors cursor-pointer min-w-0 ${badgeProps.className} hover:opacity-80`}
                   style={badgeProps.style}
                   title={`Изменить статус: ${label}`}
                 >
@@ -339,6 +344,7 @@ export function TestCasesListCard({
       key: 'executedBy',
       label: 'Выполнил',
       width: '1fr',
+      minWidth: 100,
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate" title={row.executedBy?.name || undefined}>
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED' ? '-' : row.executedBy?.name || '-'}
@@ -349,8 +355,9 @@ export function TestCasesListCard({
       key: 'executedAt',
       label: 'Дата',
       width: '1fr',
+      minWidth: 120,
       render: (_, row: ResultRow) => (
-        <span className="text-white/70 text-sm">
+        <span className="text-white/70 text-sm truncate">
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED'
             ? '-'
             : row.executedAt
@@ -363,8 +370,10 @@ export function TestCasesListCard({
       key: 'id',
       label: 'Действия',
       width: '100px',
+      hideable: false,
+      minWidth: 80,
       render: (_, row: ResultRow) => (
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex items-center gap-2 justify-end min-w-0">
           {(testRunStatus === 'IN_PROGRESS' || forceShowDefectActions) && (
             <>
               {row.status === 'FAILED' && canCreateDefect && (
