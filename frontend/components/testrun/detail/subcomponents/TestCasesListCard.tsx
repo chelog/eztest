@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { BaseConfirmDialog } from '@/frontend/reusable-components/dialogs/BaseConfirmDialog';
-import { AlertCircle, Plus, Bug, ListChecks, ChevronDown } from 'lucide-react';
+import { AlertCircle, Plus, Bug, ListChecks, ChevronDown, Search } from 'lucide-react';
 import { TestResult, TestCase } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -57,18 +57,22 @@ interface TestCasesListCardProps {
   itemsPerPage: number;
   statusFilter: string;
   ownerFilter: string;
-  statusSort: 'none' | 'asc' | 'desc';
+  statusSort: 'none' | 'asc' | 'desc' | 'passed_last';
+  searchQuery: string;
   onStatusFilterChange: (value: string) => void;
   onOwnerFilterChange: (value: string) => void;
-  onStatusSortChange: (value: 'none' | 'asc' | 'desc') => void;
+  onStatusSortChange: (value: 'none' | 'asc' | 'desc' | 'passed_last') => void;
+  onSearchChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
   onAddTestCases: () => void;
   onAddTestSuites: () => void;
   onExecuteTestCase: (testCase: TestCase) => void;
+  onQuickStatusChange: (testCase: TestCase, status: string) => Promise<void>;
   onCreateDefect?: (testCaseId: string) => void;
   forceShowDefectActions?: boolean;
   getResultIcon: (status?: string) => React.JSX.Element;
+  activeTestCaseId?: string;
 }
 
 interface ResultRow {
@@ -79,6 +83,16 @@ interface ResultRow {
   executedBy?: { id?: string; name: string };
   executedAt?: string;
 }
+
+const QUICK_STATUS_VALUES = ['PASSED', 'FAILED', 'BLOCKED', 'RETEST', 'NOT_RUN'] as const;
+
+const STATUS_LABELS: Record<string, string> = {
+  PASSED: 'Успешно',
+  FAILED: 'Провалено',
+  BLOCKED: 'Заблокировано',
+  RETEST: 'Ретест',
+  NOT_RUN: 'Не запускался',
+};
 
 export function TestCasesListCard({
   testRunId,
@@ -95,17 +109,21 @@ export function TestCasesListCard({
   statusFilter,
   ownerFilter,
   statusSort,
+  searchQuery,
   onStatusFilterChange,
   onOwnerFilterChange,
   onStatusSortChange,
+  onSearchChange,
   onPageChange,
   onItemsPerPageChange,
   onAddTestCases,
   onAddTestSuites,
   onExecuteTestCase,
+  onQuickStatusChange,
   onCreateDefect,
   forceShowDefectActions = false,
   getResultIcon,
+  activeTestCaseId,
 }: TestCasesListCardProps) {
   const { data: session } = useSession();
   const [selectedTestCaseIds, setSelectedTestCaseIds] = useState<Set<string>>(new Set());
@@ -118,6 +136,7 @@ export function TestCasesListCard({
   const [bulkAssigneeId, setBulkAssigneeId] = useState('');
   const [members, setMembers] = useState<Array<{ id: string; name: string }>>([]);
   const [submittingBulk, setSubmittingBulk] = useState(false);
+  const [quickStatusLoading, setQuickStatusLoading] = useState<string | null>(null);
   const { options: priorityOptions, loading: loadingPriority } = useDropdownOptions('TestCase', 'priority');
   const { options: statusOptions, loading: loadingStatus } = useDropdownOptions('TestResult', 'status');
   const { hasPermission: hasPermissionCheck, role } = usePermissions();
@@ -128,7 +147,6 @@ export function TestCasesListCard({
         .sort((a, b) => {
           const aIsCurrent = !!currentUserId && a.id === currentUserId;
           const bIsCurrent = !!currentUserId && b.id === currentUserId;
-
           if (aIsCurrent && !bIsCurrent) return -1;
           if (!aIsCurrent && bIsCurrent) return 1;
           return a.name.localeCompare(b.name, 'ru');
@@ -139,10 +157,11 @@ export function TestCasesListCard({
         })),
     [members, currentUserId]
   );
-  
-  // Check if user can create defects
+
   const canCreateDefect = hasPermissionCheck('defects:create');
   const isAdmin = role === 'ADMIN';
+  const isTester = role === 'TESTER';
+  const canAssign = canUpdate || isTester;
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -161,27 +180,32 @@ export function TestCasesListCard({
         console.error('Error fetching project members:', error);
       }
     };
-
     fetchMembers();
   }, [projectId]);
 
   const getStatusLabel = (status: string) => {
-    if (status === 'NOT_RUN' || status === 'SKIPPED') {
-      return 'Не запускался';
-    }
-
+    if (status === 'NOT_RUN' || status === 'SKIPPED') return 'Не запускался';
     if (!loadingStatus && statusOptions.length > 0) {
       return statusOptions.find((opt) => opt.value === status)?.label || status;
     }
-
     return status;
+  };
+
+  const handleQuickStatus = async (testCase: TestCase, status: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuickStatusLoading(testCase.id + status);
+    try {
+      await onQuickStatusChange(testCase, status);
+    } finally {
+      setQuickStatusLoading(null);
+    }
   };
 
   const columns: ColumnDef<ResultRow>[] = [
     {
       key: 'select',
       label: '',
-      className: 'w-10',
+      width: '40px',
       render: (_, row: ResultRow) => (
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox
@@ -203,21 +227,28 @@ export function TestCasesListCard({
     },
     {
       key: 'tcId',
-      label: 'ID тест-кейса',
-      className: 'min-w-[80px]',
+      label: 'ID',
+      width: '90px',
       render: (_, row: ResultRow) => (
-        <p className="text-xs font-mono text-white/70 truncate">{row.testCase.tcId || '-'}</p>
+        <p className="text-xs font-mono text-white/70 truncate" title={row.testCase.tcId || '-'}>
+          {row.testCase.tcId || '-'}
+        </p>
       ),
     },
     {
       key: 'testCase',
       label: 'Тест-кейс',
-      className: 'min-w-0 max-w-xs whitespace-normal',
+      width: '3fr',
       render: (_, row: ResultRow) => (
-        <div className="min-w-0 max-w-xs overflow-hidden">
-          <p className="font-medium text-white/90 truncate block">{row.testCase.title}</p>
+        <div className="min-w-0 overflow-hidden">
+          <p
+            className="font-medium text-white/90 truncate block"
+            title={row.testCase.title}
+          >
+            {row.testCase.title}
+          </p>
           {row.comment && (
-            <p className="text-xs text-white/60 mt-1 break-words whitespace-pre-wrap">
+            <p className="text-xs text-white/60 mt-1 truncate" title={row.comment}>
               {row.comment}
             </p>
           )}
@@ -227,14 +258,17 @@ export function TestCasesListCard({
     {
       key: 'priority',
       label: 'Приоритет',
+      width: '1fr',
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.testCase.priority, priorityOptions);
-        const priorityLabel = !loadingPriority && priorityOptions.length > 0
-          ? priorityOptions.find(opt => opt.value === row.testCase.priority)?.label || row.testCase.priority
-          : row.testCase.priority;
+        const priorityLabel =
+          !loadingPriority && priorityOptions.length > 0
+            ? priorityOptions.find((opt) => opt.value === row.testCase.priority)?.label ||
+              row.testCase.priority
+            : row.testCase.priority;
         return (
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
             style={badgeProps.style}
           >
@@ -246,19 +280,57 @@ export function TestCasesListCard({
     {
       key: 'status',
       label: 'Статус',
+      width: '1.4fr',
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = getStatusLabel(row.status);
+        const canChangeStatus = testRunStatus === 'IN_PROGRESS' && canUpdate;
+
+        if (!canChangeStatus) {
+          return (
+            <div className="flex items-center gap-2">
+              {getResultIcon(row.status)}
+              <Badge
+                variant="outline"
+                className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
+                style={badgeProps.style}
+              >
+                {label}
+              </Badge>
+            </div>
+          );
+        }
+
         return (
-          <div className="flex items-center gap-2">
-            {getResultIcon(row.status)}
-            <Badge
-              variant="outline"
-              className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
-              style={badgeProps.style}
-            >
-              {label}
-            </Badge>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs transition-colors cursor-pointer ${badgeProps.className} hover:opacity-80`}
+                  style={badgeProps.style}
+                  title={`Изменить статус: ${label}`}
+                >
+                  {getResultIcon(row.status)}
+                  <span className="max-w-[80px] truncate">{label}</span>
+                  <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                {QUICK_STATUS_VALUES.map((sv) => {
+                  const isLoading = quickStatusLoading === row.testCase.id + sv;
+                  return (
+                    <DropdownMenuItem
+                      key={sv}
+                      disabled={isLoading}
+                      onClick={(e) => handleQuickStatus(row.testCase, sv, e)}
+                    >
+                      {getResultIcon(sv)}
+                      <span className="ml-2">{STATUS_LABELS[sv]}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         );
       },
@@ -266,8 +338,9 @@ export function TestCasesListCard({
     {
       key: 'executedBy',
       label: 'Выполнил',
+      width: '1fr',
       render: (_, row: ResultRow) => (
-        <span className="text-white/70 text-sm">
+        <span className="text-white/70 text-sm truncate" title={row.executedBy?.name || undefined}>
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED' ? '-' : row.executedBy?.name || '-'}
         </span>
       ),
@@ -275,9 +348,10 @@ export function TestCasesListCard({
     {
       key: 'executedAt',
       label: 'Дата',
+      width: '1fr',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm">
-          {(row.status === 'NOT_RUN' || row.status === 'SKIPPED')
+          {row.status === 'NOT_RUN' || row.status === 'SKIPPED'
             ? '-'
             : row.executedAt
             ? formatDateTime(row.executedAt)
@@ -288,6 +362,7 @@ export function TestCasesListCard({
     {
       key: 'id',
       label: 'Действия',
+      width: '100px',
       render: (_, row: ResultRow) => (
         <div className="flex items-center gap-2 justify-end">
           {(testRunStatus === 'IN_PROGRESS' || forceShowDefectActions) && (
@@ -296,10 +371,7 @@ export function TestCasesListCard({
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     asChild
-                    onClick={(e) => {
-                      // Prevent row click (which navigates to test case detail)
-                      e.stopPropagation();
-                    }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <ButtonSecondary
                       size="sm"
@@ -354,8 +426,10 @@ export function TestCasesListCard({
     }));
 
   const currentPageIds = tableData.map((row) => row.testCase.id);
-  const allCurrentPageSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedTestCaseIds.has(id));
-  const hasActiveFilters = statusFilter !== 'all' || ownerFilter !== 'all';
+  const allCurrentPageSelected =
+    currentPageIds.length > 0 && currentPageIds.every((id) => selectedTestCaseIds.has(id));
+  const hasActiveFilters =
+    statusFilter !== 'all' || ownerFilter !== 'all' || searchQuery !== '';
   const hasAnyResultsInRun = totalItems > 0 || hasActiveFilters;
 
   const handleSelectCurrentPage = () => {
@@ -373,10 +447,7 @@ export function TestCasesListCard({
   const selectedRows = tableData.filter((row) => selectedTestCaseIds.has(row.testCase.id));
 
   const handleBulkRemove = async () => {
-    if (selectedTestCaseIds.size === 0) {
-      return;
-    }
-
+    if (selectedTestCaseIds.size === 0) return;
     try {
       setSubmittingBulk(true);
       const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
@@ -384,12 +455,8 @@ export function TestCasesListCard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testCaseIds: Array.from(selectedTestCaseIds) }),
       });
-
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось удалить тест-кейсы из тест-рана');
-      }
-
+      if (!response.ok) throw new Error(data.error || 'Не удалось удалить тест-кейсы из тест-рана');
       setSelectedTestCaseIds(new Set());
       setBulkRemoveOpen(false);
       onRefresh();
@@ -401,10 +468,7 @@ export function TestCasesListCard({
   };
 
   const handleBulkExecute = async () => {
-    if (selectedTestCaseIds.size === 0 || !bulkStatus) {
-      return;
-    }
-
+    if (selectedTestCaseIds.size === 0 || !bulkStatus) return;
     try {
       setSubmittingBulk(true);
       const executorId = bulkExecutorId === 'current-user' ? undefined : bulkExecutorId;
@@ -418,12 +482,8 @@ export function TestCasesListCard({
           executedById: executorId,
         }),
       });
-
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось массово обновить результаты');
-      }
-
+      if (!response.ok) throw new Error(data.error || 'Не удалось массово обновить результаты');
       setSelectedTestCaseIds(new Set());
       setBulkExecuteOpen(false);
       setBulkStatus('');
@@ -438,10 +498,7 @@ export function TestCasesListCard({
   };
 
   const handleBulkAssign = async () => {
-    if (selectedTestCaseIds.size === 0 || !bulkAssigneeId) {
-      return;
-    }
-
+    if (selectedTestCaseIds.size === 0 || !bulkAssigneeId) return;
     try {
       setSubmittingBulk(true);
       const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
@@ -452,12 +509,8 @@ export function TestCasesListCard({
           executedById: bulkAssigneeId,
         }),
       });
-
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось назначить исполнителя');
-      }
-
+      if (!response.ok) throw new Error(data.error || 'Не удалось назначить исполнителя');
       setSelectedTestCaseIds(new Set());
       setBulkAssignOpen(false);
       setBulkAssigneeId('');
@@ -469,6 +522,31 @@ export function TestCasesListCard({
     }
   };
 
+  const handleAssignToMe = async () => {
+    if (selectedTestCaseIds.size === 0 || !currentUserId) return;
+    setBulkAssigneeId(currentUserId);
+    try {
+      setSubmittingBulk(true);
+      const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          testCaseIds: Array.from(selectedTestCaseIds),
+          executedById: currentUserId,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Не удалось назначить');
+      setSelectedTestCaseIds(new Set());
+      onRefresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось назначить');
+    } finally {
+      setSubmittingBulk(false);
+      setBulkAssigneeId('');
+    }
+  };
+
   return (
     <DetailCard
       title={`Тест-кейсы (${totalItems})`}
@@ -476,103 +554,128 @@ export function TestCasesListCard({
       headerAction={
         <div className="flex gap-2 flex-wrap justify-end">
           {tableData.length > 0 && (
-            <Button
-              variant="glass"
-              size="sm"
-              onClick={handleSelectCurrentPage}
-            >
+            <Button variant="glass" size="sm" onClick={handleSelectCurrentPage}>
               {allCurrentPageSelected ? 'Снять выделение страницы' : 'Выбрать страницу'}
             </Button>
           )}
-            {selectedTestCaseIds.size > 0 && (
-              <>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                  {selectedTestCaseIds.size} выбрано
-                </Badge>
-                {canUpdate && testRunStatus !== 'CANCELLED' && (
-                  <ButtonSecondary size="sm" onClick={() => setBulkAssignOpen(true)}>
-                    Кто будет выполнять
-                  </ButtonSecondary>
-                )}
-                {testRunStatus === 'IN_PROGRESS' && canUpdate && (
-                  <>
-                    <ButtonSecondary size="sm" onClick={() => setBulkExecuteOpen(true)}>
-                      Массово обновить статус
-                    </ButtonSecondary>
-                  </>
-                )}
-                {((canUpdate && testRunStatus !== 'COMPLETED' && testRunStatus !== 'CANCELLED') ||
-                  (isAdmin && testRunStatus !== 'CANCELLED')) && (
-                  <ButtonSecondary size="sm" onClick={() => setBulkRemoveOpen(true)}>
-                    Убрать из рана
-                  </ButtonSecondary>
-                )}
-              </>
-            )}
-            <Button
-              variant="glass"
-              size="sm"
-              onClick={onAddTestSuites}
-              disabled={testRunStatus === 'COMPLETED' || testRunStatus === 'CANCELLED'}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить тест-сьюты
-            </Button>
-            <Button
-              variant="glass"
-              size="sm"
-              onClick={onAddTestCases}
-              disabled={testRunStatus === 'COMPLETED' || testRunStatus === 'CANCELLED'}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить тест-кейсы
-            </Button>
-          </div>
+          {selectedTestCaseIds.size > 0 && (
+            <>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                {selectedTestCaseIds.size} выбрано
+              </Badge>
+              {canAssign && testRunStatus !== 'CANCELLED' && currentUserId && (
+                <ButtonSecondary
+                  size="sm"
+                  onClick={handleAssignToMe}
+                  disabled={submittingBulk}
+                >
+                  Назначить на себя
+                </ButtonSecondary>
+              )}
+              {canAssign && testRunStatus !== 'CANCELLED' && (
+                <ButtonSecondary size="sm" onClick={() => setBulkAssignOpen(true)}>
+                  Кто будет выполнять
+                </ButtonSecondary>
+              )}
+              {testRunStatus === 'IN_PROGRESS' && canUpdate && (
+                <ButtonSecondary size="sm" onClick={() => setBulkExecuteOpen(true)}>
+                  Массово обновить статус
+                </ButtonSecondary>
+              )}
+              {((canUpdate && testRunStatus !== 'COMPLETED' && testRunStatus !== 'CANCELLED') ||
+                (isAdmin && testRunStatus !== 'CANCELLED')) && (
+                <ButtonSecondary size="sm" onClick={() => setBulkRemoveOpen(true)}>
+                  Убрать из рана
+                </ButtonSecondary>
+              )}
+            </>
+          )}
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={onAddTestSuites}
+            disabled={testRunStatus === 'COMPLETED' || testRunStatus === 'CANCELLED'}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Добавить тест-сьюты
+          </Button>
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={onAddTestCases}
+            disabled={testRunStatus === 'COMPLETED' || testRunStatus === 'CANCELLED'}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Добавить тест-кейсы
+          </Button>
+        </div>
       }
     >
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Фильтр по статусу" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
-            {Array.from(
-              new Set(
-                ['NOT_RUN', ...statusOptions.map((option) => option.value === 'SKIPPED' ? 'NOT_RUN' : option.value)]
-              )
-            ).map((status) => (
-              <SelectItem key={status} value={status}>
-                {getStatusLabel(status)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="mb-4 space-y-3">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-3 py-2 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors"
+            placeholder="Поиск по названию или ID тест-кейса..."
+            value={searchQuery}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              onPageChange(1);
+            }}
+          />
+        </div>
 
-        <Select value={ownerFilter} onValueChange={onOwnerFilterChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Фильтр по исполнителю" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Все исполнители</SelectItem>
-            {membersForFilter.map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                {member.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filters */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Фильтр по статусу" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все статусы</SelectItem>
+              {Array.from(
+                new Set(
+                  ['NOT_RUN', ...statusOptions.map((option) => (option.value === 'SKIPPED' ? 'NOT_RUN' : option.value))]
+                )
+              ).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {getStatusLabel(status)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={statusSort} onValueChange={(v) => onStatusSortChange(v as 'none' | 'asc' | 'desc')}>
-          <SelectTrigger>
-            <SelectValue placeholder="Сортировка по статусу" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Без сортировки</SelectItem>
-            <SelectItem value="asc">Статус: A-Z</SelectItem>
-            <SelectItem value="desc">Статус: Z-A</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={ownerFilter} onValueChange={onOwnerFilterChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Фильтр по исполнителю" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все исполнители</SelectItem>
+              {membersForFilter.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={statusSort}
+            onValueChange={(v) => onStatusSortChange(v as 'none' | 'asc' | 'desc' | 'passed_last')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Сортировка по статусу" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Без сортировки</SelectItem>
+              <SelectItem value="passed_last">Пройденные в конец</SelectItem>
+              <SelectItem value="asc">Статус: A-Z</SelectItem>
+              <SelectItem value="desc">Статус: Z-A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {!hasAnyResultsInRun ? (
@@ -605,7 +708,9 @@ export function TestCasesListCard({
         <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-10 text-center">
           <AlertCircle className="mx-auto mb-4 h-10 w-10 text-gray-400" />
           <p className="mb-2 text-white/80">По выбранным фильтрам тест-кейсы не найдены</p>
-          <p className="mb-4 text-sm text-white/60">Снимите фильтры или измените сортировку, чтобы снова увидеть кейсы.</p>
+          <p className="mb-4 text-sm text-white/60">
+            Снимите фильтры или измените сортировку, чтобы снова увидеть кейсы.
+          </p>
           <Button
             variant="glass"
             size="sm"
@@ -613,6 +718,7 @@ export function TestCasesListCard({
               onStatusFilterChange('all');
               onOwnerFilterChange('all');
               onStatusSortChange('none');
+              onSearchChange('');
             }}
           >
             Сбросить фильтры
@@ -623,9 +729,12 @@ export function TestCasesListCard({
           <DataTable
             columns={columns}
             data={tableData}
-            rowClassName="cursor-pointer hover:bg-accent/20"
+            rowClassName="cursor-pointer"
             onRowClick={(row) => onExecuteTestCase(row.testCase)}
             emptyMessage="В этом запуске нет тест-кейсов"
+            resizable={true}
+            activeRowKey={activeTestCaseId}
+            getRowKey={(row) => row.testCase.id}
           />
 
           <div className="mt-6">
@@ -643,6 +752,7 @@ export function TestCasesListCard({
         </>
       )}
 
+      {/* Bulk Execute Dialog */}
       <Dialog open={bulkExecuteOpen} onOpenChange={setBulkExecuteOpen}>
         <DialogContent>
           <DialogHeader>
@@ -651,7 +761,6 @@ export function TestCasesListCard({
               Обновление {selectedRows.length} тест-кейсов в рамках текущего тест-рана.
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bulk-status">Статус результата</Label>
@@ -668,7 +777,6 @@ export function TestCasesListCard({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="bulk-executor">Исполнитель</Label>
               <Select value={bulkExecutorId} onValueChange={setBulkExecutorId}>
@@ -685,7 +793,6 @@ export function TestCasesListCard({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="bulk-comment">Комментарий</Label>
               <Textarea
@@ -697,7 +804,6 @@ export function TestCasesListCard({
                 rows={4}
               />
             </div>
-
             <div className="space-y-2">
               <Label>Выбранные тест-кейсы</Label>
               <div className="max-h-48 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-3 space-y-2">
@@ -710,7 +816,6 @@ export function TestCasesListCard({
               </div>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="glass" onClick={() => setBulkExecuteOpen(false)}>
               Отмена
@@ -722,15 +827,16 @@ export function TestCasesListCard({
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Assign Dialog */}
       <Dialog open={bulkAssignOpen} onOpenChange={setBulkAssignOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Кто будет выполнять</DialogTitle>
             <DialogDescription>
-              Назначение исполнителя для {selectedRows.length} выбранных тест-кейсов без изменения статуса.
+              Назначение исполнителя для {selectedRows.length} выбранных тест-кейсов без изменения
+              статуса.
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bulk-assignee">Исполнитель</Label>
@@ -748,7 +854,6 @@ export function TestCasesListCard({
               </Select>
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="glass" onClick={() => setBulkAssignOpen(false)}>
               Отмена
