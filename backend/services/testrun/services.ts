@@ -393,7 +393,8 @@ export class TestRunService {
     filters?: {
       resultStatus?: string;
       executedById?: string;
-      resultStatusSort?: 'asc' | 'desc';
+      resultStatusSort?: 'asc' | 'desc' | 'passed_last';
+      search?: string;
     }
   ) {
     const safePage = Math.max(1, page);
@@ -402,8 +403,14 @@ export class TestRunService {
 
     const resultWhere: {
       testRunId: string;
-      status?: string | { in: string[] };
+      status?: string | { in: string[] } | { not: string };
       executedById?: string;
+      testCase?: {
+        OR: Array<{
+          title?: { contains: string; mode: 'insensitive' };
+          tcId?: { contains: string; mode: 'insensitive' };
+        }>;
+      };
     } = {
       testRunId,
     };
@@ -419,71 +426,121 @@ export class TestRunService {
       resultWhere.executedById = filters.executedById;
     }
 
-    const resultOrderBy = filters?.resultStatusSort
-      ? [{ status: filters.resultStatusSort }, { executedAt: 'desc' as const }]
-      : [{ executedAt: 'desc' as const }];
+    if (filters?.search) {
+      resultWhere.testCase = {
+        OR: [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          { tcId: { contains: filters.search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const isPassedLast = filters?.resultStatusSort === 'passed_last';
+    const resultOrderBy =
+      !isPassedLast && filters?.resultStatusSort
+        ? [{ status: filters.resultStatusSort as 'asc' | 'desc' }, { executedAt: 'desc' as const }]
+        : [{ executedAt: 'desc' as const }];
+
+    const resultInclude = {
+      testCase: {
+        select: {
+          id: true,
+          tcId: true,
+          title: true,
+          description: true,
+          preconditions: true,
+          priority: true,
+          status: true,
+          steps: {
+            select: {
+              id: true,
+              stepNumber: true,
+              action: true,
+              expectedResult: true,
+            },
+            orderBy: {
+              stepNumber: 'asc' as const,
+            },
+          },
+        },
+      },
+      executedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+        },
+      },
+    };
+
+    // For passed_last: fetch non-PASSED first, then PASSED, with correct pagination
+    if (isPassedLast && !filters?.resultStatus) {
+      const nonPassedWhere = { ...resultWhere, status: { not: 'PASSED' } as { not: string } };
+      const passedWhere = { ...resultWhere, status: 'PASSED' };
+
+      const [testRun, nonPassedCount, passedCount] = await Promise.all([
+        prisma.testRun.findUnique({
+          where: { id: testRunId },
+          include: {
+            project: { select: { id: true, name: true, key: true } },
+            assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+            _count: { select: { results: true } },
+          },
+        }),
+        prisma.testResult.count({ where: nonPassedWhere }),
+        prisma.testResult.count({ where: passedWhere }),
+      ]);
+
+      if (!testRun) return null;
+
+      const filteredResultsCount = nonPassedCount + passedCount;
+      const nonPassedSkip = Math.min(skip, nonPassedCount);
+      const nonPassedTake = Math.max(0, Math.min(safeLimit, nonPassedCount - nonPassedSkip));
+      const passedSkip = Math.max(0, skip - nonPassedCount);
+      const passedTake = Math.max(0, safeLimit - nonPassedTake);
+
+      const [nonPassedResults, passedResults] = await Promise.all([
+        nonPassedTake > 0
+          ? prisma.testResult.findMany({
+              where: nonPassedWhere,
+              include: resultInclude,
+              orderBy: [{ executedAt: 'desc' as const }],
+              skip: nonPassedSkip,
+              take: nonPassedTake,
+            })
+          : [],
+        passedTake > 0 && passedSkip < passedCount
+          ? prisma.testResult.findMany({
+              where: passedWhere,
+              include: resultInclude,
+              orderBy: [{ executedAt: 'desc' as const }],
+              skip: passedSkip,
+              take: passedTake,
+            })
+          : [],
+      ]);
+
+      return {
+        ...testRun,
+        results: [...nonPassedResults, ...passedResults],
+        _count: { ...testRun._count, results: filteredResultsCount },
+      };
+    }
 
     const [testRun, filteredResultsCount, paginatedResults] = await Promise.all([
       prisma.testRun.findUnique({
         where: { id: testRunId },
         include: {
-          project: {
-            select: {
-              id: true,
-              name: true,
-              key: true,
-            },
-          },
-          assignedTo: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-            },
-          },
-          _count: {
-            select: {
-              results: true,
-            },
-          },
+          project: { select: { id: true, name: true, key: true } },
+          assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+          _count: { select: { results: true } },
         },
       }),
       prisma.testResult.count({ where: resultWhere }),
       prisma.testResult.findMany({
         where: resultWhere,
-        include: {
-          testCase: {
-            select: {
-              id: true,
-              tcId: true,
-              title: true,
-              description: true,
-              preconditions: true,
-              priority: true,
-              status: true,
-              steps: {
-                select: {
-                  id: true,
-                  stepNumber: true,
-                  action: true,
-                  expectedResult: true,
-                },
-                orderBy: {
-                  stepNumber: 'asc',
-                },
-              },
-            },
-          },
-          executedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-            },
-          },
-        },
+        include: resultInclude,
         orderBy: resultOrderBy,
         skip,
         take: safeLimit,

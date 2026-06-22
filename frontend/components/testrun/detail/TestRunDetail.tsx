@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
@@ -56,7 +56,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [totalItems, setTotalItems] = useState(0);
   const [resultStatusFilter, setResultStatusFilter] = useState('all');
   const [resultOwnerFilter, setResultOwnerFilter] = useState('all');
-  const [resultStatusSort, setResultStatusSort] = useState<'none' | 'asc' | 'desc'>('none');
+  const [resultStatusSort, setResultStatusSort] = useState<'none' | 'asc' | 'desc' | 'passed_last'>('none');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
@@ -111,7 +112,22 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   useEffect(() => {
     fetchTestRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort]);
+  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery]);
+
+  // Polling for real-time updates (30s interval, silent)
+  const fetchTestRunRef = useRef(fetchTestRun);
+  useEffect(() => {
+    fetchTestRunRef.current = fetchTestRun;
+  });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchTestRunRef.current(true);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -139,9 +155,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   }, [testRun]);
 
-  const fetchTestRun = async () => {
+  const fetchTestRun = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       // Extract projectId from URL path or use from testRun data
       let projectId = testRun?.project?.id;
       if (!projectId && typeof window !== 'undefined') {
@@ -167,6 +183,10 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
       if (resultStatusSort !== 'none') {
         params.set('resultStatusSort', resultStatusSort);
+      }
+
+      if (searchQuery) {
+        params.set('search', searchQuery);
       }
 
       const query = params.toString();
@@ -334,8 +354,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const handleOpenResultDialog = (testCase: TestCase) => {
-    const existingResult = testRun?.results.find(
+  const handleOpenResultDialog = (testCase: TestCase) => {    const existingResult = testRun?.results.find(
       (r) => r.testCaseId === testCase.id
     );
 
@@ -348,6 +367,59 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
     setResultDialogOpen(true);
   };
+
+  const saveResultForCase = useCallback(async (testCase: TestCase, status: string, comment: string) => {
+    let projectId = testRun?.project?.id;
+    if (!projectId && typeof window !== 'undefined') {
+      const pathSegments = window.location.pathname.split('/');
+      const projectIndex = pathSegments.indexOf('projects');
+      if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
+        projectId = pathSegments[projectIndex + 1];
+      }
+    }
+    const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseId: testCase.id, status, comment }),
+    });
+    const data = await response.json();
+    if (data.data) {
+      setTestRun((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          results: prev.results.map((result) =>
+            result.testCaseId !== testCase.id
+              ? result
+              : { ...result, status: data.data.status, comment: data.data.comment, executedAt: data.data.executedAt, executedBy: data.data.executedBy }
+          ),
+        };
+      });
+    }
+    return data;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testRun?.project?.id, testRunId]);
+
+  const handleQuickStatusChange = useCallback(async (testCase: TestCase, status: string) => {
+    await saveResultForCase(testCase, status, '');
+  }, [saveResultForCase]);
+
+  const handleAutoSave = useCallback(async (status: string) => {
+    if (!selectedTestCase) return;
+    await saveResultForCase(selectedTestCase, status, resultForm.comment || '');
+  }, [selectedTestCase, resultForm.comment, saveResultForCase]);
+
+  const handleSelfAssign = useCallback(async () => {
+    if (!selectedTestCase || !testRun?.project?.id) return;
+    const projectId = testRun.project.id;
+    await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds: [selectedTestCase.id] }),
+    });
+    fetchTestRun(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTestCase, testRun?.project?.id, testRunId]);
 
   const handleSubmitResult = async () => {
     if (!selectedTestCase || !resultForm.status) {
@@ -710,7 +782,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const calculateStats = (): TestRunStats => {
+  const stats = useMemo((): TestRunStats => {
     if (!testRun)
       return { passed: 0, failed: 0, blocked: 0, skipped: 0, retest: 0, pending: 0, total: 0 };
 
@@ -726,47 +798,26 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       };
     }
 
-    const stats: TestRunStats = {
-      passed: 0,
-      failed: 0,
-      blocked: 0,
-      skipped: 0,
-      retest: 0,
-      pending: 0,
+    const s: TestRunStats = {
+      passed: 0, failed: 0, blocked: 0, skipped: 0, retest: 0, pending: 0,
       total: testRun.results?.length || 0,
     };
 
-    // Check if results exist before iterating
     if (testRun.results && Array.isArray(testRun.results)) {
       testRun.results.forEach((result) => {
         switch (result.status) {
-          case 'PASSED':
-            stats.passed++;
-            break;
-          case 'FAILED':
-            stats.failed++;
-            break;
-          case 'BLOCKED':
-            stats.blocked++;
-            break;
+          case 'PASSED': s.passed++; break;
+          case 'FAILED': s.failed++; break;
+          case 'BLOCKED': s.blocked++; break;
           case 'SKIPPED':
-          case 'NOT_RUN':
-            stats.skipped++;
-            break;
-          case 'RETEST':
-            stats.retest++;
-            break;
+          case 'NOT_RUN': s.skipped++; break;
+          case 'RETEST': s.retest++; break;
         }
       });
     }
-
-    // Pending = tests that haven't been executed (skipped tests count as not executed)
-    stats.pending = stats.skipped;
-
-    return stats;
-  };
-
-  const stats = calculateStats();
+    s.pending = s.skipped;
+    return s;
+  }, [testRun]);
   // Progress = tests that have been executed (passed, failed, blocked, retest)
   // Skipped tests are NOT considered executed
   const executed = stats.passed + stats.failed + stats.blocked + stats.retest;
@@ -846,6 +897,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           statusFilter={resultStatusFilter}
           ownerFilter={resultOwnerFilter}
           statusSort={resultStatusSort}
+          searchQuery={searchQuery}
           onStatusFilterChange={(value) => {
             setResultStatusFilter(value);
             setCurrentPage(1);
@@ -856,6 +908,10 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           }}
           onStatusSortChange={(value) => {
             setResultStatusSort(value);
+            setCurrentPage(1);
+          }}
+          onSearchChange={(value) => {
+            setSearchQuery(value);
             setCurrentPage(1);
           }}
           onPageChange={setCurrentPage}
@@ -872,9 +928,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             setAddSuitesDialogOpen(true);
           }}
           onExecuteTestCase={handleOpenResultDialog}
+          onQuickStatusChange={handleQuickStatusChange}
           onCreateDefect={handleCreateDefect}
           forceShowDefectActions={showAutomationDefectActions}
           getResultIcon={getResultIcon}
+          activeTestCaseId={selectedTestCase?.id}
         />
 
         <AddTestCasesDialog
@@ -976,6 +1034,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           setResultForm({ ...resultForm, ...filteredData } as ResultFormData);
         }}
         onSave={handleSubmitResult}
+        onAutoSave={handleAutoSave}
+        onSelfAssign={handleSelfAssign}
         getStatusIcon={getResultIcon}
       />
 

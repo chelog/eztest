@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, X, UserCheck } from 'lucide-react';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
@@ -14,9 +14,12 @@ interface TestCaseResultSidePanelProps {
   projectId?: string;
   formData: ResultFormData;
   saving?: boolean;
+  currentUserId?: string;
   onClose: () => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
   onSave: () => void;
+  onAutoSave?: (status: string) => void;
+  onSelfAssign?: () => void;
   getStatusIcon: (status?: string) => React.JSX.Element;
 }
 
@@ -62,6 +65,8 @@ export function TestCaseResultSidePanel({
   onClose,
   onFormChange,
   onSave,
+  onAutoSave,
+  onSelfAssign,
   getStatusIcon,
 }: TestCaseResultSidePanelProps) {
   if (!open || !testCase) {
@@ -69,6 +74,13 @@ export function TestCaseResultSidePanel({
   }
 
   const canOpenTestCase = Boolean(projectId && testCase.id);
+
+  const handleStatusClick = (statusValue: string) => {
+    onFormChange({ status: statusValue });
+    if (onAutoSave) {
+      onAutoSave(statusValue);
+    }
+  };
 
   return (
     <aside className="fixed right-0 top-0 z-[70] h-screen w-full max-w-xl border-l border-white/10 bg-[#0f0f12] shadow-2xl">
@@ -91,9 +103,16 @@ export function TestCaseResultSidePanel({
               <p className="text-xs font-mono text-white/60">{testCase.tcId || '-'}</p>
             )}
             {canOpenTestCase && (
-              <p className="mt-1 text-[11px] text-white/45">Cmd/Ctrl+Click, чтобы открыть в новой вкладке</p>
+              <p className="mt-1 text-[11px] text-white/45">
+                Cmd/Ctrl+Click, чтобы открыть в новой вкладке
+              </p>
             )}
-            <h3 className="mt-1 truncate text-base font-semibold text-white/90">{testCase.title || testCase.name || 'Тест-кейс'}</h3>
+            <h3
+              className="mt-1 text-base font-semibold text-white/90"
+              title={testCase.title || testCase.name || 'Тест-кейс'}
+            >
+              {testCase.title || testCase.name || 'Тест-кейс'}
+            </h3>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -104,7 +123,9 @@ export function TestCaseResultSidePanel({
           {testCase.preconditions && (
             <div className="rounded-lg border border-white/10 bg-white/5 p-3">
               <h4 className="text-sm font-medium text-white/90">Предусловия</h4>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-white/70">{testCase.preconditions}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-white/70">
+                {testCase.preconditions}
+              </p>
             </div>
           )}
 
@@ -116,7 +137,9 @@ export function TestCaseResultSidePanel({
                   <div key={step.id} className="rounded-md border border-white/10 bg-black/10 p-2">
                     <p className="text-xs text-white/60">Шаг {step.stepNumber}</p>
                     <p className="mt-1 text-sm text-white/80 whitespace-pre-wrap">{step.action}</p>
-                    <p className="mt-1 text-xs text-white/60 whitespace-pre-wrap">Ожидаемый результат: {step.expectedResult}</p>
+                    <p className="mt-1 text-xs text-white/60 whitespace-pre-wrap">
+                      Ожидаемый результат: {step.expectedResult}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -124,7 +147,12 @@ export function TestCaseResultSidePanel({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="panel-status">Статус результата</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="panel-status">Статус результата</Label>
+              {onAutoSave && (
+                <span className="text-xs text-white/40">Клик = авто-сохранение</span>
+              )}
+            </div>
 
             <div className="flex flex-wrap gap-2">
               {QUICK_STATUS_VALUES.map((statusValue) => (
@@ -133,14 +161,35 @@ export function TestCaseResultSidePanel({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className={formData.status === statusValue ? STATUS_BUTTON_STYLES[statusValue].active : STATUS_BUTTON_STYLES[statusValue].idle}
-                  onClick={() => onFormChange({ status: statusValue })}
+                  disabled={saving}
+                  className={
+                    formData.status === statusValue
+                      ? STATUS_BUTTON_STYLES[statusValue].active
+                      : STATUS_BUTTON_STYLES[statusValue].idle
+                  }
+                  onClick={() => handleStatusClick(statusValue)}
                 >
-                  {STATUS_LABELS[statusValue] || statusValue}
+                  {getStatusIcon(statusValue)}
+                  <span className="ml-1">{STATUS_LABELS[statusValue] || statusValue}</span>
                 </Button>
               ))}
             </div>
           </div>
+
+          {onSelfAssign && (
+            <div className="space-y-1">
+              <Button
+                variant="glass"
+                size="sm"
+                className="w-full flex items-center gap-2 justify-center"
+                onClick={onSelfAssign}
+                disabled={saving}
+              >
+                <UserCheck className="w-4 h-4" />
+                Назначить на себя
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="panel-comment">Комментарий</Label>
