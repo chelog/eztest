@@ -109,53 +109,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     return actions;
   }, [canUpdateTestRun]);
 
-  useEffect(() => {
-    fetchTestRun();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery]);
-
-  // Polling for real-time updates (30s interval, silent)
-  const fetchTestRunRef = useRef(fetchTestRun);
-  useEffect(() => {
-    fetchTestRunRef.current = fetchTestRun;
-  });
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        fetchTestRunRef.current(true);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
-    if (saved) {
-      const parsed = Number(saved);
-      if (!Number.isNaN(parsed) && parsed > 0) {
-        setItemsPerPage(parsed);
-      }
-    }
-  }, [testRunId]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`testrun-items-per-page-${testRunId}`, String(itemsPerPage));
-    }
-  }, [itemsPerPage, testRunId]);
-
-  useEffect(() => {
-    if (testRun) {
-      document.title = `${testRun.name} | EZTest`;
-    }
-  }, [testRun]);
-
-  const fetchTestRun = async (silent = false) => {
+  const fetchTestRun = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       // Extract projectId from URL path or use from testRun data
@@ -210,7 +164,53 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, testRunId]);
+
+  useEffect(() => {
+    fetchTestRun();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery]);
+
+  // Polling for real-time updates (30s interval, silent)
+  const fetchTestRunRef = useRef(fetchTestRun);
+  useEffect(() => {
+    fetchTestRunRef.current = fetchTestRun;
+  });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchTestRunRef.current(true);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
+    if (saved) {
+      const parsed = Number(saved);
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        setItemsPerPage(parsed);
+      }
+    }
+  }, [testRunId]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`testrun-items-per-page-${testRunId}`, String(itemsPerPage));
+    }
+  }, [itemsPerPage, testRunId]);
+
+  useEffect(() => {
+    if (testRun) {
+      document.title = `${testRun.name} | EZTest`;
+    }
+  }, [testRun]);
 
   const handleNameUpdate = async (name: string) => {
     const projectId = testRun?.project?.id;
