@@ -50,10 +50,6 @@ export const getProjectSidebarItems = (projectId: string, isAdmin: boolean = fal
       children: [], // Will be populated dynamically
     },
     {
-      label: 'Дефекты',
-      href: `/projects/${projectId}/defects`,
-    },
-    {
       label: 'Участники',
       href: `/projects/${projectId}/members`,
     },
@@ -100,10 +96,6 @@ export const getProjectsPageSidebarItems = (isAdmin: boolean = false): SidebarIt
     {
       label: 'Тест-раны',
       children: [],
-    },
-    {
-      label: 'Дефекты',
-      href: '#',
     },
     {
       label: 'Участники',

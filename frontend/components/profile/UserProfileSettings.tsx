@@ -38,12 +38,6 @@ export default function UserProfileSettings() {
     // Clear project context from session storage
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('lastProjectId');
-      // Clear any other project-related session data
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('defects-filters-')) {
-          sessionStorage.removeItem(key);
-        }
-      });
     }
     // Let the form submit naturally to /api/auth/signout
   };

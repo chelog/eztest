@@ -16,7 +16,6 @@ import { TestCaseDetailsCard } from './subcomponents/TestCaseDetailsCard';
 import { TestStepsCard } from './subcomponents/TestStepsCard';
 import { TestCaseInfoCard } from './subcomponents/TestCaseInfoCard';
 import { TestCaseHistoryCard } from './subcomponents/TestCaseHistoryCard';
-import { LinkedDefectsCard } from './subcomponents/LinkedDefectsCard';
 import { DeleteTestCaseDialog } from './subcomponents/DeleteTestCaseDialog';
 import { attachmentStorage } from '@/lib/attachment-storage';
 import type { Attachment } from '@/lib/s3';
@@ -911,7 +910,6 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
               onNewStepExpectedResultAttachmentsChange={setNewStepExpectedResultAttachments}
             />
 
-            <LinkedDefectsCard testCase={testCase} onRefresh={fetchTestCase} />
 
             <TestCaseHistoryCard projectId={testCase.project.id} testCaseId={testCaseId} />
           </div>

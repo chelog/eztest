@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { BaseConfirmDialog } from '@/frontend/reusable-components/dialogs/BaseConfirmDialog';
-import { AlertCircle, Plus, Bug, ListChecks, ChevronDown, Search } from 'lucide-react';
+import { AlertCircle, Plus, ChevronDown, Search } from 'lucide-react';
 import { TestResult, TestCase } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -67,8 +67,6 @@ interface TestCasesListCardProps {
   onAddTestSuites: () => void;
   onExecuteTestCase: (testCase: TestCase) => void;
   onQuickStatusChange: (testCase: TestCase, status: string) => Promise<void>;
-  onCreateDefect?: (testCaseId: string) => void;
-  forceShowDefectActions?: boolean;
   getResultIcon: (status?: string) => React.JSX.Element;
   activeTestCaseId?: string;
   sortBy?: string;
@@ -119,8 +117,6 @@ export function TestCasesListCard({
   onAddTestSuites,
   onExecuteTestCase,
   onQuickStatusChange,
-  onCreateDefect,
-  forceShowDefectActions = false,
   getResultIcon,
   activeTestCaseId,
   sortBy,
@@ -160,7 +156,6 @@ export function TestCasesListCard({
     [members, currentUserId]
   );
 
-  const canCreateDefect = hasPermissionCheck('defects:create');
   const isAdmin = role === 'ADMIN';
   const canAssign = true;
 
@@ -412,49 +407,6 @@ export function TestCasesListCard({
       minWidth: 80,
       render: (_, row: ResultRow) => (
         <div className="flex items-center gap-2 justify-end min-w-0">
-          {(testRunStatus === 'IN_PROGRESS' || forceShowDefectActions) && (
-            <>
-              {row.status === 'FAILED' && canCreateDefect && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ButtonSecondary
-                      size="sm"
-                      className="flex items-center gap-2"
-                      buttonName={`Test Cases List Card - Defect Actions (${row.testCase.title || row.testCase.id})`}
-                    >
-                      Дефект
-                      <ChevronDown className="w-3 h-3" />
-                    </ButtonSecondary>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    {onCreateDefect && (
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCreateDefect(row.testCase.id);
-                        }}
-                      >
-                        <Bug className="w-4 h-4 mr-2" />
-                        Создать дефект
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onExecuteTestCase(row.testCase);
-                      }}
-                    >
-                      <ListChecks className="w-4 h-4 mr-2" />
-                      Выбрать дефект
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </>
-          )}
         </div>
       ),
       align: 'right',

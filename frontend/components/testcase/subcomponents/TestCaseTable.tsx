@@ -6,7 +6,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/frontend/reusable-elements/hover-cards/HoverCard';
-import { Trash2, Bug } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { PriorityBadge } from '@/frontend/reusable-components/badges/PriorityBadge';
 import { GroupedDataTable, ColumnDef, GroupConfig, ActionConfig } from '@/frontend/reusable-components/tables/GroupedDataTable';
 import { TestCase, Module } from '../types';
@@ -96,36 +96,8 @@ export function TestCaseTable({
       render: (row) => (
         <div className="min-w-0 flex items-center gap-2">
           <div className="min-w-0 flex-1">
-            <HoverCard openDelay={200}>
-              <HoverCardTrigger asChild>
-                <p className="text-sm font-medium text-white truncate cursor-pointer">
-                  {row.title}
-                </p>
-              </HoverCardTrigger>
-              {row.title && row.title.length > 40 && (
-                <HoverCardContent side="top" className="w-80">
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-white">Test Case Title</h4>
-                    <p className="text-sm text-white/80 break-words">{row.title}</p>
-                    {row._count.defects > 0 && (
-                      <div className="pt-2 border-t border-white/10">
-                        <p className="text-xs text-red-400">
-                          {row._count.defects} open defect{row._count.defects !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </HoverCardContent>
-              )}
-            </HoverCard>
+            <p className="text-sm font-medium text-white truncate">{row.title}</p>
           </div>
-          {row._count.defects > 0 && (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded border border-red-500/30 flex-shrink-0">
-              <Bug className="w-3 h-3 text-red-400" />
-              <span className="text-xs text-red-400 font-medium">{row._count.defects}</span>
-            </div>
-          )}
-        </div>
       ),
     },
     {

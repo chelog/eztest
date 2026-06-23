@@ -60,11 +60,6 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     clearAllPersistedForms();
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('lastProjectId');
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('defects-filters-')) {
-          sessionStorage.removeItem(key);
-        }
-      });
     }
   };
 
