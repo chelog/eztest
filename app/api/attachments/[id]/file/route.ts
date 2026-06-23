@@ -39,7 +39,7 @@ export async function GET(
     ? 'inline'
     : `attachment; filename="${encodeURIComponent(attachment.originalName)}"`;
 
-  return new Response(fileBuffer, {
+  return new Response(new Uint8Array(fileBuffer), {
     headers: {
       'Content-Type': attachment.mimeType,
       'Content-Disposition': disposition,
