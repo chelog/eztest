@@ -545,7 +545,7 @@ export class TestRunService {
     }
 
     // Create the test run
-    const status = data.status || 'PLANNED';
+    const status = data.status || 'IN_PROGRESS';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
@@ -555,6 +555,7 @@ export class TestRunService {
         assignedToId: data.assignedToId || null,
         environment: data.environment,
         status,
+        startedAt: status === 'IN_PROGRESS' ? new Date() : null,
         completedAt: status === 'COMPLETED' ? new Date() : null,
         createdById: data.createdById,
       },
