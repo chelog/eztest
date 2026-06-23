@@ -24,6 +24,8 @@ import { TestRun, TestCase, ResultFormData, TestRunStats, TestSuite } from './ty
 import { usePermissions } from '@/hooks/usePermissions';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { FileExportDialog } from '@/frontend/reusable-components/dialogs/FileExportDialog';
+import type { Attachment } from '@/lib/s3';
+import { deleteFile } from '@/lib/s3';
 
 interface TestRunDetailProps {
   testRunId: string;
@@ -44,6 +46,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [selectedResultExecutedBy, setSelectedResultExecutedBy] = useState<{ id?: string; name: string } | null>(null);
   const [projectMembers, setProjectMembers] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTestCaseAttachments, setSelectedTestCaseAttachments] = useState<Attachment[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [availableTestCases, setAvailableTestCases] = useState<TestCase[]>([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
@@ -377,6 +380,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
     setSelectedTestCase(testCase);
     setSelectedResultExecutedBy(existingResult?.executedBy || null);
+    setSelectedTestCaseAttachments([]);
 
     setResultForm({
       status: existingResult?.status || '',
@@ -384,6 +388,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     });
 
     setResultDialogOpen(true);
+
+    // Fetch test case attachments
+    fetch(`/api/testcases/${testCase.id}/attachments`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.data) {
+          setSelectedTestCaseAttachments(
+            data.data.map((a: Attachment) => ({ ...a, entityType: 'testcase' as const }))
+          );
+        }
+      })
+      .catch(() => {});
   };
 
   const saveResultForCase = useCallback(async (testCase: TestCase, status: string, comment: string) => {
@@ -454,6 +470,19 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     fetchTestRun(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestCase, testRun?.project?.id, testRunId, projectMembers]);
+
+  const handleAttachmentUploaded = useCallback((attachment: Attachment) => {
+    setSelectedTestCaseAttachments((prev) => [attachment, ...prev]);
+  }, []);
+
+  const handleAttachmentDeleted = useCallback(async (attachmentId: string) => {
+    try {
+      await deleteFile(attachmentId, 'testcase');
+      setSelectedTestCaseAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+    } catch (err) {
+      console.error('Failed to delete attachment:', err);
+    }
+  }, []);
 
   const handleSubmitResult = async () => {
     if (!selectedTestCase || !resultForm.status) {
@@ -1065,10 +1094,12 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         currentUserId={currentUserId}
         executedBy={selectedResultExecutedBy}
         members={projectMembers}
+        attachments={selectedTestCaseAttachments}
         onClose={() => {
           setResultDialogOpen(false);
           setSelectedTestCase(null);
           setSelectedResultExecutedBy(null);
+          setSelectedTestCaseAttachments([]);
         }}
         onFormChange={(data) => {
           const filteredData = Object.fromEntries(
@@ -1080,6 +1111,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         onAutoSave={handleAutoSave}
         onSelfAssign={handleSelfAssign}
         onAssign={handleAssign}
+        onAttachmentUploaded={handleAttachmentUploaded}
+        onAttachmentDeleted={handleAttachmentDeleted}
         getStatusIcon={getResultIcon}
       />
 
