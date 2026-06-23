@@ -23,6 +23,16 @@ interface TestCaseResultSidePanelProps {
   getStatusIcon: (status?: string) => React.JSX.Element;
 }
 
+const MIGRATION_METADATA_RE = /^(Source system|Source testcase ID|Original folder path|Owner|Created at|Created by|Modified at|Modified by)\s*:/i;
+
+function cleanDescription(text: string): string {
+  return text
+    .split('\n')
+    .filter((line) => !MIGRATION_METADATA_RE.test(line.trim()))
+    .join('\n')
+    .trim();
+}
+
 const STATUS_LABELS: Record<string, string> = {
   PASSED: 'Успешно',
   FAILED: 'Провалено',
@@ -120,6 +130,15 @@ export function TestCaseResultSidePanel({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-4 custom-scrollbar">
+          {testCase.description && cleanDescription(testCase.description) && (
+            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+              <h4 className="text-sm font-medium text-white/90">Описание</h4>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-white/70">
+                {cleanDescription(testCase.description)}
+              </p>
+            </div>
+          )}
+
           {testCase.preconditions && (
             <div className="rounded-lg border border-white/10 bg-white/5 p-3">
               <h4 className="text-sm font-medium text-white/90">Предусловия</h4>

@@ -322,6 +322,8 @@ export function TestCasesListCard({
       label: 'Статус',
       width: '1.4fr',
       minWidth: 130,
+      sortable: true,
+      sortKey: 'status',
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = getStatusLabel(row.status);
@@ -381,6 +383,8 @@ export function TestCasesListCard({
       label: 'Выполнил',
       width: '1fr',
       minWidth: 100,
+      sortable: true,
+      sortKey: 'executedBy',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate" title={row.executedBy?.name || undefined}>
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED' ? '-' : row.executedBy?.name || '-'}
@@ -392,6 +396,8 @@ export function TestCasesListCard({
       label: 'Дата',
       width: '1fr',
       minWidth: 120,
+      sortable: true,
+      sortKey: 'executedAt',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate">
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED'
