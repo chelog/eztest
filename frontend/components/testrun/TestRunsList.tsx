@@ -13,7 +13,8 @@ import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageH
 import { HeaderWithFilters } from '@/frontend/reusable-components/layout/HeaderWithFilters';
 import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { TestRunsFilterCard } from './subcomponents/TestRunsFilterCard';
 import { TestRunCard } from './subcomponents/TestRunCard';
 import { TestRunsEmptyState } from './subcomponents/TestRunsEmptyState';
@@ -62,7 +63,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
 
   useEffect(() => {
     fetchProject();

@@ -8,7 +8,8 @@ import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-co
 import { InfoBanner } from '@/frontend/reusable-components/alerts/InfoBanner';
 import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { ProjectCard } from './subcomponents/ProjectCard';
 import { CreateProjectDialog } from './subcomponents/CreateProjectDialog';
@@ -29,7 +30,7 @@ export default function ProjectList() {
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
   const [hasSelectedProject, setHasSelectedProject] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
 
   // Compute permissions early for hooks
   const canCreateProject = hasPermissionCheck('projects:create');

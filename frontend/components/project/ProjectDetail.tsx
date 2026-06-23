@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { TestTube2, Play, FileText, Folder, Bug, LogOut } from 'lucide-react';
+import { TestTube2, Play, FileText, Folder, LogOut } from 'lucide-react';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs, type BreadcrumbItem } from '@/frontend/reusable-components/layout/Breadcrumbs';
@@ -65,12 +65,6 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
     // Clear project context from session storage
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('lastProjectId');
-      // Clear any other project-related session data
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('defects-filters-')) {
-          sessionStorage.removeItem(key);
-        }
-      });
     }
     await signOut({ callbackUrl: '/auth/login', redirect: true });
   };
@@ -168,14 +162,6 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             borderColor="border-l-purple-400/30"
             hoverColor="group-hover:bg-purple-400/10"
             onClick={() => router.push(`/projects/${projectId}/testsuites`)}
-          />
-          <ClickableStatCard
-            icon={<Bug className="w-4 h-4" />}
-            label="Дефекты"
-            value={project._count?.defects || 0}
-            borderColor="border-l-red-400/30"
-            hoverColor="group-hover:bg-red-400/10"
-            onClick={() => router.push(`/projects/${projectId}/defects`)}
           />
           <ClickableStatCard
             icon={<Folder className="w-4 h-4" />}

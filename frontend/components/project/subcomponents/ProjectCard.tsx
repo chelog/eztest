@@ -6,7 +6,7 @@ import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { StatsGrid } from '@/frontend/reusable-components/data/StatsGrid';
 import { AvatarStack } from '@/frontend/reusable-components/users/AvatarStack';
-import { Folder, Settings, Users, Trash2, TestTube2, Play, FileText, Bug } from 'lucide-react';
+import { Folder, Settings, Users, Trash2, TestTube2, Play, FileText } from 'lucide-react';
 
 interface ProjectCardProps {
   project: {
@@ -28,7 +28,6 @@ interface ProjectCardProps {
       testCases: number;
       testRuns: number;
       testSuites: number;
-      defects?: number;
     };
   };
   onNavigate: (path: string) => void;
@@ -101,14 +100,8 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
           label: 'Тест-сьюты',
           iconColor: 'text-purple-400',
         },
-        {
-          icon: Bug,
-          value: project._count?.defects || 0,
-          label: 'Дефекты',
-          iconColor: 'text-red-400',
-        },
       ]}
-      columns={4}
+      columns={3}
       gap="sm"
       className="mb-2.5"
     />

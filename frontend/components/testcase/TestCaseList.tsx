@@ -16,7 +16,8 @@ import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageH
 import { HeaderWithFilters } from '@/frontend/reusable-components/layout/HeaderWithFilters';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { TestCase, Project, Module } from './types';
 import { TestCaseTable } from './subcomponents/TestCaseTable';
@@ -56,7 +57,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isPaginationChange, setIsPaginationChange] = useState(false);

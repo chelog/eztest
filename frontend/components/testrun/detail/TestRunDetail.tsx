@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { useSession } from 'next-auth/react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
@@ -11,7 +12,6 @@ import { TestCasesListCard } from './subcomponents/TestCasesListCard';
 import { TestCaseResultSidePanel } from './subcomponents/TestCaseResultSidePanel';
 import { AddTestCasesDialog } from '@/frontend/components/common/dialogs/AddTestCasesDialog';
 import { AddTestSuitesDialog } from './subcomponents/AddTestSuitesDialog';
-import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
 import { SendTestRunReportDialog } from './subcomponents/SendTestRunReportDialog';
 import {
   CheckCircle,
@@ -41,8 +41,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [addCasesDialogOpen, setAddCasesDialogOpen] = useState(false);
   const [addSuitesDialogOpen, setAddSuitesDialogOpen] = useState(false);
-  const [createDefectDialogOpen, setCreateDefectDialogOpen] = useState(false);
-  const [selectedTestCaseForDefect, setSelectedTestCaseForDefect] = useState<string | null>(null);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [selectedResultExecutedBy, setSelectedResultExecutedBy] = useState<{ id?: string; name: string } | null>(null);
   const [projectMembers, setProjectMembers] = useState<Array<{ id: string; name: string }>>([]);
@@ -52,7 +50,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
   const [availableTestSuites, setAvailableTestSuites] = useState<TestSuite[]>([]);
   const [selectedSuiteIds, setSelectedSuiteIds] = useState<string[]>([]);
-  const [defectRefreshTrigger, setDefectRefreshTrigger] = useState(0);
   const [sendReportDialogOpen, setSendReportDialogOpen] = useState(false);
   const [floatingAlert, setFloatingAlert] = useState<FloatingAlertMessage | null>(null);
   const [addingTestCases, setAddingTestCases] = useState(false);
@@ -60,12 +57,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
-    if (typeof window === 'undefined') return 50;
-    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
-    const parsed = Number(saved);
-    return !Number.isNaN(parsed) && parsed > 0 ? parsed : 50;
-  });
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [resultStatusFilter, setResultStatusFilter] = useState('all');
@@ -94,12 +86,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     const type = (testRun?.executionType || 'MANUAL').toString().toUpperCase();
     return type === 'AUTOMATION' ? 'AUTOMATION' : 'MANUAL';
   }, [testRun?.executionType]);
-
-  // For automation runs, allow defect actions even after completion
-  const showAutomationDefectActions = useMemo(() => {
-    const type = (testRun?.executionType || 'MANUAL').toString().toUpperCase();
-    return type === 'AUTOMATION' && testRun?.status === 'COMPLETED';
-  }, [testRun?.executionType, testRun?.status]);
 
   const navbarActions = useMemo(() => {
     const actions = [];
@@ -202,11 +188,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`testrun-items-per-page-${testRunId}`, String(itemsPerPage));
-    }
-  }, [itemsPerPage, testRunId]);
+
 
   useEffect(() => {
     if (testRun) {
@@ -813,20 +795,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const handleCreateDefect = (testCaseId: string) => {
-    setSelectedTestCaseForDefect(testCaseId);
-    setCreateDefectDialogOpen(true);
-  };
-
-  const handleDefectCreated = () => {
-    setCreateDefectDialogOpen(false);
-    setSelectedTestCaseForDefect(null);
-    // Trigger defect list refresh in RecordResultDialog
-    setDefectRefreshTrigger(prev => prev + 1);
-    // Optionally refresh test run data if needed
-    fetchTestRun();
-  };
-
   const getResultIcon = (status?: string) => {
     switch (status) {
       case 'PASSED':
@@ -990,8 +958,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           }}
           onExecuteTestCase={handleOpenResultDialog}
           onQuickStatusChange={handleQuickStatusChange}
-          onCreateDefect={handleCreateDefect}
-          forceShowDefectActions={showAutomationDefectActions}
           getResultIcon={getResultIcon}
           activeTestCaseId={selectedTestCase?.id}
           sortBy={columnSortBy}
@@ -1050,17 +1016,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           loading={addingTestSuites}
           fetchingData={loadingSuites}
         />
-
-        {selectedTestCaseForDefect && testRun.project?.id && (
-          <CreateDefectDialog
-            projectId={testRun.project.id}
-            triggerOpen={createDefectDialogOpen}
-            onOpenChange={setCreateDefectDialogOpen}
-            onDefectCreated={handleDefectCreated}
-            testCaseId={selectedTestCaseForDefect}
-            testRunEnvironment={testRun.environment}
-          />
-        )}
 
         <SendTestRunReportDialog
           open={sendReportDialogOpen}
