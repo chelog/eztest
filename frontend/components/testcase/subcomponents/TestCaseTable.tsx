@@ -98,6 +98,7 @@ export function TestCaseTable({
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white truncate">{row.title}</p>
           </div>
+        </div>
       ),
     },
     {
