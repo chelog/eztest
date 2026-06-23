@@ -45,6 +45,8 @@ export class TestRunController {
       executedById?: string;
       resultStatusSort?: 'asc' | 'desc' | 'passed_last';
       search?: string;
+      sortBy?: string;
+      sortDir?: 'asc' | 'desc';
     }
   ) {
     const testRun = await testRunService.getTestRunById(testRunId, page, limit, filters);

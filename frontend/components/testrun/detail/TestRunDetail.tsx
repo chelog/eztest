@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
@@ -29,6 +30,8 @@ interface TestRunDetailProps {
 
 export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const { hasPermission: hasPermissionCheck, isLoading: permissionsLoading, role } = usePermissions();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
 
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,13 +54,20 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    if (typeof window === 'undefined') return 50;
+    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
+    const parsed = Number(saved);
+    return !Number.isNaN(parsed) && parsed > 0 ? parsed : 50;
+  });
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [resultStatusFilter, setResultStatusFilter] = useState('all');
   const [resultOwnerFilter, setResultOwnerFilter] = useState('all');
   const [resultStatusSort, setResultStatusSort] = useState<'none' | 'asc' | 'desc' | 'passed_last'>('none');
   const [searchQuery, setSearchQuery] = useState('');
+  const [columnSortBy, setColumnSortBy] = useState<string | undefined>(undefined);
+  const [columnSortDir, setColumnSortDir] = useState<'asc' | 'desc'>('asc');
 
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
@@ -143,6 +153,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         params.set('search', searchQuery);
       }
 
+      if (columnSortBy) {
+        params.set('sortBy', columnSortBy);
+        params.set('sortDir', columnSortDir);
+      }
+
       const query = params.toString();
       const url = projectId 
         ? `/api/projects/${projectId}/testruns/${testRunId}?${query}`
@@ -164,12 +179,12 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     } finally {
       setLoading(false);
     }
-  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, testRunId]);
+  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, columnSortBy, columnSortDir, testRunId]);
 
   useEffect(() => {
     fetchTestRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery]);
+  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, columnSortBy, columnSortDir]);
 
   // Polling for real-time updates (30s interval, silent)
   const fetchTestRunRef = useRef(fetchTestRun);
@@ -185,20 +200,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
-    if (saved) {
-      const parsed = Number(saved);
-      if (!Number.isNaN(parsed) && parsed > 0) {
-        setItemsPerPage(parsed);
-      }
-    }
-  }, [testRunId]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -410,16 +411,16 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   }, [selectedTestCase, resultForm.comment, saveResultForCase]);
 
   const handleSelfAssign = useCallback(async () => {
-    if (!selectedTestCase || !testRun?.project?.id) return;
+    if (!selectedTestCase || !testRun?.project?.id || !currentUserId) return;
     const projectId = testRun.project.id;
     await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ testCaseIds: [selectedTestCase.id] }),
+      body: JSON.stringify({ testCaseIds: [selectedTestCase.id], executedById: currentUserId }),
     });
     fetchTestRun(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTestCase, testRun?.project?.id, testRunId]);
+  }, [selectedTestCase, testRun?.project?.id, testRunId, currentUserId]);
 
   const handleSubmitResult = async () => {
     if (!selectedTestCase || !resultForm.status) {
@@ -795,6 +796,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         retest: testRun.stats.retest,
         pending: testRun.stats.skipped,
         total: testRun.stats.total,
+        perUserStats: testRun.stats.perUserStats,
       };
     }
 
@@ -933,6 +935,13 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           forceShowDefectActions={showAutomationDefectActions}
           getResultIcon={getResultIcon}
           activeTestCaseId={selectedTestCase?.id}
+          sortBy={columnSortBy}
+          sortDir={columnSortDir}
+          onSortChange={(key, dir) => {
+            setColumnSortBy(key);
+            setColumnSortDir(dir);
+            setCurrentPage(1);
+          }}
         />
 
         <AddTestCasesDialog

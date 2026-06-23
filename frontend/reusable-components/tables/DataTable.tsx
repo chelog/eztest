@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/frontend/reusable-elements/dropdowns/DropdownMenu';
-import { Eye, EyeOff, Settings } from 'lucide-react';
+import { Eye, EyeOff, Settings, ChevronUp, ChevronDown as ChevronDownIcon } from 'lucide-react';
 
 export interface ColumnDef<T> {
   key: keyof T | string;
@@ -21,6 +21,8 @@ export interface ColumnDef<T> {
   width?: string; // e.g. '40px', '2fr', '1fr'
   minWidth?: number; // minimum px during resize
   hideable?: boolean; // Allow column to be hidden
+  sortable?: boolean; // Allow column header click sorting
+  sortKey?: string; // override key used for sorting (defaults to col.key)
 }
 
 export interface DataTableProps<T> {
@@ -33,6 +35,9 @@ export interface DataTableProps<T> {
   resizable?: boolean;
   activeRowKey?: string;
   getRowKey?: (row: T) => string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  onSort?: (key: string, dir: 'asc' | 'desc') => void;
 }
 
 export function DataTable<T>({
@@ -45,6 +50,9 @@ export function DataTable<T>({
   resizable = false,
   activeRowKey,
   getRowKey,
+  sortBy,
+  sortDir,
+  onSort,
 }: DataTableProps<T>) {
   const [colWidths, setColWidths] = useState<Record<number, number>>({});
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
@@ -189,8 +197,9 @@ export function DataTable<T>({
             style={{ gridTemplateColumns: gridColumns }}
           >
             {visibleColumns.map((col, visibleIdx) => {
-              const originalIdx = visibleColumnIndices[visibleIdx];
               const isLastColumn = visibleIdx === visibleColumns.length - 1;
+              const colSortKey = col.sortKey || String(col.key);
+              const isColSorted = col.sortable && sortBy === colSortKey;
               return (
                 <div
                   key={String(col.key)}
@@ -204,9 +213,24 @@ export function DataTable<T>({
                     resizable && !isLastColumn
                       ? 'group'
                       : ''
-                  } ${!isLastColumn ? 'border-r border-white/5' : ''}`}
+                  } ${!isLastColumn ? 'border-r border-white/5' : ''} ${
+                    col.sortable ? 'cursor-pointer select-none hover:text-white/90' : ''
+                  }`}
+                  onClick={() => {
+                    if (!col.sortable || !onSort) return;
+                    const newDir = isColSorted && sortDir === 'asc' ? 'desc' : 'asc';
+                    onSort(colSortKey, newDir);
+                  }}
                 >
-                  <span className="truncate block">{col.label}</span>
+                  <span className="truncate flex items-center gap-1">
+                    {col.label}
+                    {col.sortable && (
+                      <span className="flex flex-col -space-y-1 flex-shrink-0">
+                        <ChevronUp className={`w-3 h-3 ${isColSorted && sortDir === 'asc' ? 'text-primary' : 'text-white/20'}`} />
+                        <ChevronDownIcon className={`w-3 h-3 ${isColSorted && sortDir === 'desc' ? 'text-primary' : 'text-white/20'}`} />
+                      </span>
+                    )}
+                  </span>
                   {resizable && !isLastColumn && (
                     <div
                       className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 hover:!opacity-100 bg-white/20 hover:bg-primary/60 rounded transition-colors z-10"
