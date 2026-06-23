@@ -719,6 +719,8 @@ export class TestRunService {
       stackTrace?: string;
     }
   ) {
+    const isNotRun = data.status === 'NOT_RUN';
+
     return await prisma.testResult.upsert({
       where: {
         testRunId_testCaseId: {
@@ -728,7 +730,8 @@ export class TestRunService {
       },
       update: {
         status: data.status,
-        executedById: data.executedById,
+        // NOT_RUN = preserve pre-assigned executor; any other status = person who changed it becomes executor
+        executedById: isNotRun ? undefined : data.executedById,
         executedAt: new Date(),
         duration: data.duration,
         comment: data.comment,
@@ -739,7 +742,8 @@ export class TestRunService {
         testRunId,
         testCaseId,
         status: data.status,
-        executedById: data.executedById,
+        // On first creation with NOT_RUN (adding to run) — no executor yet
+        executedById: isNotRun ? null : data.executedById,
         duration: data.duration,
         comment: data.comment,
         errorMessage: data.errorMessage,

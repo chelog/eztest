@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { useSession } from 'next-auth/react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
@@ -60,12 +61,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
-    if (typeof window === 'undefined') return 50;
-    const saved = window.localStorage.getItem(`testrun-items-per-page-${testRunId}`);
-    const parsed = Number(saved);
-    return !Number.isNaN(parsed) && parsed > 0 ? parsed : 50;
-  });
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [resultStatusFilter, setResultStatusFilter] = useState('all');
@@ -202,11 +198,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`testrun-items-per-page-${testRunId}`, String(itemsPerPage));
-    }
-  }, [itemsPerPage, testRunId]);
+
 
   useEffect(() => {
     if (testRun) {
