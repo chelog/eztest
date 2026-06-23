@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
@@ -73,6 +73,9 @@ interface TestCasesListCardProps {
   forceShowDefectActions?: boolean;
   getResultIcon: (status?: string) => React.JSX.Element;
   activeTestCaseId?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  onSortChange?: (sortBy: string, sortDir: 'asc' | 'desc') => void;
 }
 
 interface ResultRow {
@@ -124,6 +127,9 @@ export function TestCasesListCard({
   forceShowDefectActions = false,
   getResultIcon,
   activeTestCaseId,
+  sortBy,
+  sortDir,
+  onSortChange,
 }: TestCasesListCardProps) {
   const { data: session } = useSession();
   const [selectedTestCaseIds, setSelectedTestCaseIds] = useState<Set<string>>(new Set());
@@ -160,8 +166,32 @@ export function TestCasesListCard({
 
   const canCreateDefect = hasPermissionCheck('defects:create');
   const isAdmin = role === 'ADMIN';
-  const isTester = role === 'TESTER';
-  const canAssign = canUpdate || isTester;
+  const canAssign = true;
+
+  // Debounce search input — update parent only after 300ms of inactivity
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      if (localSearch !== searchQuery) {
+        onSearchChange(localSearch);
+        onPageChange(1);
+      }
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
+
+  // Sync localSearch if searchQuery is cleared externally (e.g. reset filters button)
+  useEffect(() => {
+    if (searchQuery === '' && localSearch !== '') {
+      setLocalSearch('');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -231,6 +261,8 @@ export function TestCasesListCard({
       label: 'ID',
       width: '90px',
       minWidth: 80,
+      sortable: true,
+      sortKey: 'tcId',
       render: (_, row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate" title={row.testCase.tcId || '-'}>
           {row.testCase.tcId || '-'}
@@ -242,6 +274,8 @@ export function TestCasesListCard({
       label: 'Тест-кейс',
       width: '3fr',
       minWidth: 200,
+      sortable: true,
+      sortKey: 'title',
       render: (_, row: ResultRow) => (
         <div className="min-w-0 overflow-hidden">
           <p
@@ -263,6 +297,8 @@ export function TestCasesListCard({
       label: 'Приоритет',
       width: '1fr',
       minWidth: 100,
+      sortable: true,
+      sortKey: 'priority',
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.testCase.priority, priorityOptions);
         const priorityLabel =
@@ -628,10 +664,9 @@ export function TestCasesListCard({
             type="text"
             className="w-full pl-9 pr-3 py-2 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-colors"
             placeholder="Поиск по названию или ID тест-кейса..."
-            value={searchQuery}
+            value={localSearch}
             onChange={(e) => {
-              onSearchChange(e.target.value);
-              onPageChange(1);
+              setLocalSearch(e.target.value);
             }}
           />
         </div>
@@ -644,13 +679,9 @@ export function TestCasesListCard({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все статусы</SelectItem>
-              {Array.from(
-                new Set(
-                  ['NOT_RUN', ...statusOptions.map((option) => (option.value === 'SKIPPED' ? 'NOT_RUN' : option.value))]
-                )
-              ).map((status) => (
+              {(['PASSED', 'FAILED', 'BLOCKED', 'RETEST', 'NOT_RUN'] as const).map((status) => (
                 <SelectItem key={status} value={status}>
-                  {getStatusLabel(status)}
+                  {STATUS_LABELS[status] || status}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -744,6 +775,9 @@ export function TestCasesListCard({
             resizable={true}
             activeRowKey={activeTestCaseId}
             getRowKey={(row) => row.testCase.id}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSort={onSortChange}
           />
 
           <div className="mt-6">

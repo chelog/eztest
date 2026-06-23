@@ -62,6 +62,15 @@ export interface TestRun {
     blocked: number;
     skipped: number;
     retest: number;
+    perUserStats?: Array<{
+      userId: string;
+      name: string;
+      total: number;
+      passed: number;
+      failed: number;
+      blocked: number;
+      retest: number;
+    }>;
   };
   createdAt: string;
   startedAt?: string;
@@ -92,4 +101,13 @@ export interface TestRunStats {
   retest: number;
   pending: number;
   total: number;
+  perUserStats?: Array<{
+    userId: string;
+    name: string;
+    total: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    retest: number;
+  }>;
 }

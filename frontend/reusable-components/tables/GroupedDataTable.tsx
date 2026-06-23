@@ -1,13 +1,23 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, useRef, ReactNode } from 'react';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
-import { ChevronDown, LucideIcon } from 'lucide-react';
+import { ChevronDown, LucideIcon, Settings, Eye, EyeOff } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/frontend/reusable-elements/dropdowns/DropdownMenu';
 
 export interface ColumnDef<T> {
   key: string;
   label: string;
   width?: string;
+  minWidth?: number;
+  hideable?: boolean;
   render?: (row: T, index: number) => ReactNode;
   className?: string;
   align?: 'left' | 'center' | 'right';
@@ -47,11 +57,12 @@ export interface GroupedDataTableProps<T> {
   rowClassName?: string;
   emptyMessage?: string;
   gridTemplateColumns?: string;
+  resizable?: boolean;
 }
 
 /**
  * Fully reusable grouped data table component
- * 
+ *
  * @example
  * ```tsx
  * const columns: ColumnDef<TestCase>[] = [
@@ -59,7 +70,7 @@ export interface GroupedDataTableProps<T> {
  *   { key: 'title', label: 'Title', render: (row) => <span>{row.title}</span> },
  *   { key: 'priority', label: 'Priority', render: (row) => <PriorityBadge priority={row.priority} /> },
  * ];
- * 
+ *
  * <GroupedDataTable
  *   data={testCases}
  *   columns={columns}
@@ -88,8 +99,20 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   rowClassName = '',
   emptyMessage = 'No data available',
   gridTemplateColumns,
+  resizable = false,
 }: GroupedDataTableProps<T>) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  const [colWidths, setColWidths] = useState<Record<number, number>>({});
+  const resizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const hideableColumns = columns.filter((col) => col.hideable !== false);
+  const visibleColumns = columns.filter((col) => !hiddenColumns.has(col.key));
+  const visibleColumnIndices = columns
+    .map((col, idx) => ({ col, idx }))
+    .filter(({ col }) => !hiddenColumns.has(col.key))
+    .map(({ idx }) => idx);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
@@ -103,11 +126,56 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     });
   };
 
-  // Calculate grid template columns if not provided
+  const toggleColumnVisibility = (colKey: string) => {
+    setHiddenColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(colKey)) {
+        next.delete(colKey);
+      } else {
+        next.add(colKey);
+      }
+      return next;
+    });
+  };
+
+  const handleResizeStart = (visibleIdx: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const headerCells = headerRef.current?.children;
+    if (!headerCells) return;
+    const cellWidth = (headerCells[visibleIdx] as HTMLElement).offsetWidth;
+    const originalIdx = visibleColumnIndices[visibleIdx];
+
+    resizingRef.current = { colIdx: originalIdx, startX: e.clientX, startWidth: cellWidth };
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const { colIdx: ci, startX, startWidth } = resizingRef.current;
+      const minW = columns[ci].minWidth ?? 40;
+      const newWidth = Math.max(minW, startWidth + (ev.clientX - startX));
+      setColWidths((prev) => ({ ...prev, [ci]: newWidth }));
+    };
+
+    const onMouseUp = () => {
+      resizingRef.current = null;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  // Calculate grid template columns
   const getGridColumns = () => {
-    if (gridTemplateColumns) return gridTemplateColumns;
-    
-    const columnWidths = columns.map(col => col.width || '1fr');
+    if (gridTemplateColumns && !resizable && hiddenColumns.size === 0) return gridTemplateColumns;
+
+    const columnWidths = visibleColumns.map((col, idx) => {
+      const originalIdx = visibleColumnIndices[idx];
+      if (colWidths[originalIdx] !== undefined) return `${colWidths[originalIdx]}px`;
+      return col.width || '1fr';
+    });
     const actionColumn = actions ? '50px' : '';
     return [...columnWidths, actionColumn].filter(Boolean).join(' ');
   };
@@ -158,17 +226,27 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   // Render header row
   const renderHeader = () => (
     <div
+      ref={headerRef}
       className={`grid gap-3 px-3 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10 ${headerClassName}`}
       style={{ gridTemplateColumns: getGridColumns() }}
     >
-      {columns.map((col) => (
-        <div
-          key={col.key}
-          className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}
-        >
-          {col.label}
-        </div>
-      ))}
+      {visibleColumns.map((col, visibleIdx) => {
+        const isLastCol = visibleIdx === visibleColumns.length - 1 && !actions;
+        return (
+          <div
+            key={col.key}
+            className={`relative ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${resizable && !isLastCol ? 'group' : ''}`}
+          >
+            {col.label}
+            {resizable && !isLastCol && (
+              <div
+                className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize opacity-0 group-hover:opacity-100 hover:!opacity-100 bg-white/20 hover:bg-primary/60 rounded transition-colors z-10"
+                onMouseDown={(e) => handleResizeStart(visibleIdx, e)}
+              />
+            )}
+          </div>
+        );
+      })}
       {actions && <div></div>}
     </div>
   );
@@ -190,7 +268,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
         style={{ gridTemplateColumns: getGridColumns() }}
         onClick={() => onRowClick?.(row)}
       >
-        {columns.map((col) => (
+        {visibleColumns.map((col) => (
           <div
             key={col.key}
             className={`${col.className || ''} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
@@ -207,8 +285,8 @@ export function GroupedDataTable<T = Record<string, unknown>>({
                   icon: item.icon as LucideIcon,
                   onClick: () => item.onClick(row),
                   variant: item.variant,
-                  buttonName: typeof item.buttonName === 'function' 
-                    ? item.buttonName(row) 
+                  buttonName: typeof item.buttonName === 'function'
+                    ? item.buttonName(row)
                     : item.buttonName || item.label,
                 }))}
                 align={actions.align || 'end'}
@@ -279,6 +357,56 @@ export function GroupedDataTable<T = Record<string, unknown>>({
 
   return (
     <div className="space-y-0">
+      {/* Column visibility toolbar */}
+      {hideableColumns.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 mb-1">
+          <div className="text-xs font-semibold text-white/60">
+            {visibleColumns.length} видимых столбцов
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1.5 hover:bg-white/10 rounded transition-colors" title="Показать/скрыть столбцы">
+                <Settings className="w-4 h-4 text-white/60 hover:text-white/90" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium text-white/70">
+                Видимость столбцов
+              </div>
+              <DropdownMenuSeparator />
+              {hideableColumns.map((col) => (
+                <DropdownMenuCheckboxItem
+                  key={col.key}
+                  checked={!hiddenColumns.has(col.key)}
+                  onCheckedChange={() => toggleColumnVisibility(col.key)}
+                >
+                  {col.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+              {hideableColumns.length > 1 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setHiddenColumns(new Set())}
+                    className="text-xs"
+                  >
+                    <Eye className="w-3 h-3 mr-2" />
+                    Показать все
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setHiddenColumns(new Set(hideableColumns.map((c) => c.key)))}
+                    className="text-xs"
+                  >
+                    <EyeOff className="w-3 h-3 mr-2" />
+                    Скрыть все
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       {renderHeader()}
 
       {groupedData ? (
@@ -305,4 +433,3 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     </div>
   );
 }
-

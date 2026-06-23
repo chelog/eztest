@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import dropdownOptionService from '@/backend/services/dropdown-option/dropdown-option.service';
 import { TestRunMessages } from '@/backend/constants/static_messages';
@@ -395,6 +396,8 @@ export class TestRunService {
       executedById?: string;
       resultStatusSort?: 'asc' | 'desc' | 'passed_last';
       search?: string;
+      sortBy?: string;
+      sortDir?: 'asc' | 'desc';
     }
   ) {
     const safePage = Math.max(1, page);
@@ -437,10 +440,25 @@ export class TestRunService {
 
     const isPassedLast = filters?.resultStatusSort === 'passed_last';
     const isDefaultSort = !filters?.resultStatusSort;
-    const resultOrderBy =
-      !isPassedLast && filters?.resultStatusSort
-        ? [{ status: filters.resultStatusSort as 'asc' | 'desc' }, { executedAt: 'desc' as const }]
-        : [{ executedAt: 'desc' as const }];
+
+    const getSortOrderBy = (): Prisma.TestResultOrderByWithRelationInput[] => {
+      const dir = (filters?.sortDir || 'asc') as 'asc' | 'desc';
+      if (filters?.sortBy) {
+        switch (filters.sortBy) {
+          case 'tcId': return [{ testCase: { tcId: dir } }, { id: 'asc' as const }];
+          case 'title': return [{ testCase: { title: dir } }, { id: 'asc' as const }];
+          case 'priority': return [{ testCase: { priority: dir } }, { id: 'asc' as const }];
+          case 'executedAt': return [{ executedAt: dir }, { id: 'asc' as const }];
+          case 'executedBy': return [{ executedBy: { name: dir } }, { id: 'asc' as const }];
+          case 'status': return [{ status: dir }, { id: 'asc' as const }];
+        }
+      }
+      if (!isPassedLast && filters?.resultStatusSort && filters.resultStatusSort !== 'passed_last') {
+        return [{ status: filters.resultStatusSort as 'asc' | 'desc' }, { id: 'asc' as const }];
+      }
+      return [{ id: 'asc' as const }];
+    };
+    const resultOrderBy = getSortOrderBy();
 
     const resultInclude = {
       testCase: {
@@ -476,7 +494,7 @@ export class TestRunService {
     };
 
     // Default ordering: show not-run first, then all others, with correct pagination.
-    if (isDefaultSort && !filters?.resultStatus) {
+    if (isDefaultSort && !filters?.resultStatus && !filters?.sortBy) {
       const notRunWhere = { ...resultWhere, status: { in: ['NOT_RUN', 'SKIPPED'] } as { in: string[] } };
       const otherWhere = {
         ...resultWhere,
@@ -509,7 +527,7 @@ export class TestRunService {
           ? prisma.testResult.findMany({
               where: notRunWhere,
               include: resultInclude,
-              orderBy: [{ executedAt: 'desc' as const }],
+              orderBy: [{ id: 'asc' as const }],
               skip: notRunSkip,
               take: notRunTake,
             })
@@ -518,7 +536,7 @@ export class TestRunService {
           ? prisma.testResult.findMany({
               where: otherWhere,
               include: resultInclude,
-              orderBy: [{ executedAt: 'desc' as const }],
+              orderBy: [{ id: 'asc' as const }],
               skip: otherSkip,
               take: otherTake,
             })
@@ -563,7 +581,7 @@ export class TestRunService {
           ? prisma.testResult.findMany({
               where: nonPassedWhere,
               include: resultInclude,
-              orderBy: [{ executedAt: 'desc' as const }],
+              orderBy: [{ id: 'asc' as const }],
               skip: nonPassedSkip,
               take: nonPassedTake,
             })
@@ -572,7 +590,7 @@ export class TestRunService {
           ? prisma.testResult.findMany({
               where: passedWhere,
               include: resultInclude,
-              orderBy: [{ executedAt: 'desc' as const }],
+              orderBy: [{ id: 'asc' as const }],
               skip: passedSkip,
               take: passedTake,
             })
@@ -967,15 +985,18 @@ export class TestRunService {
    * Get test run statistics
    */
   async getTestRunStats(testRunId: string) {
-    const results = await prisma.testResult.groupBy({
-      by: ['status'],
-      where: {
-        testRunId,
-      },
-      _count: {
-        status: true,
-      },
-    });
+    const [results, userResultStats] = await Promise.all([
+      prisma.testResult.groupBy({
+        by: ['status'],
+        where: { testRunId },
+        _count: { status: true },
+      }),
+      prisma.testResult.groupBy({
+        by: ['executedById', 'status'],
+        where: { testRunId, status: { notIn: ['NOT_RUN', 'SKIPPED'] } },
+        _count: { status: true },
+      }),
+    ]);
 
     const stats = {
       total: 0,
@@ -1008,7 +1029,41 @@ export class TestRunService {
       }
     });
 
-    return stats;
+    // Build per-user stats
+    const userIds = [...new Set(userResultStats.map((s) => s.executedById))];
+    const users = userIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    const perUserMap: Record<string, { userId: string; name: string; total: number; passed: number; failed: number; blocked: number; retest: number }> = {};
+    userResultStats.forEach((stat) => {
+      if (!perUserMap[stat.executedById]) {
+        const user = users.find((u) => u.id === stat.executedById);
+        perUserMap[stat.executedById] = {
+          userId: stat.executedById,
+          name: user?.name || 'Unknown',
+          total: 0,
+          passed: 0,
+          failed: 0,
+          blocked: 0,
+          retest: 0,
+        };
+      }
+      perUserMap[stat.executedById].total += stat._count.status;
+      switch (stat.status) {
+        case 'PASSED': perUserMap[stat.executedById].passed += stat._count.status; break;
+        case 'FAILED': perUserMap[stat.executedById].failed += stat._count.status; break;
+        case 'BLOCKED': perUserMap[stat.executedById].blocked += stat._count.status; break;
+        case 'RETEST': perUserMap[stat.executedById].retest += stat._count.status; break;
+      }
+    });
+
+    const perUserStats = Object.values(perUserMap).sort((a, b) => b.total - a.total);
+
+    return { ...stats, perUserStats };
   }
 
   /**

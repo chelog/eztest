@@ -82,6 +82,7 @@ export function TestCaseTable({
       key: 'tcId',
       label: 'ID',
       width: '70px',
+      hideable: false,
       render: (row) => (
         <p className="text-xs font-mono text-white/70 truncate">{row.tcId}</p>
       ),
@@ -90,6 +91,8 @@ export function TestCaseTable({
       key: 'title',
       label: 'TITLE',
       className: 'min-w-0',
+      minWidth: 150,
+      hideable: false,
       render: (row) => (
         <div className="min-w-0 flex items-center gap-2">
           <div className="min-w-0 flex-1">
@@ -129,6 +132,8 @@ export function TestCaseTable({
       key: 'priority',
       label: 'PRIORITY',
       width: '100px',
+      minWidth: 80,
+      hideable: true,
       render: (row) => {
         const badgeProps = getDynamicBadgeProps(row.priority, priorityOptions);
         const priorityLabel = priorityOptions.find(opt => opt.value === row.priority)?.label || row.priority;
@@ -147,6 +152,8 @@ export function TestCaseTable({
       key: 'status',
       label: 'STATUS',
       width: '90px',
+      minWidth: 70,
+      hideable: true,
       render: (row) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = statusOptions.find(opt => opt.value === row.status)?.label || row.status;
@@ -165,6 +172,8 @@ export function TestCaseTable({
       key: 'owner',
       label: 'OWNER',
       width: '140px',
+      minWidth: 80,
+      hideable: true,
       render: (row) => (
         <div className="min-w-0">
           <HoverCard openDelay={200}>
@@ -189,6 +198,8 @@ export function TestCaseTable({
       key: 'runs',
       label: 'RUNS',
       width: '70px',
+      minWidth: 50,
+      hideable: true,
       render: (row) => (
         <span className="text-xs text-white/60">{row._count.results}</span>
       ),
@@ -249,7 +260,7 @@ export function TestCaseTable({
       grouped={groupedByModule}
       groupConfig={groupConfig}
       actions={actions}
-      gridTemplateColumns="70px 1fr 100px 90px 140px 70px 40px"
+      resizable={true}
       emptyMessage="No test cases available"
     />
   );
