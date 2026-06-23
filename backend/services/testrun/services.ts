@@ -403,7 +403,7 @@ export class TestRunService {
 
     const resultWhere: {
       testRunId: string;
-      status?: string | { in: string[] } | { not: string };
+      status?: string | { in: string[] } | { not: string } | { notIn: string[] };
       executedById?: string;
       testCase?: {
         OR: Array<{
@@ -436,6 +436,7 @@ export class TestRunService {
     }
 
     const isPassedLast = filters?.resultStatusSort === 'passed_last';
+    const isDefaultSort = !filters?.resultStatusSort;
     const resultOrderBy =
       !isPassedLast && filters?.resultStatusSort
         ? [{ status: filters.resultStatusSort as 'asc' | 'desc' }, { executedAt: 'desc' as const }]
@@ -473,6 +474,63 @@ export class TestRunService {
         },
       },
     };
+
+    // Default ordering: show not-run first, then all others, with correct pagination.
+    if (isDefaultSort && !filters?.resultStatus) {
+      const notRunWhere = { ...resultWhere, status: { in: ['NOT_RUN', 'SKIPPED'] } as { in: string[] } };
+      const otherWhere = {
+        ...resultWhere,
+        status: { notIn: ['NOT_RUN', 'SKIPPED'] } as { notIn: string[] },
+      };
+
+      const [testRun, notRunCount, otherCount] = await Promise.all([
+        prisma.testRun.findUnique({
+          where: { id: testRunId },
+          include: {
+            project: { select: { id: true, name: true, key: true } },
+            assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+            _count: { select: { results: true } },
+          },
+        }),
+        prisma.testResult.count({ where: notRunWhere }),
+        prisma.testResult.count({ where: otherWhere }),
+      ]);
+
+      if (!testRun) return null;
+
+      const filteredResultsCount = notRunCount + otherCount;
+      const notRunSkip = Math.min(skip, notRunCount);
+      const notRunTake = Math.max(0, Math.min(safeLimit, notRunCount - notRunSkip));
+      const otherSkip = Math.max(0, skip - notRunCount);
+      const otherTake = Math.max(0, safeLimit - notRunTake);
+
+      const [notRunResults, otherResults] = await Promise.all([
+        notRunTake > 0
+          ? prisma.testResult.findMany({
+              where: notRunWhere,
+              include: resultInclude,
+              orderBy: [{ executedAt: 'desc' as const }],
+              skip: notRunSkip,
+              take: notRunTake,
+            })
+          : [],
+        otherTake > 0 && otherSkip < otherCount
+          ? prisma.testResult.findMany({
+              where: otherWhere,
+              include: resultInclude,
+              orderBy: [{ executedAt: 'desc' as const }],
+              skip: otherSkip,
+              take: otherTake,
+            })
+          : [],
+      ]);
+
+      return {
+        ...testRun,
+        results: [...notRunResults, ...otherResults],
+        _count: { ...testRun._count, results: filteredResultsCount },
+      };
+    }
 
     // For passed_last: fetch non-PASSED first, then PASSED, with correct pagination
     if (isPassedLast && !filters?.resultStatus) {
