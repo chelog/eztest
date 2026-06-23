@@ -20,7 +20,6 @@ import { LinkedDefectsCard } from './subcomponents/LinkedDefectsCard';
 import { DeleteTestCaseDialog } from './subcomponents/DeleteTestCaseDialog';
 import { attachmentStorage } from '@/lib/attachment-storage';
 import type { Attachment } from '@/lib/s3';
-import { uploadFileToS3 } from '@/lib/s3';
 
 interface TestCaseDetailProps {
   testCaseId: string;
@@ -308,14 +307,14 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
     }
   };
 
-  const uploadPendingAttachments = async (): Promise<Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }>> => {
+  const uploadPendingAttachments = async (): Promise<Array<{ id: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }>> => {
     const pendingAttachments = commonAttachments.filter((att) => att.id.startsWith('pending-'));
-    
+
     if (pendingAttachments.length === 0) {
       return []; // No pending attachments
     }
 
-    const uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
+    const uploadedAttachments: Array<{ id: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
 
     // Upload all pending files
     for (const attachment of pendingAttachments) {
@@ -324,28 +323,23 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
       if (!file) continue;
 
       try {
-        const result = await uploadFileToS3({
-          file,
-          fieldName: attachment.fieldName || 'attachment',
-          entityType: 'testcase',
-          projectId: testCase?.project?.id,
-          onProgress: () => {}, // Silent upload
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('testCaseId', testCaseId);
+        fd.append('fieldName', attachment.fieldName || 'attachment');
+        const res = await fetch('/api/attachments/local-upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Upload failed');
+        }
+        const { data } = await res.json();
+        uploadedAttachments.push({
+          id: data.id,
+          s3Key: data.filename,
+          fileName: file.name,
+          mimeType: file.type,
+          fieldName: attachment.fieldName,
         });
-
-        if (!result.success) {
-          throw new Error(result.error || 'Upload failed');
-        }
-
-        // Store the uploaded attachment info for linking
-        if (result.attachment) {
-          uploadedAttachments.push({
-            id: result.attachment.id, // Use the database ID
-            s3Key: result.attachment.filename,
-            fileName: file.name,
-            mimeType: file.type,
-            fieldName: attachment.fieldName,
-          });
-        }
       } catch (error) {
         console.error('Failed to upload attachment:', error);
         throw error; // Throw error to stop save
@@ -544,20 +538,18 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
                   // @ts-expect-error - Access the File object
                   const file = att._pendingFile;
                   if (file) {
-                    const result = await uploadFileToS3({
-                      file,
-                      fieldName: att.fieldName || 'action',
-                      entityType: 'teststep',
-                      projectId: testCase?.project?.id,
-                      onProgress: () => {}, // Silent upload
-                    });
-                    if (result.success && result.attachment) {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('fieldName', att.fieldName || 'action');
+                    const res = await fetch('/api/attachments/local-upload', { method: 'POST', body: fd });
+                    if (res.ok) {
+                      const { data } = await res.json();
                       return {
-                        id: result.attachment.id,
-                        s3Key: result.attachment.filename,
+                        id: data.id,
+                        s3Key: data.filename,
                         fileName: file.name,
                         mimeType: file.type,
-                        fieldName: att.fieldName || 'action'
+                        fieldName: att.fieldName || 'action',
                       };
                     }
                   }

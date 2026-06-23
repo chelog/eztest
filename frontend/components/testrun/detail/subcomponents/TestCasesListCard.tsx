@@ -383,7 +383,7 @@ export function TestCasesListCard({
       sortKey: 'executedBy',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate" title={row.executedBy?.name || undefined}>
-          {row.status === 'NOT_RUN' || row.status === 'SKIPPED' ? '-' : row.executedBy?.name || '-'}
+          {row.executedBy?.name || '-'}
         </span>
       ),
     },

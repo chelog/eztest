@@ -577,10 +577,6 @@ export class TestRunService {
           testRunId: testRun.id,
           testCaseId,
           status: 'NOT_RUN',
-          // executedById is a required User FK. Attribute placeholder results to
-          // the run creator — i.e. the API key's owner for API-driven runs
-          // (request.userInfo.id flows here as createdById). Updated on execution.
-          executedById: data.createdById,
         })),
         skipDuplicates: true,
       });
@@ -716,7 +712,7 @@ export class TestRunService {
     testCaseId: string,
     data: {
       status: string;
-      executedById: string;
+      executedById?: string;
       duration?: number;
       comment?: string;
       errorMessage?: string;
@@ -732,7 +728,7 @@ export class TestRunService {
       },
       update: {
         status: data.status,
-        // Preserve existing executedById — only fall back to the saver if not pre-assigned
+        executedById: data.executedById,
         executedAt: new Date(),
         duration: data.duration,
         comment: data.comment,
@@ -912,7 +908,9 @@ export class TestRunService {
     });
 
     // Build per-user stats
-    const userIds = [...new Set(userResultStats.map((s) => s.executedById))];
+    const userIds = [...new Set(
+      userResultStats.map((s) => s.executedById).filter((id): id is string => id !== null)
+    )];
     const users = userIds.length > 0
       ? await prisma.user.findMany({
           where: { id: { in: userIds } },
@@ -922,6 +920,7 @@ export class TestRunService {
 
     const perUserMap: Record<string, { userId: string; name: string; total: number; passed: number; failed: number; blocked: number; retest: number }> = {};
     userResultStats.forEach((stat) => {
+      if (!stat.executedById) return;
       if (!perUserMap[stat.executedById]) {
         const user = users.find((u) => u.id === stat.executedById);
         perUserMap[stat.executedById] = {
