@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
@@ -12,7 +13,8 @@ import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageH
 import { HeaderWithFilters } from '@/frontend/reusable-components/layout/HeaderWithFilters';
 import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { TestRunsFilterCard } from './subcomponents/TestRunsFilterCard';
 import { TestRunCard } from './subcomponents/TestRunCard';
 import { TestRunsEmptyState } from './subcomponents/TestRunsEmptyState';
@@ -37,6 +39,7 @@ interface TestRunsListProps {
 
 export default function TestRunsList({ projectId }: TestRunsListProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { hasPermission: hasPermissionCheck, isLoading: permissionsLoading } = usePermissions();
 
   const [project, setProject] = useState<Project | null>(null);
@@ -54,12 +57,13 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     searchQuery: '',
     statusFilter: 'all',
     environmentFilter: 'all',
+    assignedToFilter: 'all',
   });
 
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
 
   useEffect(() => {
     fetchProject();
@@ -69,7 +73,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
 
   useEffect(() => {
     if (project) {
-      document.title = `Test Runs - ${project.name} | EZTest`;
+      document.title = `Тест-раны - ${project.name} | EZTest`;
     }
   }, [project]);
 
@@ -130,6 +134,13 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
       );
     }
 
+    // Assigned user filter
+    if (filters.assignedToFilter !== 'all') {
+      filtered = filtered.filter(
+        (tr) => tr.assignedTo?.id === filters.assignedToFilter
+      );
+    }
+
     setFilteredTestRuns(filtered);
     setCurrentPage(1);
   };
@@ -143,8 +154,8 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
   const handleTestRunCreated = (newTestRun: TestRun) => {
     setAlert({
       type: 'success',
-      title: 'Success',
-      message: `Test run "${newTestRun.name}" created successfully`,
+      title: 'Успешно',
+      message: `Тест-ран "${newTestRun.name}" успешно создан`,
     });
     setTimeout(() => setAlert(null), 5000);
     fetchTestRuns();
@@ -164,8 +175,8 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
         setSelectedTestRun(null);
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: `Test run "${deletedTestRunName}" deleted successfully`,
+          title: 'Успешно',
+          message: `Тест-ран "${deletedTestRunName}" успешно удален`,
         });
         setTimeout(() => setAlert(null), 5000);
         fetchTestRuns();
@@ -173,15 +184,15 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
         const data = await response.json();
         setAlert({
           type: 'error',
-          title: 'Failed to Delete Test Run',
-          message: data.error || 'Failed to delete test run',
+          title: 'Не удалось удалить тест-ран',
+          message: data.error || 'Не удалось удалить тест-ран',
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error deleting test run:', error);
@@ -204,7 +215,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <ButtonSecondary className="cursor-pointer flex items-center gap-2">
-                Manual / Automation
+                Ручные / Авто
                 <ChevronDown className="w-4 h-4" />
               </ButtonSecondary>
             </DropdownMenuTrigger>
@@ -212,16 +223,16 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
               {/* Always show automation setup guide */}
               <DropdownMenuItem onClick={() => setAutomationWizardOpen(true)}>
                 <BookOpen className="w-4 h-4" />
-                Automation Setup Guide
+                Гайд по автоматизации
               </DropdownMenuItem>
               {/* Always show import/export options */}
               <DropdownMenuItem onClick={() => setUploadXMLDialogOpen(true)}>
                 <FileCode className="w-4 h-4" />
-                Upload TestNG XML
+                Загрузить TestNG XML
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
                 <Upload className="w-4 h-4" />
-                Export Test Runs
+                Экспорт тест-ранов
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -232,11 +243,11 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     if (canCreateTestRun) {
       actions.push({
         type: 'action' as const,
-        label: 'New Test Run',
+        label: 'Новый тест-ран',
         icon: Plus,
         onClick: () => setCreateDialogOpen(true),
         variant: 'primary' as const,
-        buttonName: 'Test Runs List - New Test Run',
+        buttonName: 'Список тест-ранов - Новый тест-ран',
       });
     }
 
@@ -249,8 +260,32 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
   }, [canCreateTestRun, canReadTestRun]);
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test runs..." />;
+    return <Loader fullScreen text="Загрузка тест-ранов..." />;
   }
+
+  const assignedToOptions = [
+    { value: 'all', label: 'Все' },
+    ...Array.from(
+      new Map(
+        testRuns
+          .filter((run) => run.assignedTo?.id)
+          .map((run) => [run.assignedTo!.id, run.assignedTo!.name])
+      ).entries()
+    )
+      .sort(([aId, aName], [bId, bName]) => {
+        const currentUserId = session?.user?.id;
+        const aIsCurrent = !!currentUserId && aId === currentUserId;
+        const bIsCurrent = !!currentUserId && bId === currentUserId;
+
+        if (aIsCurrent && !bIsCurrent) return -1;
+        if (!aIsCurrent && bIsCurrent) return 1;
+        return aName.localeCompare(bName, 'ru');
+      })
+      .map(([value, label]) => ({
+        value,
+        label: session?.user?.id && value === session.user.id ? `${label} (Я)` : label,
+      })),
+  ];
 
   const totalPages = Math.max(1, Math.ceil(filteredTestRuns.length / itemsPerPage));
   const paginatedTestRuns = filteredTestRuns.slice(
@@ -269,9 +304,9 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
-              { label: project?.name || 'Loading...', href: `/projects/${projectId}` },
-              { label: 'Test Runs', href: `/projects/${projectId}/testruns` },
+              { label: 'Проекты', href: '/projects' },
+              { label: project?.name || 'Загрузка...', href: `/projects/${projectId}` },
+              { label: 'Тест-раны', href: `/projects/${projectId}/testruns` },
             ]}
           />
         }
@@ -284,13 +319,14 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
           header={
             <PageHeaderWithBadge
               badge={project?.key}
-              title="Test Runs"
-              description="Manage and track test execution progress"
+              title="Тест-раны"
+              description="Управляйте и отслеживайте прогресс выполнения тестов"
             />
           }
           filters={
             <TestRunsFilterCard
               filters={filters}
+              assignedToOptions={assignedToOptions}
               onSearchChange={(searchQuery) =>
                 setFilters({ ...filters, searchQuery })
               }
@@ -299,6 +335,9 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
               }
               onEnvironmentFilterChange={(environmentFilter) =>
                 setFilters({ ...filters, environmentFilter })
+              }
+              onAssignedToFilterChange={(assignedToFilter) =>
+                setFilters({ ...filters, assignedToFilter })
               }
             />
           }
@@ -375,17 +414,18 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
         <FileExportDialog
           open={exportDialogOpen}
           onOpenChange={setExportDialogOpen}
-          title="Export Test Runs"
-          description="Choose a format to export your test runs."
+          title="Экспорт тест-ранов"
+          description="Выберите формат для экспорта тест-ранов."
           exportOptions={{
             projectId,
             endpoint: `/api/projects/${projectId}/testruns/export`,
             filters: {
               status: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
               environment: filters.environmentFilter !== 'all' ? filters.environmentFilter : undefined,
+              assignedToId: filters.assignedToFilter !== 'all' ? filters.assignedToFilter : undefined,
             },
           }}
-          itemName="test runs"
+          itemName="тест-раны"
         />
 
         {/* Upload XML Dialog */}

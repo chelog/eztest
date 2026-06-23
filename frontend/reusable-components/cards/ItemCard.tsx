@@ -52,8 +52,8 @@ export const ItemCard = ({
         background: gradientStyle,
       }}
     >
-      {/* Inner container with page background color to block gradient */}
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+      {/* Theme-aware inner surface keeps dark cards in dark mode and light cards in light mode */}
+      <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
         <Card
           variant="glass"
           className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
@@ -64,12 +64,12 @@ export const ItemCard = ({
               {badges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
               <div className="overflow-hidden">
                 <CardTitle 
-                  className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-white"
+                  className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-foreground"
                   style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                 >
                   {title}
                 </CardTitle>
-                <CardDescription className={descriptionClassName || "line-clamp-1 text-sm text-white/60 min-h-5"}>
+                <CardDescription className={descriptionClassName || "line-clamp-1 text-sm text-muted-foreground min-h-5"}>
                   {description || ''}
                 </CardDescription>
               </div>
@@ -80,7 +80,7 @@ export const ItemCard = ({
 
         <CardContent className="py-2.5 px-3.5 flex-1 flex flex-col">
           <div className="flex-1">{content}</div>
-          {footer && <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-auto">{footer}</div>}
+          {footer && <div className="flex items-center justify-between pt-2 border-t border-border/60 mt-auto">{footer}</div>}
         </CardContent>
         </Card>
       </div>

@@ -11,7 +11,8 @@ import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-co
 import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageHeaderWithBadge';
 import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { TestSuite, Project } from './types';
 import { TestSuiteTreeItem } from './subcomponents/TestSuiteTreeItem';
 import { CreateTestSuiteDialog } from './subcomponents/CreateTestSuiteDialog';
@@ -35,7 +36,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
   const [expandedSuites, setExpandedSuites] = useState<Set<string>>(new Set());
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
 
   const canCreateTestSuite = hasPermissionCheck('testsuites:create');
 

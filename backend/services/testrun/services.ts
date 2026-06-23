@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import dropdownOptionService from '@/backend/services/dropdown-option/dropdown-option.service';
+import { TestRunMessages } from '@/backend/constants/static_messages';
 
 /**
  * Normalize test case identifier by converting underscores to hyphens
@@ -385,57 +387,136 @@ export class TestRunService {
   /**
    * Get a single test run by ID
    */
-  async getTestRunById(testRunId: string) {
-    return await prisma.testRun.findUnique({
-      where: { id: testRunId },
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-            key: true,
-          },
-        },
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
-        },
-        results: {
-          include: {
-            testCase: {
-              select: {
-                id: true,
-                tcId: true,
-                title: true,
-                description: true,
-                priority: true,
-                status: true,
-              },
+  async getTestRunById(
+    testRunId: string,
+    page = 1,
+    limit = 50,
+    filters?: {
+      resultStatus?: string;
+      executedById?: string;
+      search?: string;
+      sortBy?: string;
+      sortDir?: 'asc' | 'desc';
+    }
+  ) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.max(1, limit);
+    const skip = (safePage - 1) * safeLimit;
+
+    const resultWhere: {
+      testRunId: string;
+      status?: string | { in: string[] } | { not: string } | { notIn: string[] };
+      executedById?: string;
+      testCase?: {
+        OR: Array<{
+          title?: { contains: string; mode: 'insensitive' };
+          tcId?: { contains: string; mode: 'insensitive' };
+        }>;
+      };
+    } = {
+      testRunId,
+    };
+
+    if (filters?.resultStatus) {
+      resultWhere.status =
+        filters.resultStatus === 'NOT_RUN'
+          ? { in: ['NOT_RUN', 'SKIPPED'] }
+          : filters.resultStatus;
+    }
+
+    if (filters?.executedById) {
+      resultWhere.executedById = filters.executedById;
+    }
+
+    if (filters?.search) {
+      resultWhere.testCase = {
+        OR: [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          { tcId: { contains: filters.search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const getSortOrderBy = (): Prisma.TestResultOrderByWithRelationInput[] => {
+      const dir = (filters?.sortDir || 'asc') as 'asc' | 'desc';
+      if (filters?.sortBy) {
+        switch (filters.sortBy) {
+          case 'tcId': return [{ testCase: { tcId: dir } }, { id: 'asc' as const }];
+          case 'title': return [{ testCase: { title: dir } }, { id: 'asc' as const }];
+          case 'priority': return [{ testCase: { priority: dir } }, { id: 'asc' as const }];
+          case 'executedAt': return [{ executedAt: dir }, { id: 'asc' as const }];
+          case 'executedBy': return [{ executedBy: { name: dir } }, { id: 'asc' as const }];
+          case 'status': return [{ status: dir }, { id: 'asc' as const }];
+        }
+      }
+      return [{ id: 'asc' as const }];
+    };
+    const resultOrderBy = getSortOrderBy();
+
+    const resultInclude = {
+      testCase: {
+        select: {
+          id: true,
+          tcId: true,
+          title: true,
+          description: true,
+          preconditions: true,
+          priority: true,
+          status: true,
+          steps: {
+            select: {
+              id: true,
+              stepNumber: true,
+              action: true,
+              expectedResult: true,
             },
-            executedBy: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
+            orderBy: {
+              stepNumber: 'asc' as const,
             },
-          },
-          orderBy: {
-            executedAt: 'desc',
-          },
-        },
-        _count: {
-          select: {
-            results: true,
           },
         },
       },
-    });
+      executedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+        },
+      },
+    };
+
+    const [testRun, filteredResultsCount, paginatedResults] = await Promise.all([
+      prisma.testRun.findUnique({
+        where: { id: testRunId },
+        include: {
+          project: { select: { id: true, name: true, key: true } },
+          assignedTo: { select: { id: true, name: true, email: true, avatar: true } },
+          _count: { select: { results: true } },
+        },
+      }),
+      prisma.testResult.count({ where: resultWhere }),
+      prisma.testResult.findMany({
+        where: resultWhere,
+        include: resultInclude,
+        orderBy: resultOrderBy,
+        skip,
+        take: safeLimit,
+      }),
+    ]);
+
+    if (!testRun) {
+      return null;
+    }
+
+    return {
+      ...testRun,
+      results: paginatedResults,
+      _count: {
+        ...testRun._count,
+        results: filteredResultsCount,
+      },
+    };
   }
 
   /**
@@ -464,7 +545,7 @@ export class TestRunService {
     }
 
     // Create the test run
-    const status = data.status || 'PLANNED';
+    const status = data.status || 'IN_PROGRESS';
     const testRun = await prisma.testRun.create({
       data: {
         projectId: data.projectId,
@@ -474,6 +555,7 @@ export class TestRunService {
         assignedToId: data.assignedToId || null,
         environment: data.environment,
         status,
+        startedAt: status === 'IN_PROGRESS' ? new Date() : null,
         completedAt: status === 'COMPLETED' ? new Date() : null,
         createdById: data.createdById,
       },
@@ -495,11 +577,7 @@ export class TestRunService {
         data: testCaseIds.map((testCaseId) => ({
           testRunId: testRun.id,
           testCaseId,
-          status: 'SKIPPED',
-          // executedById is a required User FK. Attribute placeholder results to
-          // the run creator — i.e. the API key's owner for API-driven runs
-          // (request.userInfo.id flows here as createdById). Updated on execution.
-          executedById: data.createdById,
+          status: 'NOT_RUN',
         })),
         skipDuplicates: true,
       });
@@ -635,13 +713,15 @@ export class TestRunService {
     testCaseId: string,
     data: {
       status: string;
-      executedById: string;
+      executedById?: string;
       duration?: number;
       comment?: string;
       errorMessage?: string;
       stackTrace?: string;
     }
   ) {
+    const isNotRun = data.status === 'NOT_RUN';
+
     return await prisma.testResult.upsert({
       where: {
         testRunId_testCaseId: {
@@ -651,18 +731,20 @@ export class TestRunService {
       },
       update: {
         status: data.status,
-        executedById: data.executedById,
+        // NOT_RUN = preserve pre-assigned executor; any other status = person who changed it becomes executor
+        executedById: isNotRun ? undefined : data.executedById,
+        executedAt: new Date(),
         duration: data.duration,
         comment: data.comment,
         errorMessage: data.errorMessage,
         stackTrace: data.stackTrace,
-        executedAt: new Date(),
       },
       create: {
         testRunId,
         testCaseId,
         status: data.status,
-        executedById: data.executedById,
+        // On first creation with NOT_RUN (adding to run) — no executor yet
+        executedById: isNotRun ? null : data.executedById,
         duration: data.duration,
         comment: data.comment,
         errorMessage: data.errorMessage,
@@ -688,19 +770,116 @@ export class TestRunService {
     });
   }
 
+  async bulkUpdateTestResults(
+    testRunId: string,
+    testCaseIds: string[],
+    data: {
+      status?: string;
+      executedById?: string;
+      assignedToId?: string | null;
+      duration?: number;
+      comment?: string;
+      errorMessage?: string;
+      stackTrace?: string;
+    }
+  ) {
+    return await prisma.$transaction(async (tx) => {
+      if (data.assignedToId !== undefined) {
+        await tx.testRun.update({
+          where: { id: testRunId },
+          data: {
+            assignedToId: data.assignedToId || null,
+          },
+        });
+      }
+
+      const updateData: Record<string, unknown> = {};
+
+      if (data.status !== undefined) {
+        updateData.status = data.status;
+        if (data.status !== 'NOT_RUN') {
+          updateData.executedAt = new Date();
+        }
+      }
+
+      if (data.executedById !== undefined) {
+        updateData.executedById = data.executedById;
+      }
+
+      if (data.status !== undefined) {
+        updateData.duration = data.duration;
+        updateData.comment = data.comment;
+        updateData.errorMessage = data.errorMessage;
+        updateData.stackTrace = data.stackTrace;
+      }
+
+      const updateResult = await tx.testResult.updateMany({
+        where: {
+          testRunId,
+          testCaseId: {
+            in: testCaseIds,
+          },
+        },
+        data: updateData,
+      });
+
+      return {
+        updatedCount: updateResult.count,
+      };
+    });
+  }
+
+  async bulkDeleteTestResults(testRunId: string, testCaseIds: string[], userRole: string) {
+    const testRun = await prisma.testRun.findUnique({
+      where: { id: testRunId },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!testRun) {
+      throw new Error(TestRunMessages.TestRunNotFound);
+    }
+
+    if (testRun.status === 'CANCELLED') {
+      throw new Error('Нельзя удалять тест-кейсы из отмененного тест-рана');
+    }
+
+    if (testRun.status === 'COMPLETED' && userRole !== 'ADMIN') {
+      throw new Error('Только администратор может удалять тест-кейсы из завершенного тест-рана');
+    }
+
+    const result = await prisma.testResult.deleteMany({
+      where: {
+        testRunId,
+        testCaseId: {
+          in: testCaseIds,
+        },
+      },
+    });
+
+    return {
+      deletedCount: result.count,
+    };
+  }
+
   /**
    * Get test run statistics
    */
   async getTestRunStats(testRunId: string) {
-    const results = await prisma.testResult.groupBy({
-      by: ['status'],
-      where: {
-        testRunId,
-      },
-      _count: {
-        status: true,
-      },
-    });
+    const [results, userResultStats] = await Promise.all([
+      prisma.testResult.groupBy({
+        by: ['status'],
+        where: { testRunId },
+        _count: { status: true },
+      }),
+      prisma.testResult.groupBy({
+        by: ['executedById', 'status'],
+        where: { testRunId, status: { notIn: ['NOT_RUN', 'SKIPPED'] } },
+        _count: { status: true },
+      }),
+    ]);
 
     const stats = {
       total: 0,
@@ -724,6 +903,7 @@ export class TestRunService {
           stats.blocked = result._count.status;
           break;
         case 'SKIPPED':
+        case 'NOT_RUN':
           stats.skipped = result._count.status;
           break;
         case 'RETEST':
@@ -732,7 +912,44 @@ export class TestRunService {
       }
     });
 
-    return stats;
+    // Build per-user stats
+    const userIds = [...new Set(
+      userResultStats.map((s) => s.executedById).filter((id): id is string => id !== null)
+    )];
+    const users = userIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    const perUserMap: Record<string, { userId: string; name: string; total: number; passed: number; failed: number; blocked: number; retest: number }> = {};
+    userResultStats.forEach((stat) => {
+      if (!stat.executedById) return;
+      if (!perUserMap[stat.executedById]) {
+        const user = users.find((u) => u.id === stat.executedById);
+        perUserMap[stat.executedById] = {
+          userId: stat.executedById,
+          name: user?.name || 'Unknown',
+          total: 0,
+          passed: 0,
+          failed: 0,
+          blocked: 0,
+          retest: 0,
+        };
+      }
+      perUserMap[stat.executedById].total += stat._count.status;
+      switch (stat.status) {
+        case 'PASSED': perUserMap[stat.executedById].passed += stat._count.status; break;
+        case 'FAILED': perUserMap[stat.executedById].failed += stat._count.status; break;
+        case 'BLOCKED': perUserMap[stat.executedById].blocked += stat._count.status; break;
+        case 'RETEST': perUserMap[stat.executedById].retest += stat._count.status; break;
+      }
+    });
+
+    const perUserStats = Object.values(perUserMap).sort((a, b) => b.total - a.total);
+
+    return { ...stats, perUserStats };
   }
 
   /**

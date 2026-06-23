@@ -6,7 +6,7 @@ import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { StatsGrid } from '@/frontend/reusable-components/data/StatsGrid';
 import { AvatarStack } from '@/frontend/reusable-components/users/AvatarStack';
-import { Folder, Settings, Users, Trash2, TestTube2, Play, FileText, Bug } from 'lucide-react';
+import { Folder, Settings, Users, Trash2, TestTube2, Play, FileText } from 'lucide-react';
 
 interface ProjectCardProps {
   project: {
@@ -28,7 +28,6 @@ interface ProjectCardProps {
       testCases: number;
       testRuns: number;
       testSuites: number;
-      defects?: number;
     };
   };
   onNavigate: (path: string) => void;
@@ -52,24 +51,24 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
     <ActionMenu
       items={[
         {
-          label: 'Open Project',
+          label: 'Открыть проект',
           icon: Folder,
           onClick: () => onNavigate(`/projects/${project.id}`),
         },
         {
-          label: 'Settings',
+          label: 'Настройки',
           icon: Settings,
           onClick: () => onNavigate(`/projects/${project.id}/settings`),
           show: canUpdate,
         },
         {
-          label: 'Manage Members',
+          label: 'Участники',
           icon: Users,
           onClick: () => onNavigate(`/projects/${project.id}/members`),
           show: canManageMembers,
         },
         {
-          label: 'Delete',
+          label: 'Удалить',
           icon: Trash2,
           onClick: onDelete,
           variant: 'destructive',
@@ -86,29 +85,23 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
         {
           icon: TestTube2,
           value: project._count?.testCases || 0,
-          label: 'Test Cases',
+          label: 'Тест-кейсы',
           iconColor: 'text-primary',
         },
         {
           icon: Play,
           value: project._count?.testRuns || 0,
-          label: 'Test Runs',
+          label: 'Тест-раны',
           iconColor: 'text-accent',
         },
         {
           icon: FileText,
           value: project._count?.testSuites || 0,
-          label: 'Test Suites',
+          label: 'Тест-сьюты',
           iconColor: 'text-purple-400',
         },
-        {
-          icon: Bug,
-          value: project._count?.defects || 0,
-          label: 'Defects',
-          iconColor: 'text-red-400',
-        },
       ]}
-      columns={4}
+      columns={3}
       gap="sm"
       className="mb-2.5"
     />
@@ -129,11 +122,11 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
           showCount={true}
         />
         <span className="text-xs text-white/60">
-          {project.members.length} member{project.members.length !== 1 ? 's' : ''}
+          {project.members.length} участник{project.members.length !== 1 ? 'а' : ''}
         </span>
       </div>
       <span className="text-xs text-white/50">
-        Updated {formatDateTime(project.updatedAt)}
+        Обновлен: {formatDateTime(project.updatedAt)}
       </span>
     </>
   );

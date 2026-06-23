@@ -16,7 +16,8 @@ import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageH
 import { HeaderWithFilters } from '@/frontend/reusable-components/layout/HeaderWithFilters';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Pagination } from '@/frontend/reusable-elements/pagination/Pagination';
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { TestCase, Project, Module } from './types';
 import { TestCaseTable } from './subcomponents/TestCaseTable';
@@ -56,7 +57,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_PAGE_SIZE);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
   const [totalPagesCount, setTotalPagesCount] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isPaginationChange, setIsPaginationChange] = useState(false);
@@ -82,7 +83,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
   useEffect(() => {
     if (project) {
-      document.title = `Test Cases - ${project.name} | EZTest`;
+      document.title = `Тест-кейсы - ${project.name} | EZTest`;
     }
   }, [project]);
 
@@ -181,8 +182,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const handleTestCaseCreated = (newTestCase: TestCase) => {
     setAlert({
       type: 'success',
-      title: 'Success',
-      message: `Test case "${newTestCase.title}" created successfully`,
+      title: 'Успешно',
+      message: `Тест-кейс "${newTestCase.title}" успешно создан`,
     });
     setTimeout(() => setAlert(null), 5000);
     setCurrentPage(1); // Navigate to page 1 to see the newly created test case
@@ -192,8 +193,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const handleModuleCreated = (newModule: Module) => {
     setAlert({
       type: 'success',
-      title: 'Success',
-      message: `Module "${newModule.name}" created successfully`,
+      title: 'Успешно',
+      message: `Папка "${newModule.name}" успешно создана`,
     });
     setTimeout(() => setAlert(null), 5000);
     setCreateModuleDialogOpen(false);
@@ -215,8 +216,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         setSelectedTestCase(null);
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: `Test case "${deletedTestCaseName}" deleted successfully`,
+          title: 'Успешно',
+          message: `Тест-кейс "${deletedTestCaseName}" успешно удален`,
         });
         setTimeout(() => setAlert(null), 5000);
         fetchTestCases();
@@ -224,15 +225,15 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         const data = await response.json();
         setAlert({
           type: 'error',
-          title: 'Failed to Delete Test Case',
-          message: data.error || 'Failed to delete test case',
+          title: 'Не удалось удалить тест-кейс',
+          message: data.error || 'Не удалось удалить тест-кейс',
         });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error deleting test case:', error);
@@ -263,18 +264,18 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <ButtonSecondary className="cursor-pointer flex items-center gap-2">
-                Add
+                Добавить
                 <ChevronDown className="w-4 h-4" />
               </ButtonSecondary>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={() => setCreateModuleDialogOpen(true)}>
                 <FolderPlus className="w-4 h-4" />
-                New Module
+                Новая папка
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4" />
-                New Test Case
+                Новый тест-кейс
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -289,18 +290,18 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <ButtonSecondary className="cursor-pointer flex items-center gap-2">
-                Migration
+                Миграция
                 <ChevronDown className="w-4 h-4" />
               </ButtonSecondary>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
                 <Import className="w-4 h-4" />
-                Import Test Cases
+                Импорт тест-кейсов
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setExportDialogOpen(true)}>
                 <Upload className="w-4 h-4" />
-                Export Test Cases
+                Экспорт тест-кейсов
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -317,7 +318,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   }, [canCreateTestCase, canImport]);
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test cases..." />;
+    return <Loader fullScreen text="Загрузка тест-кейсов..." />;
   }
 
   return (
@@ -332,9 +333,9 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
-              { label: project?.name || 'Loading...', href: `/projects/${projectId}` },
-              { label: 'Test Cases' }
+              { label: 'Проекты', href: '/projects' },
+              { label: project?.name || 'Загрузка...', href: `/projects/${projectId}` },
+              { label: 'Тест-кейсы' }
             ]}
           />
         }
@@ -347,7 +348,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           header={
             <PageHeaderWithBadge
               badge={project?.key}
-              title="Test Cases"
+              title="Тест-кейсы"
               description={project?.name}
             />
           }
@@ -370,7 +371,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       <div className="max-w-7xl mx-auto px-8 py-4">
         {/* Test Cases List */}
         {loading ? (
-          <Loader fullScreen={false} text="Loading test cases..." />
+          <Loader fullScreen={false} text="Загрузка тест-кейсов..." />
         ) : testCases.length === 0 && totalItems === 0 ? (
           <EmptyTestCaseState
             hasFilters={false}
@@ -436,11 +437,11 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         <FileImportDialog
           open={importDialogOpen}
           onOpenChange={setImportDialogOpen}
-          title="Import Test Cases"
-          description="Upload a CSV or Excel file to import multiple test cases at once."
+          title="Импорт тест-кейсов"
+          description="Загрузите CSV или Excel файл для массового импорта тест-кейсов."
           importEndpoint={`/api/projects/${projectId}/testcases/import`}
           templateEndpoint={`/api/projects/${projectId}/testcases/import/template`}
-          itemName="test cases"
+          itemName="тест-кейсы"
           onImportComplete={() => {
             fetchTestCases();
             setImportDialogOpen(false);
@@ -451,8 +452,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         <FileExportDialog
           open={exportDialogOpen}
           onOpenChange={setExportDialogOpen}
-          title="Export Test Cases"
-          description="Choose a format to export your test cases."
+          title="Экспорт тест-кейсов"
+          description="Выберите формат для экспорта тест-кейсов."
           exportOptions={{
             projectId,
             endpoint: `/api/projects/${projectId}/testcases/export`,
@@ -463,7 +464,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
               priority: priorityFilter !== 'all' ? priorityFilter : undefined,
             },
           }}
-          itemName="test cases"
+          itemName="тест-кейсы"
         />
       </div>
     </>

@@ -7,16 +7,20 @@ import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 
 interface TestRunsFilterCardProps {
   filters: TestRunFilters;
+  assignedToOptions: FilterOption[];
   onSearchChange: (search: string) => void;
   onStatusFilterChange: (status: string) => void;
   onEnvironmentFilterChange: (environment: string) => void;
+  onAssignedToFilterChange: (assignedToId: string) => void;
 }
 
 export function TestRunsFilterCard({
   filters,
+  assignedToOptions,
   onSearchChange,
   onStatusFilterChange,
   onEnvironmentFilterChange,
+  onAssignedToFilterChange,
 }: TestRunsFilterCardProps) {
   // Fetch dynamic dropdown options
   const { options: statusOptionsData } = useDropdownOptions('TestRun', 'status');
@@ -24,22 +28,22 @@ export function TestRunsFilterCard({
 
   // Map to FilterOption format with "All" option
   const statusOptions: FilterOption[] = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: 'Все статусы' },
     ...statusOptionsData.map(opt => ({ value: opt.value, label: opt.label })),
   ];
 
   const environmentOptions: FilterOption[] = [
-    { value: 'all', label: 'All Environments' },
+    { value: 'all', label: 'Все окружения' },
     ...environmentOptionsData.map(opt => ({ value: opt.value, label: opt.label })),
   ];
   return (
     <div className="mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="md:col-span-2">
           <SearchInput
             value={filters.searchQuery}
             onChange={onSearchChange}
-            placeholder="Search test runs..."
+            placeholder="Поиск тест-ранов..."
           />
         </div>
 
@@ -47,7 +51,7 @@ export function TestRunsFilterCard({
           <FilterDropdown
             value={filters.statusFilter}
             onValueChange={onStatusFilterChange}
-            placeholder="Status"
+            placeholder="Статус"
             options={statusOptions}
           />
         </div>
@@ -56,8 +60,17 @@ export function TestRunsFilterCard({
           <FilterDropdown
             value={filters.environmentFilter}
             onValueChange={onEnvironmentFilterChange}
-            placeholder="Environment"
+            placeholder="Окружение"
             options={environmentOptions}
+          />
+        </div>
+
+        <div>
+          <FilterDropdown
+            value={filters.assignedToFilter}
+            onValueChange={onAssignedToFilterChange}
+            placeholder="Назначен"
+            options={assignedToOptions}
           />
         </div>
       </div>
