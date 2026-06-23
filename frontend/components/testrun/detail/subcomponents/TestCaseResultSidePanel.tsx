@@ -356,8 +356,6 @@ export function TestCaseResultSidePanel({
   );
 }
 
-
-interface Member {
   id: string;
   name: string;
 }
