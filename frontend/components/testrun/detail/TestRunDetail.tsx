@@ -6,6 +6,7 @@ import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { FloatingAlert, FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { TestRunHeader } from './subcomponents/TestRunHeader';
 import { TestRunStatsCards } from './subcomponents/TestRunStatsCards';
+import { TestRunTeamStats } from './subcomponents/TestRunTeamStats';
 import { TestCasesListCard } from './subcomponents/TestCasesListCard';
 import { TestCaseResultSidePanel } from './subcomponents/TestCaseResultSidePanel';
 import { AddTestCasesDialog } from '@/frontend/components/common/dialogs/AddTestCasesDialog';
@@ -41,6 +42,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [createDefectDialogOpen, setCreateDefectDialogOpen] = useState(false);
   const [selectedTestCaseForDefect, setSelectedTestCaseForDefect] = useState<string | null>(null);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
+  const [selectedResultExecutedBy, setSelectedResultExecutedBy] = useState<{ id?: string; name: string } | null>(null);
+  const [projectMembers, setProjectMembers] = useState<Array<{ id: string; name: string }>>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [availableTestCases, setAvailableTestCases] = useState<TestCase[]>([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
@@ -64,7 +67,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [totalItems, setTotalItems] = useState(0);
   const [resultStatusFilter, setResultStatusFilter] = useState('all');
   const [resultOwnerFilter, setResultOwnerFilter] = useState('all');
-  const [resultStatusSort, setResultStatusSort] = useState<'none' | 'asc' | 'desc' | 'passed_last'>('none');
   const [searchQuery, setSearchQuery] = useState('');
   const [columnSortBy, setColumnSortBy] = useState<string | undefined>(undefined);
   const [columnSortDir, setColumnSortDir] = useState<'asc' | 'desc'>('asc');
@@ -145,10 +147,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         params.set('executedById', resultOwnerFilter);
       }
 
-      if (resultStatusSort !== 'none') {
-        params.set('resultStatusSort', resultStatusSort);
-      }
-
       if (searchQuery) {
         params.set('search', searchQuery);
       }
@@ -179,12 +177,12 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     } finally {
       setLoading(false);
     }
-  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, columnSortBy, columnSortDir, testRunId]);
+  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, searchQuery, columnSortBy, columnSortDir, testRunId]);
 
   useEffect(() => {
     fetchTestRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, resultStatusSort, searchQuery, columnSortBy, columnSortDir]);
+  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, searchQuery, columnSortBy, columnSortDir]);
 
   // Polling for real-time updates (30s interval, silent)
   const fetchTestRunRef = useRef(fetchTestRun);
@@ -212,6 +210,24 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       document.title = `${testRun.name} | EZTest`;
     }
   }, [testRun]);
+
+  useEffect(() => {
+    const projectId = testRun?.project?.id;
+    if (!projectId || projectMembers.length > 0) return;
+    fetch(`/api/projects/${projectId}/members`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.data) {
+          setProjectMembers(
+            data.data.map((m: { user: { id: string; name: string } }) => ({
+              id: m.user.id,
+              name: m.user.name,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [testRun?.project?.id, projectMembers.length]);
 
   const handleNameUpdate = async (name: string) => {
     const projectId = testRun?.project?.id;
@@ -360,6 +376,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     );
 
     setSelectedTestCase(testCase);
+    setSelectedResultExecutedBy(existingResult?.executedBy || null);
 
     setResultForm({
       status: existingResult?.status || '',
@@ -418,9 +435,25 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ testCaseIds: [selectedTestCase.id], executedById: currentUserId }),
     });
+    const me = projectMembers.find((m) => m.id === currentUserId);
+    if (me) setSelectedResultExecutedBy({ id: me.id, name: me.name });
     fetchTestRun(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTestCase, testRun?.project?.id, testRunId, currentUserId]);
+  }, [selectedTestCase, testRun?.project?.id, testRunId, currentUserId, projectMembers]);
+
+  const handleAssign = useCallback(async (userId: string) => {
+    if (!selectedTestCase || !testRun?.project?.id) return;
+    const projectId = testRun.project.id;
+    await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds: [selectedTestCase.id], executedById: userId }),
+    });
+    const member = projectMembers.find((m) => m.id === userId);
+    if (member) setSelectedResultExecutedBy({ id: member.id, name: member.name });
+    fetchTestRun(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTestCase, testRun?.project?.id, testRunId, projectMembers]);
 
   const handleSubmitResult = async () => {
     if (!selectedTestCase || !resultForm.status) {
@@ -884,6 +917,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testRun={testRun}
         />
 
+        <TestRunTeamStats stats={stats} />
+
         <TestCasesListCard
           testRunId={testRun.id}
           results={testRun.results}
@@ -898,7 +933,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           itemsPerPage={itemsPerPage}
           statusFilter={resultStatusFilter}
           ownerFilter={resultOwnerFilter}
-          statusSort={resultStatusSort}
           searchQuery={searchQuery}
           onStatusFilterChange={(value) => {
             setResultStatusFilter(value);
@@ -906,10 +940,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           }}
           onOwnerFilterChange={(value) => {
             setResultOwnerFilter(value);
-            setCurrentPage(1);
-          }}
-          onStatusSortChange={(value) => {
-            setResultStatusSort(value);
             setCurrentPage(1);
           }}
           onSearchChange={(value) => {
@@ -1032,9 +1062,13 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         testCase={selectedTestCase}
         projectId={testRun?.project?.id}
         formData={resultForm}
+        currentUserId={currentUserId}
+        executedBy={selectedResultExecutedBy}
+        members={projectMembers}
         onClose={() => {
           setResultDialogOpen(false);
           setSelectedTestCase(null);
+          setSelectedResultExecutedBy(null);
         }}
         onFormChange={(data) => {
           const filteredData = Object.fromEntries(
@@ -1045,6 +1079,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         onSave={handleSubmitResult}
         onAutoSave={handleAutoSave}
         onSelfAssign={handleSelfAssign}
+        onAssign={handleAssign}
         getStatusIcon={getResultIcon}
       />
 

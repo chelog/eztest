@@ -6,7 +6,13 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Textarea } from '@/frontend/reusable-elements/textareas/Textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/frontend/reusable-elements/dropdowns/Select';
 import { TestCase, ResultFormData } from '../types';
+
+interface Member {
+  id: string;
+  name: string;
+}
 
 interface TestCaseResultSidePanelProps {
   open: boolean;
@@ -15,11 +21,14 @@ interface TestCaseResultSidePanelProps {
   formData: ResultFormData;
   saving?: boolean;
   currentUserId?: string;
+  executedBy?: { id?: string; name: string } | null;
+  members?: Member[];
   onClose: () => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
   onSave: () => void;
   onAutoSave?: (status: string) => void;
   onSelfAssign?: () => void;
+  onAssign?: (userId: string) => void;
   getStatusIcon: (status?: string) => React.JSX.Element;
 }
 
@@ -72,11 +81,15 @@ export function TestCaseResultSidePanel({
   projectId,
   formData,
   saving = false,
+  currentUserId,
+  executedBy,
+  members = [],
   onClose,
   onFormChange,
   onSave,
   onAutoSave,
   onSelfAssign,
+  onAssign,
   getStatusIcon,
 }: TestCaseResultSidePanelProps) {
   if (!open || !testCase) {
@@ -195,18 +208,40 @@ export function TestCaseResultSidePanel({
             </div>
           </div>
 
-          {onSelfAssign && (
-            <div className="space-y-1">
-              <Button
-                variant="glass"
-                size="sm"
-                className="w-full flex items-center gap-2 justify-center"
-                onClick={onSelfAssign}
-                disabled={saving}
-              >
-                <UserCheck className="w-4 h-4" />
-                Назначить на себя
-              </Button>
+          {(onSelfAssign || onAssign) && members.length > 0 && (
+            <div className="space-y-2">
+              <Label>Исполнитель</Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={executedBy?.id || ''}
+                  onValueChange={(v) => onAssign?.(v)}
+                  disabled={saving}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Не назначен" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {onSelfAssign && currentUserId && executedBy?.id !== currentUserId && (
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    className="flex-shrink-0 flex items-center gap-1"
+                    onClick={onSelfAssign}
+                    disabled={saving}
+                    title="Назначить на себя"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    На себя
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 

@@ -57,11 +57,9 @@ interface TestCasesListCardProps {
   itemsPerPage: number;
   statusFilter: string;
   ownerFilter: string;
-  statusSort: 'none' | 'asc' | 'desc' | 'passed_last';
   searchQuery: string;
   onStatusFilterChange: (value: string) => void;
   onOwnerFilterChange: (value: string) => void;
-  onStatusSortChange: (value: 'none' | 'asc' | 'desc' | 'passed_last') => void;
   onSearchChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (items: number) => void;
@@ -111,11 +109,9 @@ export function TestCasesListCard({
   itemsPerPage,
   statusFilter,
   ownerFilter,
-  statusSort,
   searchQuery,
   onStatusFilterChange,
   onOwnerFilterChange,
-  onStatusSortChange,
   onSearchChange,
   onPageChange,
   onItemsPerPageChange,
@@ -706,21 +702,6 @@ export function TestCasesListCard({
               ))}
             </SelectContent>
           </Select>
-
-          <Select
-            value={statusSort}
-            onValueChange={(v) => onStatusSortChange(v as 'none' | 'asc' | 'desc' | 'passed_last')}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Сортировка по статусу" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Без сортировки</SelectItem>
-              <SelectItem value="passed_last">Пройденные в конец</SelectItem>
-              <SelectItem value="asc">Статус: A-Z</SelectItem>
-              <SelectItem value="desc">Статус: Z-A</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -763,7 +744,6 @@ export function TestCasesListCard({
             onClick={() => {
               onStatusFilterChange('all');
               onOwnerFilterChange('all');
-              onStatusSortChange('none');
               onSearchChange('');
             }}
           >

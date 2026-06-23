@@ -43,7 +43,6 @@ export class TestRunController {
     filters?: {
       resultStatus?: string;
       executedById?: string;
-      resultStatusSort?: 'asc' | 'desc' | 'passed_last';
       search?: string;
       sortBy?: string;
       sortDir?: 'asc' | 'desc';
