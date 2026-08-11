@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, ReactNode } from 'react';
+import Link from 'next/link';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { ChevronDown, LucideIcon, Settings, Eye, EyeOff } from 'lucide-react';
 import {
@@ -28,6 +29,7 @@ export interface GroupConfig<T> {
   getGroupName: (groupId: string, row?: T) => string;
   getGroupCount?: (groupId: string) => number | undefined;
   onGroupClick?: (groupId: string) => void;
+  getGroupHref?: (groupId: string) => string | undefined;
   renderGroupHeader?: (groupId: string, groupName: string, count: number) => ReactNode;
   emptyGroups?: Array<{ id: string; name: string; count?: number }>;
 }
@@ -50,6 +52,7 @@ export interface GroupedDataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   onRowClick?: (row: T) => void;
+  getRowHref?: (row: T) => string | undefined;
   grouped?: boolean;
   groupConfig?: GroupConfig<T>;
   actions?: ActionConfig<T>;
@@ -92,6 +95,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   data,
   columns,
   onRowClick,
+  getRowHref,
   grouped = false,
   groupConfig,
   actions,
@@ -259,15 +263,13 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       return true;
     }) || [];
 
-    return (
-      <div
-        key={index}
-        className={`grid gap-3 px-3 py-1.5 cursor-pointer transition-colors items-center text-sm rounded-sm hover:bg-accent/20 ${
-          index % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
-        } ${rowClassName}`}
-        style={{ gridTemplateColumns: getGridColumns() }}
-        onClick={() => onRowClick?.(row)}
-      >
+    const rowHref = getRowHref?.(row);
+    const rowClass = `grid gap-3 px-3 py-1.5 cursor-pointer transition-colors items-center text-sm rounded-sm hover:bg-accent/20 ${
+      index % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
+    } ${rowClassName}`;
+
+    const cells = (
+      <>
         {visibleColumns.map((col) => (
           <div
             key={col.key}
@@ -295,6 +297,35 @@ export function GroupedDataTable<T = Record<string, unknown>>({
             )}
           </div>
         )}
+      </>
+    );
+
+    if (rowHref) {
+      return (
+        <Link
+          key={index}
+          href={rowHref}
+          className={rowClass}
+          style={{ gridTemplateColumns: getGridColumns() }}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest('button, [role="button"]')) {
+              e.preventDefault();
+            }
+          }}
+        >
+          {cells}
+        </Link>
+      );
+    }
+
+    return (
+      <div
+        key={index}
+        className={rowClass}
+        style={{ gridTemplateColumns: getGridColumns() }}
+        onClick={() => onRowClick?.(row)}
+      >
+        {cells}
       </div>
     );
   };
@@ -323,16 +354,30 @@ export function GroupedDataTable<T = Record<string, unknown>>({
           />
           <span className="min-w-0 flex-1 overflow-hidden max-w-[200px]">
             {groupConfig?.onGroupClick ? (
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  groupConfig.onGroupClick?.(groupId);
-                }}
-                className="text-sm font-semibold text-blue-400 hover:text-blue-300 cursor-pointer truncate block"
-                title={groupName}
-              >
-                {groupName}
-              </span>
+              (() => {
+                const groupHref = groupConfig.getGroupHref?.(groupId);
+                return groupHref ? (
+                  <Link
+                    href={groupHref}
+                    className="text-sm font-semibold text-blue-400 hover:text-blue-300 cursor-pointer truncate block"
+                    title={groupName}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {groupName}
+                  </Link>
+                ) : (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      groupConfig.onGroupClick?.(groupId);
+                    }}
+                    className="text-sm font-semibold text-blue-400 hover:text-blue-300 cursor-pointer truncate block"
+                    title={groupName}
+                  >
+                    {groupName}
+                  </span>
+                );
+              })()
             ) : (
               <span className="text-sm font-semibold text-white/80 truncate block" title={groupName}>
                 {groupName}

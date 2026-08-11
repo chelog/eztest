@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
+  getRowHref?: (row: T) => string;
   isLoading?: boolean;
   emptyMessage?: string;
   rowClassName?: string | ((row: T) => string);
@@ -44,6 +46,7 @@ export function DataTable<T>({
   columns,
   data,
   onRowClick,
+  getRowHref,
   isLoading = false,
   emptyMessage = 'No data available',
   rowClassName = 'cursor-pointer hover:bg-white/5',
@@ -246,18 +249,72 @@ export function DataTable<T>({
           {data.map((row, idx) => {
             const rowKey = getRowKey?.(row);
             const isActive = activeRowKey !== undefined && rowKey === activeRowKey;
+            const rowHref = getRowHref?.(row);
+
+            const rowClass = `grid gap-0 px-3 py-2.5 transition-colors items-center text-sm rounded-sm ${
+              isActive
+                ? 'bg-primary/20 ring-1 ring-inset ring-primary/40'
+                : idx % 2 === 0
+                ? 'bg-transparent hover:bg-accent/20'
+                : 'bg-white/[0.04] border-b border-white/10 hover:bg-accent/20'
+            } ${idx === data.length - 1 ? 'rounded-b-md' : ''} ${
+              rowHref || onRowClick ? 'cursor-pointer' : ''
+            } ${getRowClass(row)}`;
+
+            const cells = visibleColumns.map((col, visibleIdx) => {
+              const isLastColumn = visibleIdx === visibleColumns.length - 1;
+              return (
+                <div
+                  key={`${idx}-${String(col.key)}`}
+                  className={`overflow-hidden px-3 py-1 min-w-0 ${
+                    col.align === 'right'
+                      ? 'text-right'
+                      : col.align === 'center'
+                      ? 'text-center'
+                      : col.className
+                  } ${!isLastColumn ? 'border-r border-white/5' : ''}`}
+                >
+                  {col.render
+                    ? col.render(
+                        (row as Record<string, unknown>)[String(col.key)] as unknown,
+                        row
+                      )
+                    : String(
+                        (row as Record<string, unknown>)[String(col.key)] ?? ''
+                      )}
+                </div>
+              );
+            });
+
+            if (rowHref) {
+              return (
+                <Link
+                  key={idx}
+                  href={rowHref}
+                  className={rowClass}
+                  style={{ gridTemplateColumns: gridColumns }}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) {
+                      e.preventDefault();
+                      return;
+                    }
+                    // Left-click with an onRowClick handler: call it instead of navigating
+                    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && onRowClick) {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                    // Middle/ctrl-click: browser handles → opens in new tab
+                  }}
+                >
+                  {cells}
+                </Link>
+              );
+            }
+
             return (
               <div
                 key={idx}
-                className={`grid gap-0 px-3 py-2.5 transition-colors items-center text-sm rounded-sm ${
-                  isActive
-                    ? 'bg-primary/20 ring-1 ring-inset ring-primary/40'
-                    : idx % 2 === 0
-                    ? 'bg-transparent hover:bg-accent/20'
-                    : 'bg-white/[0.04] border-b border-white/10 hover:bg-accent/20'
-                } ${idx === data.length - 1 ? 'rounded-b-md' : ''} ${
-                  onRowClick ? 'cursor-pointer' : ''
-                } ${getRowClass(row)}`}
+                className={rowClass}
                 style={{ gridTemplateColumns: gridColumns }}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) {
@@ -266,30 +323,7 @@ export function DataTable<T>({
                   onRowClick?.(row);
                 }}
               >
-                {visibleColumns.map((col, visibleIdx) => {
-                  const isLastColumn = visibleIdx === visibleColumns.length - 1;
-                  return (
-                    <div
-                      key={`${idx}-${String(col.key)}`}
-                      className={`overflow-hidden px-3 py-1 min-w-0 ${
-                        col.align === 'right'
-                          ? 'text-right'
-                          : col.align === 'center'
-                          ? 'text-center'
-                          : col.className
-                      } ${!isLastColumn ? 'border-r border-white/5' : ''}`}
-                    >
-                      {col.render
-                        ? col.render(
-                            (row as Record<string, unknown>)[String(col.key)] as unknown,
-                            row
-                          )
-                        : String(
-                            (row as Record<string, unknown>)[String(col.key)] ?? ''
-                          )}
-                    </div>
-                  );
-                })}
+                {cells}
               </div>
             );
           })}

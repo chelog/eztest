@@ -709,6 +709,7 @@ export function TestCasesListCard({
             data={tableData}
             rowClassName="cursor-pointer"
             onRowClick={(row) => onExecuteTestCase(row.testCase)}
+            getRowHref={(row) => `/projects/${projectId}/testcases/${row.testCase.id}`}
             emptyMessage="В этом запуске нет тест-кейсов"
             resizable={true}
             activeRowKey={activeTestCaseId}
