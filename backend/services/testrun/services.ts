@@ -463,6 +463,12 @@ export class TestRunService {
           preconditions: true,
           priority: true,
           status: true,
+          module: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           steps: {
             select: {
               id: true,
@@ -669,6 +675,12 @@ export class TestRunService {
                 description: true,
                 priority: true,
                 status: true,
+                module: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             executedBy: {
