@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRef, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +57,7 @@ export function DataTable<T>({
   sortDir,
   onSort,
 }: DataTableProps<T>) {
+  const router = useRouter();
   const [colWidths, setColWidths] = useState<Record<number, number>>({});
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   const resizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
@@ -288,26 +289,31 @@ export function DataTable<T>({
 
             if (rowHref) {
               return (
-                <Link
+                <div
                   key={idx}
-                  href={rowHref}
                   className={rowClass}
                   style={{ gridTemplateColumns: gridColumns }}
                   onClick={(e) => {
-                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) {
-                      e.preventDefault();
+                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) return;
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && onRowClick) {
+                      onRowClick(row);
                       return;
                     }
-                    // Left-click with an onRowClick handler: call it instead of navigating
-                    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && onRowClick) {
-                      e.preventDefault();
-                      onRowClick(row);
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      window.open(rowHref, '_blank');
+                      return;
                     }
-                    // Middle/ctrl-click: browser handles → opens in new tab
+                    router.push(rowHref);
+                  }}
+                  onAuxClick={(e) => {
+                    if (e.button !== 1) return;
+                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) return;
+                    e.preventDefault();
+                    window.open(rowHref, '_blank');
                   }}
                 >
                   {cells}
-                </Link>
+                </div>
               );
             }
 
