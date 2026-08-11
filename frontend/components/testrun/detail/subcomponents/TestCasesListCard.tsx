@@ -104,6 +104,15 @@ export function TestCasesListCard({
       ),
     },
     {
+      key: 'module',
+      label: 'Folder',
+      render: (_, row: ResultRow) => (
+        <span className="text-white/70 text-sm">
+          {row.testCase.module?.name || '-'}
+        </span>
+      ),
+    },
+    {
       key: 'priority',
       label: 'Priority',
       render: (_, row: ResultRow) => {
@@ -303,7 +312,7 @@ export function TestCasesListCard({
           columns={columns}
           data={tableData}
           rowClassName="cursor-pointer hover:bg-accent/20"
-          onRowClick={(row) => router.push(`/projects/${projectId}/testcases/${row.testCase.id}`)}
+          getRowHref={(row) => `/projects/${projectId}/testcases/${row.testCase.id}`}
           emptyMessage="No test cases in this run"
         />
       )}

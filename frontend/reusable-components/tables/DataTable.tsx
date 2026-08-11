@@ -1,4 +1,7 @@
-﻿import * as React from 'react';
+﻿'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface ColumnDef<T> {
   key: keyof T | string;
@@ -12,6 +15,7 @@ export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
+  getRowHref?: (row: T) => string;
   isLoading?: boolean;
   emptyMessage?: string;
   rowClassName?: string;
@@ -36,10 +40,13 @@ export function DataTable<T>({
   columns,
   data,
   onRowClick,
+  getRowHref,
   isLoading = false,
   emptyMessage = 'No data available',
   rowClassName = 'cursor-pointer hover:bg-white/5',
 }: DataTableProps<T>) {
+  const router = useRouter();
+
   // Calculate grid columns - use auto for flexible sizing
   const gridColumns = columns.map(() => '1fr').join(' ');
 
@@ -71,35 +78,65 @@ export function DataTable<T>({
           </div>
 
           {/* Data Rows */}
-          {data.map((row, idx) => (
-            <div
-              key={idx}
-              className={`grid gap-3 px-3 py-2.5 transition-colors items-center text-sm rounded-sm hover:bg-accent/20 ${
-                idx % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
-              } ${
-                idx === data.length - 1 ? 'rounded-b-md' : ''
-              } ${
-                onRowClick ? 'cursor-pointer' : ''
-              } ${rowClassName || ''}`}
-              style={{ gridTemplateColumns: gridColumns }}
-              onClick={(e) => {
-                // Prevent row click if clicking on a button or interactive element
-                if ((e.target as HTMLElement).closest('button, [role="button"]')) {
-                  return;
-                }
-                onRowClick?.(row);
-              }}
-            >
-              {columns.map((col, colIdx) => (
+          {data.map((row, idx) => {
+            const rowHref = getRowHref?.(row);
+            const rowClass = `grid gap-3 px-3 py-2.5 transition-colors items-center text-sm rounded-sm hover:bg-accent/20 ${
+              idx % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
+            } ${
+              idx === data.length - 1 ? 'rounded-b-md' : ''
+            } ${
+              rowHref || onRowClick ? 'cursor-pointer' : ''
+            } ${rowClassName || ''}`;
+
+            const cells = columns.map((col, colIdx) => (
+              <div
+                key={`${idx}-${colIdx}`}
+                className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : col.className}
+              >
+                {col.render ? col.render((row as Record<string, unknown>)[String(col.key)] as unknown, row) : String((row as Record<string, unknown>)[String(col.key)])}
+              </div>
+            ));
+
+            if (rowHref) {
+              return (
                 <div
-                  key={`${idx}-${colIdx}`}
-                  className={col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : col.className}
+                  key={idx}
+                  className={rowClass}
+                  style={{ gridTemplateColumns: gridColumns }}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, [role="button"], a')) return;
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      window.open(rowHref, '_blank');
+                      return;
+                    }
+                    router.push(rowHref);
+                  }}
+                  onAuxClick={(e) => {
+                    if (e.button !== 1) return;
+                    if ((e.target as HTMLElement).closest('button, [role="button"], a')) return;
+                    e.preventDefault();
+                    window.open(rowHref, '_blank');
+                  }}
                 >
-                  {col.render ? col.render((row as Record<string, unknown>)[String(col.key)] as unknown, row) : String((row as Record<string, unknown>)[String(col.key)])}
+                  {cells}
                 </div>
-              ))}
-            </div>
-          ))}
+              );
+            }
+
+            return (
+              <div
+                key={idx}
+                className={rowClass}
+                style={{ gridTemplateColumns: gridColumns }}
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button, [role="button"]')) return;
+                  onRowClick?.(row);
+                }}
+              >
+                {cells}
+              </div>
+            );
+          })}
         </>
       )}
     </div>

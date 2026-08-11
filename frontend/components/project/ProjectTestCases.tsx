@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
@@ -67,7 +67,6 @@ interface ProjectTestCasesProps {
 }
 
 export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
-  const router = useRouter();
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [filteredTestCases, setFilteredTestCases] = useState<TestCase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -435,14 +434,14 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTestCases.map((testCase) => (
+            <div key={testCase.id} className="relative">
+            <Link href={`/testcases/${testCase.id}`} className="block">
             <Card
-              key={testCase.id}
               className="glass cursor-pointer hover:border-blue-500/50 transition-colors"
-              onClick={() => router.push(`/testcases/${testCase.id}`)}
             >
               <CardHeader className="pb-2 pt-3 px-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0 pr-8">
                     <h3 className="text-lg font-semibold text-white mb-2 truncate">
                       {testCase.title}
                     </h3>
@@ -461,21 +460,6 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                       </Badge>
                     </div>
                   </div>
-                  <ActionMenu
-                    items={[
-                      {
-                        label: 'Delete',
-                        icon: Trash2,
-                        onClick: () => {
-                          setSelectedTestCase(testCase);
-                          setDeleteDialogOpen(true);
-                        },
-                        variant: 'destructive',
-                      },
-                    ]}
-                    align="end"
-                    iconSize="w-4 h-4"
-                  />
                 </div>
               </CardHeader>
               
@@ -513,6 +497,26 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                 </div>
               </CardContent>
             </Card>
+            </Link>
+            {/* ActionMenu positioned outside the Link — not inside <a> */}
+            <div className="absolute top-3 right-3 z-10">
+              <ActionMenu
+                items={[
+                  {
+                    label: 'Delete',
+                    icon: Trash2,
+                    onClick: () => {
+                      setSelectedTestCase(testCase);
+                      setDeleteDialogOpen(true);
+                    },
+                    variant: 'destructive',
+                  },
+                ]}
+                align="end"
+                iconSize="w-4 h-4"
+              />
+            </div>
+            </div>
           ))}
         </div>
       )}
