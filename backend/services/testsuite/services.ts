@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { BadRequestException } from '@/backend/utils/exceptions';
 
 const prisma = new PrismaClient();
 
@@ -169,6 +170,16 @@ export class TestSuiteService {
     parentId?: string;
     order?: number;
   }) {
+    if (data.parentId) {
+      const parent = await prisma.testSuite.findUnique({
+        where: { id: data.parentId },
+        select: { projectId: true },
+      });
+      if (!parent || parent.projectId !== data.projectId) {
+        throw new BadRequestException('Parent suite not found or does not belong to this project');
+      }
+    }
+
     const suite = await prisma.testSuite.create({
       data: {
         projectId: data.projectId,
@@ -200,6 +211,23 @@ export class TestSuiteService {
       order?: number;
     }
   ) {
+    if (data.parentId !== undefined) {
+      if (data.parentId === suiteId) {
+        throw new BadRequestException('A suite cannot be its own parent');
+      }
+      let currentId: string | null = data.parentId;
+      while (currentId) {
+        if (currentId === suiteId) {
+          throw new BadRequestException('Cannot set a descendant as parent (cycle detected)');
+        }
+        const ancestor: { parentId: string | null } | null = await prisma.testSuite.findUnique({
+          where: { id: currentId },
+          select: { parentId: true },
+        });
+        currentId = ancestor?.parentId ?? null;
+      }
+    }
+
     const suite = await prisma.testSuite.update({
       where: { id: suiteId },
       data: {

@@ -11,6 +11,15 @@ export interface CreateTestSuiteDialogProps {
   onTestSuiteCreated: (suite: TestSuite) => void;
 }
 
+function buildPathLabel(suiteId: string, suites: TestSuite[], visited = new Set<string>()): string {
+  if (visited.has(suiteId)) return '...';
+  visited.add(suiteId);
+  const suite = suites.find(s => s.id === suiteId);
+  if (!suite) return '';
+  if (!suite.parentId) return suite.name;
+  return buildPathLabel(suite.parentId, suites, visited) + ' > ' + suite.name;
+}
+
 export function CreateTestSuiteDialog({
   projectId,
   testSuites,
@@ -18,13 +27,10 @@ export function CreateTestSuiteDialog({
   onOpenChange,
   onTestSuiteCreated,
 }: CreateTestSuiteDialogProps) {
-  // Get parent suite options - only root level suites
-  const parentOptions = testSuites
-    .filter(s => !s.parentId)
-    .map((suite) => ({
-      value: suite.id,
-      label: suite.name,
-    }));
+  const parentOptions = testSuites.map((suite) => ({
+    value: suite.id,
+    label: buildPathLabel(suite.id, testSuites),
+  }));
 
   const fields: BaseDialogField[] = [
     {
