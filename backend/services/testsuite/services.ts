@@ -215,11 +215,36 @@ export class TestSuiteService {
       if (data.parentId === suiteId) {
         throw new BadRequestException('A suite cannot be its own parent');
       }
+
+      if (data.parentId !== null) {
+        const currentSuite = await prisma.testSuite.findUnique({
+          where: { id: suiteId },
+          select: { projectId: true },
+        });
+        if (!currentSuite) {
+          throw new BadRequestException('Test suite not found');
+        }
+
+        const parent = await prisma.testSuite.findUnique({
+          where: { id: data.parentId },
+          select: { projectId: true },
+        });
+        if (!parent) {
+          throw new BadRequestException('Parent suite not found');
+        }
+        if (parent.projectId !== currentSuite.projectId) {
+          throw new BadRequestException('Parent suite does not belong to the same project');
+        }
+      }
+
+      const visited = new Set<string>();
       let currentId: string | null = data.parentId;
       while (currentId) {
         if (currentId === suiteId) {
           throw new BadRequestException('Cannot set a descendant as parent (cycle detected)');
         }
+        if (visited.has(currentId)) break;
+        visited.add(currentId);
         const ancestor: { parentId: string | null } | null = await prisma.testSuite.findUnique({
           where: { id: currentId },
           select: { parentId: true },
