@@ -791,7 +791,7 @@ export class TestRunService {
       update: {
         status: data.status,
         // NOT_RUN = preserve pre-assigned executor; any other status = person who changed it becomes executor
-        executedById: isNotRun ? null : data.executedById,
+        executedById: isNotRun ? undefined : data.executedById,
         executedAt: new Date(),
         duration: data.duration,
         comment: data.comment,
