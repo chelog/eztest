@@ -24,6 +24,7 @@ export interface ColumnDef<T> {
   hideable?: boolean; // Allow column to be hidden
   sortable?: boolean; // Allow column header click sorting
   sortKey?: string; // override key used for sorting (defaults to col.key)
+  sortValue?: (row: T) => string | number | null | undefined; // client-side sort comparator
 }
 
 export interface DataTableProps<T> {
