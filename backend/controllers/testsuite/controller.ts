@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TestSuiteService } from '@/backend/services/testsuite/services';
 import { TestSuiteMessages } from '@/backend/constants/static_messages';
+import { BadRequestException } from '@/backend/utils/exceptions';
 
 const testSuiteService = new TestSuiteService();
 
@@ -90,6 +91,9 @@ export class TestSuiteController {
       });
     } catch (error) {
       console.error('Error creating test suite:', error);
+      if (error instanceof BadRequestException) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
       return NextResponse.json(
         { error: TestSuiteMessages.FailedToCreateTestSuite },
         { status: 500 }
@@ -127,6 +131,9 @@ export class TestSuiteController {
       });
     } catch (error) {
       console.error('Error updating test suite:', error);
+      if (error instanceof BadRequestException) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
       return NextResponse.json(
         { error: TestSuiteMessages.FailedToUpdateTestSuite },
         { status: 500 }
