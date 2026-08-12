@@ -111,10 +111,11 @@ export class ImportService {
     projectId: string,
     userId: string,
     data: ParsedRow[],
+    targetModuleId?: string,
   ): Promise<MigrationResult> {
     switch (type) {
       case "testcases":
-        return this.importTestCases(projectId, userId, data);
+        return this.importTestCases(projectId, userId, data, targetModuleId);
       case "defects":
         return this.importDefects(projectId, userId, data);
       default:
@@ -129,6 +130,7 @@ export class ImportService {
     projectId: string,
     userId: string,
     data: ParsedRow[],
+    targetModuleId?: string,
   ): Promise<MigrationResult> {
     const result: MigrationResult = {
       success: 0,
@@ -150,6 +152,16 @@ export class ImportService {
 
     if (!project) {
       throw new ValidationException("Project not found");
+    }
+
+    // Validate targetModuleId belongs to this project before processing any rows
+    if (targetModuleId) {
+      const targetModule = project.modules.find((m) => m.id === targetModuleId);
+      if (!targetModule) {
+        throw new ValidationException(
+          "Target module not found in this project. The selected module may belong to a different project or no longer exists."
+        );
+      }
     }
 
     // Get existing test cases to generate next tcId
@@ -296,7 +308,10 @@ export class ImportService {
 
         // Find or create module
         let moduleId: string | undefined;
-        if (
+        if (targetModuleId) {
+          // Target module override: ignore "Module / Feature" column from the file
+          moduleId = targetModuleId;
+        } else if (
           moduleValue &&
           typeof moduleValue === "string" &&
           moduleValue.toString().trim()

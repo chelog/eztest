@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import {
@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from '@/frontend/reusable-elements/dialogs/Dialog';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/frontend/reusable-elements/selects/Select';
 import { FileSpreadsheet, FileText, Upload, AlertCircle, Loader2 } from 'lucide-react';
 import { exportData, ExportOptions } from '@/frontend/lib/export-utils';
 
@@ -21,6 +28,7 @@ export interface FileExportDialogProps {
   description: string;
   exportOptions: Omit<ExportOptions, 'format'>;
   itemName: string; // e.g., "test cases", "defects"
+  modules?: Array<{ id: string; name: string }>;
 }
 
 export function FileExportDialog({
@@ -30,10 +38,21 @@ export function FileExportDialog({
   description,
   exportOptions,
   itemName,
+  modules,
 }: FileExportDialogProps) {
   const [selectedFormat, setSelectedFormat] = useState<'csv' | 'excel' | null>(null);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string>('');
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSelectedFormat(null);
+      setError(null);
+      setSelectedModuleId('');
+    }
+  }, [open]);
 
   const handleExport = async () => {
     if (!selectedFormat) {
@@ -45,8 +64,13 @@ export function FileExportDialog({
     setError(null);
 
     try {
+      const mergedFilters = {
+        ...exportOptions.filters,
+        ...(selectedModuleId ? { moduleId: selectedModuleId } : {}),
+      };
       await exportData({
         ...exportOptions,
+        filters: mergedFilters,
         format: selectedFormat,
       });
       
@@ -82,6 +106,31 @@ export function FileExportDialog({
             </DialogHeader>
 
             <div className="space-y-5">
+              {/* Module Filter */}
+              {modules && modules.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-white/90">Module (optional)</p>
+                  <Select
+                    value={selectedModuleId || '_all'}
+                    onValueChange={(val) => setSelectedModuleId(val === '_all' ? '' : val)}
+                    disabled={exporting}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All modules" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all">All modules</SelectItem>
+                      {modules.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-white/50">
+                    Export only test cases from this module, or leave blank to export all.
+                  </p>
+                </div>
+              )}
+
               {/* Format Selection */}
               <div className="space-y-3">
                 <p className="text-sm font-medium text-white/90">Select Export Format</p>
