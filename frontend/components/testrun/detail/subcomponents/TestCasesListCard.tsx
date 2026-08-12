@@ -79,11 +79,20 @@ export function TestCasesListCard({
     }
   };
 
+  const PRIORITY_RANK: Record<string, number> = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+  const STATUS_RANK: Record<string, number> = { PASSED: 1, FAILED: 2, BLOCKED: 3, RETEST: 4, SKIPPED: 5 };
+
   const columns: ColumnDef<ResultRow>[] = [
     {
       key: 'tcId',
       label: 'Test Case ID',
       className: 'min-w-[80px]',
+      sortable: true,
+      sortValue: (row: ResultRow) => {
+        const tcId = row.testCase.tcId || '';
+        const match = tcId.match(/(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      },
       render: (_, row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate">{row.testCase.tcId || '-'}</p>
       ),
@@ -92,6 +101,8 @@ export function TestCasesListCard({
       key: 'testCase',
       label: 'Test Case',
       className: 'min-w-0 max-w-xs whitespace-normal',
+      sortable: true,
+      sortValue: (row: ResultRow) => row.testCase.title || '',
       render: (_, row: ResultRow) => (
         <div className="min-w-0 max-w-xs overflow-hidden">
           <p className="font-medium text-white/90 truncate block">{row.testCase.title}</p>
@@ -106,6 +117,8 @@ export function TestCasesListCard({
     {
       key: 'module',
       label: 'Folder',
+      sortable: true,
+      sortValue: (row: ResultRow) => row.testCase.module?.name || '',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm">
           {row.testCase.module?.name || '-'}
@@ -115,14 +128,16 @@ export function TestCasesListCard({
     {
       key: 'priority',
       label: 'Priority',
+      sortable: true,
+      sortValue: (row: ResultRow) => PRIORITY_RANK[String(row.testCase.priority).toUpperCase()] || 0,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.testCase.priority, priorityOptions);
         const priorityLabel = !loadingPriority && priorityOptions.length > 0
           ? priorityOptions.find(opt => opt.value === row.testCase.priority)?.label || row.testCase.priority
           : row.testCase.priority;
         return (
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`text-xs px-2 py-0.5 ${badgeProps.className}`}
             style={badgeProps.style}
           >
@@ -134,6 +149,8 @@ export function TestCasesListCard({
     {
       key: 'status',
       label: 'Status',
+      sortable: true,
+      sortValue: (row: ResultRow) => STATUS_RANK[row.status] || 99,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = !loadingStatus && statusOptions.length > 0
@@ -156,6 +173,8 @@ export function TestCasesListCard({
     {
       key: 'executedBy',
       label: 'Executed By',
+      sortable: true,
+      sortValue: (row: ResultRow) => row.executedBy?.name || '',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm">
           {row.executedBy?.name || '-'}
@@ -165,6 +184,8 @@ export function TestCasesListCard({
     {
       key: 'executedAt',
       label: 'Date',
+      sortable: true,
+      sortValue: (row: ResultRow) => row.executedAt ? new Date(row.executedAt).getTime() : 0,
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm">
           {row.executedAt
