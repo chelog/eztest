@@ -122,6 +122,7 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String
+  tcIdCounter Int @default(0)
 
   createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
   members     ProjectMember[]

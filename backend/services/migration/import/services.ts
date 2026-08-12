@@ -124,6 +124,29 @@ export class ImportService {
   }
 
   /**
+   * Atomically allocate the next tcId for a project.
+   * Uses the same GREATEST(counter, existing MAX) + 1 logic as TestCaseService
+   * so that the counter never decreases and deleted IDs are never reused.
+   */
+  private async allocateNextTcId(projectId: string): Promise<string> {
+    const result = await prisma.$queryRaw<Array<{ counter: number | bigint }>>`
+      UPDATE "Project"
+      SET "tcIdCounter" = GREATEST(
+        "tcIdCounter",
+        COALESCE((
+          SELECT MAX(CAST(SUBSTRING("tcId" FROM '^TC-([0-9]+)$') AS INTEGER))
+          FROM "TestCase"
+          WHERE "projectId" = "Project"."id"
+        ), 0)
+      ) + 1
+      WHERE "id" = ${projectId}
+      RETURNING "tcIdCounter" AS counter
+    `;
+    const nextNumber = Number(result[0].counter);
+    return `TC-${nextNumber}`;
+  }
+
+  /**
    * Import test cases from parsed data
    */
   private async importTestCases(
@@ -164,16 +187,6 @@ export class ImportService {
       }
     }
 
-    // Get existing test cases to generate next tcId
-    const existingTestCases = await prisma.testCase.findMany({
-      where: { projectId },
-      select: { tcId: true, title: true },
-      orderBy: { tcId: "desc" },
-    });
-
-    // Create a set of existing tcIds for quick lookup
-    const existingTcIds = new Set(existingTestCases.map((tc) => tc.tcId));
-
     // Get existing defects to validate defect IDs
     const existingDefects = await prisma.defect.findMany({
       where: { projectId },
@@ -185,16 +198,6 @@ export class ImportService {
     const defectIdToDefect = new Map(
       existingDefects.map((d) => [d.defectId, { id: d.id, title: d.title }]),
     );
-
-    let nextTcIdNumber = 1;
-    if (existingTestCases.length > 0) {
-      const lastTcId = existingTestCases[0].tcId;
-      // Extract number from TC-XXX or tcXXX format
-      const match = lastTcId.match(/\d+/);
-      if (match) {
-        nextTcIdNumber = parseInt(match[0], 10) + 1;
-      }
-    }
 
     // Get dropdown options for validation
     const [priorities, statuses] = await Promise.all([
@@ -708,64 +711,78 @@ export class ImportService {
           }
         }
 
-        // Always auto-generate tcId (Test Case ID column removed from import)
-        // Auto-generate tcId in TC-XXX format without padding (TC-1, TC-2, etc.)
-        let tcId = `TC-${nextTcIdNumber}`;
-        while (existingTcIds.has(tcId)) {
-          nextTcIdNumber++;
-          tcId = `TC-${nextTcIdNumber}`;
-        }
-        nextTcIdNumber++;
-        existingTcIds.add(tcId);
+        // Atomically allocate the next tcId for this project.
+        // The atomic counter makes P2002 collisions virtually impossible, but we
+        // keep a short retry loop as belt-and-suspenders against any edge case.
+        let tcId = await this.allocateNextTcId(projectId);
 
-        // Create test case
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const testCase = await (prisma.testCase.create as any)({
-          data: {
-            tcId,
-            projectId,
-            title: testCaseTitle,
-            description: description ? description.toString().trim() : null,
-            expectedResult: finalExpectedResult,
-            priority: priorityValue,
-            status: statusValue,
-            estimatedTime: estimatedTimeValue,
-            preconditions: preconditions
-              ? preconditions.toString().trim()
-              : null,
-            postconditions: postconditions
-              ? postconditions.toString().trim()
-              : null,
-            testData: testDataValue,
-            pendingDefectIds:
-              pendingDefectIds.length > 0 ? pendingDefectIds.join(", ") : null,
-            moduleId,
-            suiteId,
-            createdById: userId,
-            steps:
-              testStepsData && testStepsData.length > 0
-                ? {
-                    create: testStepsData
-                      .filter(
-                        (step) =>
-                          (step.action && step.action.trim()) ||
-                          (step.expectedResult && step.expectedResult.trim()),
-                      ) // Include steps with either action or expected result
-                      .map((step) => ({
-                        stepNumber: step.stepNumber,
-                        action:
-                          step.action && step.action.trim()
-                            ? step.action.trim()
-                            : "", // Allow empty action
-                        expectedResult:
-                          step.expectedResult && step.expectedResult.trim()
-                            ? step.expectedResult.trim()
-                            : "", // expectedResult is optional, allow empty string
-                      })),
-                  }
-                : undefined,
-          },
-        });
+        let testCase: any;
+        let createAttempts = 0;
+        while (!testCase) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            testCase = await (prisma.testCase.create as any)({
+              data: {
+                tcId,
+                projectId,
+                title: testCaseTitle,
+                description: description ? description.toString().trim() : null,
+                expectedResult: finalExpectedResult,
+                priority: priorityValue,
+                status: statusValue,
+                estimatedTime: estimatedTimeValue,
+                preconditions: preconditions
+                  ? preconditions.toString().trim()
+                  : null,
+                postconditions: postconditions
+                  ? postconditions.toString().trim()
+                  : null,
+                testData: testDataValue,
+                pendingDefectIds:
+                  pendingDefectIds.length > 0 ? pendingDefectIds.join(", ") : null,
+                moduleId,
+                suiteId,
+                createdById: userId,
+                steps:
+                  testStepsData && testStepsData.length > 0
+                    ? {
+                        create: testStepsData
+                          .filter(
+                            (step) =>
+                              (step.action && step.action.trim()) ||
+                              (step.expectedResult && step.expectedResult.trim()),
+                          )
+                          .map((step) => ({
+                            stepNumber: step.stepNumber,
+                            action:
+                              step.action && step.action.trim()
+                                ? step.action.trim()
+                                : "",
+                            expectedResult:
+                              step.expectedResult && step.expectedResult.trim()
+                                ? step.expectedResult.trim()
+                                : "",
+                          })),
+                      }
+                    : undefined,
+              },
+            });
+          } catch (createError: unknown) {
+            if (
+              createAttempts < 4 &&
+              createError !== null &&
+              typeof createError === "object" &&
+              "code" in createError &&
+              (createError as { code: string }).code === "P2002"
+            ) {
+              createAttempts++;
+              tcId = await this.allocateNextTcId(projectId);
+            } else {
+              throw createError;
+            }
+          }
+        }
 
         // Link to test suite via junction table if suite exists
         if (suiteId) {
