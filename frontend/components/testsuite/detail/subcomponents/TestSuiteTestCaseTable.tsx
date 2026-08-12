@@ -19,6 +19,7 @@ interface TestSuiteTestCaseTableProps {
   onDelete?: (testCase: TestCase) => void;
   onClick: (testCaseId: string) => void;
   canDelete?: boolean;
+  projectId?: string;
 }
 
 /**
@@ -31,6 +32,7 @@ export function TestSuiteTestCaseTable({
   onDelete,
   onClick,
   canDelete = true,
+  projectId,
 }: TestSuiteTestCaseTableProps) {
   const { options: priorityOptions } = useDropdownOptions('TestCase', 'priority');
   const { options: statusOptions } = useDropdownOptions('TestCase', 'status');
@@ -116,10 +118,10 @@ export function TestSuiteTestCaseTable({
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <span className="text-xs text-white/70 truncate block cursor-pointer">
-                {row.createdBy.name}
+                {row.createdBy?.name ?? '-'}
               </span>
             </HoverCardTrigger>
-            {row.createdBy.name && row.createdBy.name.length > 20 && (
+            {row.createdBy?.name && row.createdBy.name.length > 20 && (
               <HoverCardContent side="top" className="w-60">
                 <div className="space-y-1">
                   <h4 className="text-xs font-semibold text-white/60">Owner</h4>
@@ -182,7 +184,8 @@ export function TestSuiteTestCaseTable({
     <GroupedDataTable
       data={testCases}
       columns={columns}
-      onRowClick={(row) => onClick(row.id)}
+      getRowHref={projectId ? (row) => `/projects/${projectId}/testcases/${row.id}` : undefined}
+      onRowClick={!projectId ? (row) => onClick(row.id) : undefined}
       grouped={true}
       groupConfig={groupConfig}
       actions={actions}

@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 import { XMLParser } from 'fast-xml-parser';
 import dropdownOptionService from '@/backend/services/dropdown-option/dropdown-option.service';
 import { TestRunMessages } from '@/backend/constants/static_messages';
@@ -437,21 +436,8 @@ export class TestRunService {
       };
     }
 
-    const getSortOrderBy = (): Prisma.TestResultOrderByWithRelationInput[] => {
-      const dir = (filters?.sortDir || 'asc') as 'asc' | 'desc';
-      if (filters?.sortBy) {
-        switch (filters.sortBy) {
-          case 'tcId': return [{ testCase: { tcId: dir } }, { id: 'asc' as const }];
-          case 'title': return [{ testCase: { title: dir } }, { id: 'asc' as const }];
-          case 'priority': return [{ testCase: { priority: dir } }, { id: 'asc' as const }];
-          case 'executedAt': return [{ executedAt: dir }, { id: 'asc' as const }];
-          case 'executedBy': return [{ executedBy: { name: dir } }, { id: 'asc' as const }];
-          case 'status': return [{ status: dir }, { id: 'asc' as const }];
-        }
-      }
-      return [{ id: 'asc' as const }];
-    };
-    const resultOrderBy = getSortOrderBy();
+    const sortBy = filters?.sortBy;
+    const sortDir = filters?.sortDir || 'asc';
 
     const resultInclude = {
       testCase: {
@@ -463,6 +449,12 @@ export class TestRunService {
           preconditions: true,
           priority: true,
           status: true,
+          module: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           steps: {
             select: {
               id: true,
@@ -486,7 +478,7 @@ export class TestRunService {
       },
     };
 
-    const [testRun, filteredResultsCount, paginatedResults] = await Promise.all([
+    const [testRun, allResults, priorityOpts, statusOpts] = await Promise.all([
       prisma.testRun.findUnique({
         where: { id: testRunId },
         include: {
@@ -495,19 +487,80 @@ export class TestRunService {
           _count: { select: { results: true } },
         },
       }),
-      prisma.testResult.count({ where: resultWhere }),
-      prisma.testResult.findMany({
-        where: resultWhere,
-        include: resultInclude,
-        orderBy: resultOrderBy,
-        skip,
-        take: safeLimit,
-      }),
+      prisma.testResult.findMany({ where: resultWhere, include: resultInclude }),
+      sortBy === 'priority'
+        ? prisma.dropdownOption.findMany({
+            where: { entity: 'TestCase', field: 'priority', isActive: true },
+            select: { value: true, order: true },
+          })
+        : Promise.resolve([] as { value: string; order: number }[]),
+      sortBy === 'status'
+        ? prisma.dropdownOption.findMany({
+            where: { entity: 'TestResult', field: 'status', isActive: true },
+            select: { value: true, order: true },
+          })
+        : Promise.resolve([] as { value: string; order: number }[]),
     ]);
 
     if (!testRun) {
       return null;
     }
+
+    const priorityOrder = new Map(priorityOpts.map(o => [o.value, o.order]));
+    const statusOrder = new Map(statusOpts.map(o => [o.value, o.order]));
+    const dir = sortDir === 'desc' ? -1 : 1;
+
+    const sortedResults = [...allResults].sort((a, b) => {
+      let cmp = 0;
+      switch (sortBy) {
+        case 'tcId': {
+          const aNum = parseInt(a.testCase.tcId.match(/\d+/)?.[0] ?? '0', 10);
+          const bNum = parseInt(b.testCase.tcId.match(/\d+/)?.[0] ?? '0', 10);
+          cmp = aNum - bNum;
+          break;
+        }
+        case 'title':
+          cmp = a.testCase.title.localeCompare(b.testCase.title, 'en', { sensitivity: 'base' });
+          break;
+        case 'module': {
+          const aName = a.testCase.module?.name;
+          const bName = b.testCase.module?.name;
+          if (!aName && !bName) { cmp = 0; break; }
+          if (!aName) return 1;
+          if (!bName) return -1;
+          cmp = aName.localeCompare(bName, 'en', { sensitivity: 'base' });
+          break;
+        }
+        case 'priority': {
+          const aOrd = priorityOrder.get(a.testCase.priority) ?? 999;
+          const bOrd = priorityOrder.get(b.testCase.priority) ?? 999;
+          cmp = aOrd - bOrd;
+          break;
+        }
+        case 'status': {
+          const aOrd = statusOrder.get(a.status) ?? 999;
+          const bOrd = statusOrder.get(b.status) ?? 999;
+          cmp = aOrd - bOrd;
+          break;
+        }
+        case 'executedAt': {
+          const aTime = a.executedAt ? new Date(a.executedAt).getTime() : 0;
+          const bTime = b.executedAt ? new Date(b.executedAt).getTime() : 0;
+          cmp = aTime - bTime;
+          break;
+        }
+        case 'executedBy':
+          cmp = (a.executedBy?.name ?? '').localeCompare(b.executedBy?.name ?? '', 'en', { sensitivity: 'base' });
+          break;
+        default:
+          return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+      }
+      if (cmp !== 0) return dir * cmp;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+
+    const filteredResultsCount = sortedResults.length;
+    const paginatedResults = sortedResults.slice(skip, skip + safeLimit);
 
     return {
       ...testRun,
@@ -669,6 +722,12 @@ export class TestRunService {
                 description: true,
                 priority: true,
                 status: true,
+                module: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             executedBy: {

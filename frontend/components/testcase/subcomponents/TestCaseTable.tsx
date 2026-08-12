@@ -152,10 +152,10 @@ export function TestCaseTable({
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <span className="text-xs text-white/70 truncate block cursor-pointer">
-                {row.createdBy.name}
+                {row.createdBy?.name ?? '-'}
               </span>
             </HoverCardTrigger>
-            {row.createdBy.name && row.createdBy.name.length > 20 && (
+            {row.createdBy?.name && row.createdBy.name.length > 20 && (
               <HoverCardContent side="top" className="w-60">
                 <div className="space-y-1">
                   <h4 className="text-xs font-semibold text-white/60">Owner</h4>
@@ -199,6 +199,9 @@ export function TestCaseTable({
               }
             }
           : undefined,
+        getGroupHref: enableModuleLink && projectId
+          ? (groupId) => groupId !== 'no-module' ? `/projects/${projectId}/modules/${groupId}` : undefined
+          : undefined,
         emptyGroups: modules.map((moduleItem) => ({
           id: moduleItem.id,
           name: moduleItem.name,
@@ -229,7 +232,8 @@ export function TestCaseTable({
     <GroupedDataTable
       data={testCases}
       columns={columns}
-      onRowClick={(row) => onClick(row.id)}
+      getRowHref={projectId ? (row) => `/projects/${projectId}/testcases/${row.id}` : undefined}
+      onRowClick={!projectId ? (row) => onClick(row.id) : undefined}
       grouped={groupedByModule}
       groupConfig={groupConfig}
       actions={actions}

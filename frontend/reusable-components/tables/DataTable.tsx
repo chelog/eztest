@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +24,14 @@ export interface ColumnDef<T> {
   hideable?: boolean; // Allow column to be hidden
   sortable?: boolean; // Allow column header click sorting
   sortKey?: string; // override key used for sorting (defaults to col.key)
+  sortValue?: (row: T) => string | number | null | undefined; // client-side sort comparator
 }
 
 export interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
+  getRowHref?: (row: T) => string;
   isLoading?: boolean;
   emptyMessage?: string;
   rowClassName?: string | ((row: T) => string);
@@ -44,6 +47,7 @@ export function DataTable<T>({
   columns,
   data,
   onRowClick,
+  getRowHref,
   isLoading = false,
   emptyMessage = 'No data available',
   rowClassName = 'cursor-pointer hover:bg-white/5',
@@ -54,6 +58,7 @@ export function DataTable<T>({
   sortDir,
   onSort,
 }: DataTableProps<T>) {
+  const router = useRouter();
   const [colWidths, setColWidths] = useState<Record<number, number>>({});
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   const resizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
@@ -246,18 +251,77 @@ export function DataTable<T>({
           {data.map((row, idx) => {
             const rowKey = getRowKey?.(row);
             const isActive = activeRowKey !== undefined && rowKey === activeRowKey;
+            const rowHref = getRowHref?.(row);
+
+            const rowClass = `grid gap-0 px-3 py-2.5 transition-colors items-center text-sm rounded-sm ${
+              isActive
+                ? 'bg-primary/20 ring-1 ring-inset ring-primary/40'
+                : idx % 2 === 0
+                ? 'bg-transparent hover:bg-accent/20'
+                : 'bg-white/[0.04] border-b border-white/10 hover:bg-accent/20'
+            } ${idx === data.length - 1 ? 'rounded-b-md' : ''} ${
+              rowHref || onRowClick ? 'cursor-pointer' : ''
+            } ${getRowClass(row)}`;
+
+            const cells = visibleColumns.map((col, visibleIdx) => {
+              const isLastColumn = visibleIdx === visibleColumns.length - 1;
+              return (
+                <div
+                  key={`${idx}-${String(col.key)}`}
+                  className={`overflow-hidden px-3 py-1 min-w-0 ${
+                    col.align === 'right'
+                      ? 'text-right'
+                      : col.align === 'center'
+                      ? 'text-center'
+                      : col.className
+                  } ${!isLastColumn ? 'border-r border-white/5' : ''}`}
+                >
+                  {col.render
+                    ? col.render(
+                        (row as Record<string, unknown>)[String(col.key)] as unknown,
+                        row
+                      )
+                    : String(
+                        (row as Record<string, unknown>)[String(col.key)] ?? ''
+                      )}
+                </div>
+              );
+            });
+
+            if (rowHref) {
+              return (
+                <div
+                  key={idx}
+                  className={rowClass}
+                  style={{ gridTemplateColumns: gridColumns }}
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) return;
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && onRowClick) {
+                      onRowClick(row);
+                      return;
+                    }
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                      window.open(rowHref, '_blank');
+                      return;
+                    }
+                    router.push(rowHref);
+                  }}
+                  onAuxClick={(e) => {
+                    if (e.button !== 1) return;
+                    if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) return;
+                    e.preventDefault();
+                    window.open(rowHref, '_blank');
+                  }}
+                >
+                  {cells}
+                </div>
+              );
+            }
+
             return (
               <div
                 key={idx}
-                className={`grid gap-0 px-3 py-2.5 transition-colors items-center text-sm rounded-sm ${
-                  isActive
-                    ? 'bg-primary/20 ring-1 ring-inset ring-primary/40'
-                    : idx % 2 === 0
-                    ? 'bg-transparent hover:bg-accent/20'
-                    : 'bg-white/[0.04] border-b border-white/10 hover:bg-accent/20'
-                } ${idx === data.length - 1 ? 'rounded-b-md' : ''} ${
-                  onRowClick ? 'cursor-pointer' : ''
-                } ${getRowClass(row)}`}
+                className={rowClass}
                 style={{ gridTemplateColumns: gridColumns }}
                 onClick={(e) => {
                   if ((e.target as HTMLElement).closest('button, [role="button"], [data-radix-popper-content-wrapper]')) {
@@ -266,30 +330,7 @@ export function DataTable<T>({
                   onRowClick?.(row);
                 }}
               >
-                {visibleColumns.map((col, visibleIdx) => {
-                  const isLastColumn = visibleIdx === visibleColumns.length - 1;
-                  return (
-                    <div
-                      key={`${idx}-${String(col.key)}`}
-                      className={`overflow-hidden px-3 py-1 min-w-0 ${
-                        col.align === 'right'
-                          ? 'text-right'
-                          : col.align === 'center'
-                          ? 'text-center'
-                          : col.className
-                      } ${!isLastColumn ? 'border-r border-white/5' : ''}`}
-                    >
-                      {col.render
-                        ? col.render(
-                            (row as Record<string, unknown>)[String(col.key)] as unknown,
-                            row
-                          )
-                        : String(
-                            (row as Record<string, unknown>)[String(col.key)] ?? ''
-                          )}
-                    </div>
-                  );
-                })}
+                {cells}
               </div>
             );
           })}

@@ -145,7 +145,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             value={project._count.testCases}
             borderColor="border-l-primary/30"
             hoverColor="group-hover:bg-primary/10"
-            onClick={() => router.push(`/projects/${projectId}/testcases`)}
+            href={`/projects/${projectId}/testcases`}
           />
           <ClickableStatCard
             icon={<Play className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             value={project._count.testRuns}
             borderColor="border-l-accent/30"
             hoverColor="group-hover:bg-accent/10"
-            onClick={() => router.push(`/projects/${projectId}/testruns`)}
+            href={`/projects/${projectId}/testruns`}
           />
           <ClickableStatCard
             icon={<FileText className="w-4 h-4" />}
@@ -161,7 +161,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             value={project._count.testSuites}
             borderColor="border-l-purple-400/30"
             hoverColor="group-hover:bg-purple-400/10"
-            onClick={() => router.push(`/projects/${projectId}/testsuites`)}
+            href={`/projects/${projectId}/testsuites`}
           />
           <ClickableStatCard
             icon={<Folder className="w-4 h-4" />}
@@ -169,7 +169,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             value={project.members?.length || 0}
             borderColor="border-l-green-400/30"
             hoverColor="group-hover:bg-green-400/10"
-            onClick={() => router.push(`/projects/${projectId}/members`)}
+            href={`/projects/${projectId}/members`}
           />
         </ResponsiveGrid>
       </div>

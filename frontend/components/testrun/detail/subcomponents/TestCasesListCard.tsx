@@ -222,6 +222,9 @@ export function TestCasesListCard({
     }
   };
 
+  const PRIORITY_RANK: Record<string, number> = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+  const STATUS_RANK: Record<string, number> = { PASSED: 1, FAILED: 2, BLOCKED: 3, RETEST: 4, SKIPPED: 5 };
+
   const columns: ColumnDef<ResultRow>[] = [
     {
       key: 'select',
@@ -254,6 +257,11 @@ export function TestCasesListCard({
       minWidth: 80,
       sortable: true,
       sortKey: 'tcId',
+      sortValue: (row: ResultRow) => {
+        const tcId = row.testCase.tcId || '';
+        const match = tcId.match(/(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      },
       render: (_, row: ResultRow) => (
         <p className="text-xs font-mono text-white/70 truncate" title={row.testCase.tcId || '-'}>
           {row.testCase.tcId || '-'}
@@ -267,6 +275,7 @@ export function TestCasesListCard({
       minWidth: 200,
       sortable: true,
       sortKey: 'title',
+      sortValue: (row: ResultRow) => row.testCase.title || '',
       render: (_, row: ResultRow) => (
         <div className="min-w-0 overflow-hidden">
           <p
@@ -284,12 +293,24 @@ export function TestCasesListCard({
       ),
     },
     {
+      key: 'module',
+      label: 'Folder',
+      sortable: true,
+      sortValue: (row: ResultRow) => row.testCase.module?.name || '',
+      render: (_, row: ResultRow) => (
+        <span className="text-white/70 text-sm">
+          {row.testCase.module?.name || '-'}
+        </span>
+      ),
+    },
+    {
       key: 'priority',
       label: 'Приоритет',
       width: '1fr',
       minWidth: 100,
       sortable: true,
       sortKey: 'priority',
+      sortValue: (row: ResultRow) => PRIORITY_RANK[String(row.testCase.priority).toUpperCase()] || 0,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.testCase.priority, priorityOptions);
         const priorityLabel =
@@ -315,6 +336,7 @@ export function TestCasesListCard({
       minWidth: 130,
       sortable: true,
       sortKey: 'status',
+      sortValue: (row: ResultRow) => STATUS_RANK[row.status] || 99,
       render: (_, row: ResultRow) => {
         const badgeProps = getDynamicBadgeProps(row.status, statusOptions);
         const label = getStatusLabel(row.status);
@@ -376,6 +398,7 @@ export function TestCasesListCard({
       minWidth: 100,
       sortable: true,
       sortKey: 'executedBy',
+      sortValue: (row: ResultRow) => row.executedBy?.name || '',
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate" title={row.executedBy?.name || undefined}>
           {row.executedBy?.name || '-'}
@@ -389,6 +412,7 @@ export function TestCasesListCard({
       minWidth: 120,
       sortable: true,
       sortKey: 'executedAt',
+      sortValue: (row: ResultRow) => row.executedAt ? new Date(row.executedAt).getTime() : 0,
       render: (_, row: ResultRow) => (
         <span className="text-white/70 text-sm truncate">
           {row.status === 'NOT_RUN' || row.status === 'SKIPPED'
@@ -709,6 +733,7 @@ export function TestCasesListCard({
             data={tableData}
             rowClassName="cursor-pointer"
             onRowClick={(row) => onExecuteTestCase(row.testCase)}
+            getRowHref={(row) => `/projects/${projectId}/testcases/${row.testCase.id}`}
             emptyMessage="В этом запуске нет тест-кейсов"
             resizable={true}
             activeRowKey={activeTestCaseId}

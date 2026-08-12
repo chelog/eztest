@@ -45,50 +45,33 @@ interface TestCaseFilters {
 
 export class TestCaseService {
   /**
-   * Generate next test case ID for a project (e.g., TC-1, TC-2, TC-3...)
+   * Atomically allocate the next tcId for a project.
+   *
+   * Uses a monotonic counter stored on Project.tcIdCounter so that:
+   * - numbers are never reused, even after deletion of the highest-numbered test case;
+   * - two concurrent calls always receive different numbers (row-level lock on UPDATE);
+   * - existing projects with tcIdCounter=0 automatically sync to the current MAX on
+   *   first call via GREATEST(tcIdCounter, MAX(existing numeric part)).
+   *
+   * Only strict TC-N format IDs (^TC-([0-9]+)$) participate in the MAX calculation,
+   * so legacy or manually-created non-standard values are safely ignored.
    */
   private async generateTestCaseId(projectId: string): Promise<string> {
-    // Get existing test cases to find the highest number
-    const existingTestCases = await prisma.testCase.findMany({
-      where: { projectId },
-      select: { tcId: true },
-      orderBy: { tcId: 'desc' },
-    });
-
-    let nextTestCaseNumber = 1;
-    if (existingTestCases.length > 0) {
-      // Extract number from existing TC-XXX format
-      const lastTcId = existingTestCases[0].tcId;
-      const match = lastTcId.match(/\d+/);
-      if (match) {
-        nextTestCaseNumber = parseInt(match[0], 10) + 1;
-      }
-    }
-    
-    // Generate ID in TC-XXX format without padding (TC-1, TC-2, etc.)
-    let tcId = `TC-${nextTestCaseNumber}`;
-    
-    // Check if this ID already exists
-    let exists = await prisma.testCase.findFirst({
-      where: {
-        projectId,
-        tcId,
-      },
-    });
-    
-    // If exists, keep incrementing until we find an available ID
-    while (exists) {
-      nextTestCaseNumber++;
-      tcId = `TC-${nextTestCaseNumber}`;
-      exists = await prisma.testCase.findFirst({
-        where: {
-          projectId,
-          tcId,
-        },
-      });
-    }
-    
-    return tcId;
+    const result = await prisma.$queryRaw<Array<{ counter: number | bigint }>>`
+      UPDATE "Project"
+      SET "tcIdCounter" = GREATEST(
+        "tcIdCounter",
+        COALESCE((
+          SELECT MAX(CAST(SUBSTRING("tcId" FROM '^TC-([0-9]+)$') AS INTEGER))
+          FROM "TestCase"
+          WHERE "projectId" = "Project"."id"
+        ), 0)
+      ) + 1
+      WHERE "id" = ${projectId}
+      RETURNING "tcIdCounter" AS counter
+    `;
+    const nextNumber = Number(result[0].counter);
+    return `TC-${nextNumber}`;
   }
 
   /**

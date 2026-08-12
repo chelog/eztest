@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/frontend/reusable-elements/cards/Card';
 import { ReactNode } from 'react';
 
@@ -11,6 +12,7 @@ interface ItemCardProps {
   header?: ReactNode;
   content: ReactNode;
   footer?: ReactNode;
+  href?: string;
   onClick?: () => void;
   className?: string;
   borderColor?: 'primary' | 'accent';
@@ -28,6 +30,7 @@ export const ItemCard = ({
   header,
   content,
   footer,
+  href,
   onClick,
   className = '',
   borderColor = 'primary',
@@ -36,34 +39,21 @@ export const ItemCard = ({
     ? 'conic-gradient(from 45deg, rgba(139, 92, 246, 0.2) 0deg, rgba(139, 92, 246, 0.8) 90deg, rgba(139, 92, 246, 0.2) 180deg, rgba(139, 92, 246, 0.8) 270deg, rgba(139, 92, 246, 0.2) 360deg)'
     : 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)';
 
-  return (
-    <div
-      className={`
-        rounded-3xl
-        relative
-        transition-all 
-        cursor-pointer 
-        group 
-        p-[1px]
-        ${className}
-      `}
-      onClick={onClick}
-      style={{
-        background: gradientStyle,
-      }}
-    >
-      {/* Theme-aware inner surface keeps dark cards in dark mode and light cards in light mode */}
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
-        <Card
-          variant="glass"
-          className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
-        >
+  const outerClassName = `rounded-3xl relative transition-all cursor-pointer group p-[1px] ${className}`;
+  const outerStyle = { background: gradientStyle };
+
+  const inner = (
+    <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
+      <Card
+        variant="glass"
+        className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
+      >
         <CardHeader className="pb-1 pt-2.5 px-3.5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               {badges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
               <div className="overflow-hidden">
-                <CardTitle 
+                <CardTitle
                   className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-foreground"
                   style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                 >
@@ -74,7 +64,8 @@ export const ItemCard = ({
                 </CardDescription>
               </div>
             </div>
-            {header}
+            {/* Prevent header actions (menus, buttons) from triggering card navigation */}
+            {header && <div onClick={(e) => e.stopPropagation()}>{header}</div>}
           </div>
         </CardHeader>
 
@@ -82,8 +73,60 @@ export const ItemCard = ({
           <div className="flex-1">{content}</div>
           {footer && <div className="flex items-center justify-between pt-2 border-t border-border/60 mt-auto">{footer}</div>}
         </CardContent>
-        </Card>
+      </Card>
+    </div>
+  );
+
+  if (href) {
+    return (
+      <div className={outerClassName} style={outerStyle}>
+        <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+          {/* Link covers card body only — no interactive header slot inside <a> */}
+          <Link href={href} className="block">
+            <Card
+              variant="glass"
+              className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
+            >
+              <CardHeader className="pb-1 pt-2.5 px-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {badges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
+                    <div className="overflow-hidden">
+                      <CardTitle
+                        className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-white"
+                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                      >
+                        {title}
+                      </CardTitle>
+                      <CardDescription className={descriptionClassName || 'line-clamp-1 text-sm text-white/60 min-h-5'}>
+                        {description || ''}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {/* Spacer preserves layout when action header is present */}
+                  {header && <div className="w-8 h-8 flex-shrink-0" aria-hidden="true" />}
+                </div>
+              </CardHeader>
+              <CardContent className="py-2.5 px-3.5 flex-1 flex flex-col">
+                <div className="flex-1">{content}</div>
+                {footer && <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-auto">{footer}</div>}
+              </CardContent>
+            </Card>
+          </Link>
+          {/* Action slot positioned outside the Link */}
+          {header && (
+            <div className="absolute top-2.5 right-2.5 z-10">
+              {header}
+            </div>
+          )}
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className={outerClassName} style={outerStyle} onClick={onClick}>
+      {inner}
     </div>
   );
 };

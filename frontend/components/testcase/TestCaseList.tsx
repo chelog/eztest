@@ -446,6 +446,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
             fetchTestCases();
             setImportDialogOpen(false);
           }}
+          modules={modules.map(m => ({ id: m.id, name: m.name }))}
         />
 
         {/* Export Dialog */}
@@ -458,13 +459,13 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
             projectId,
             endpoint: `/api/projects/${projectId}/testcases/export`,
             filters: {
-              moduleId: undefined,
               suiteId: undefined,
               status: statusFilter !== 'all' ? statusFilter : undefined,
               priority: priorityFilter !== 'all' ? priorityFilter : undefined,
             },
           }}
           itemName="тест-кейсы"
+          modules={modules.map(m => ({ id: m.id, name: m.name }))}
         />
       </div>
     </>
