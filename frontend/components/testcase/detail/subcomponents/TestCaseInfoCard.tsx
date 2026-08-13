@@ -17,8 +17,8 @@ export function TestCaseInfoCard({ testCase }: TestCaseInfoCardProps) {
       <UserInfoSection
         label="Создал"
         user={{
-          name: testCase.createdBy.name,
-          email: testCase.createdBy.email,
+          name: testCase.createdBy?.name ?? '-',
+          email: testCase.createdBy?.email,
         }}
       />
 

@@ -488,10 +488,10 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                 <div className="mt-3 pt-3 border-t border-white/5">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-semibold text-white">
-                      {testCase.createdBy.name.charAt(0).toUpperCase()}
+                      {(testCase.createdBy?.name ?? '-').charAt(0).toUpperCase()}
                     </div>
                     <span className="text-xs text-gray-400 truncate">
-                      {testCase.createdBy.name}
+                      {testCase.createdBy?.name ?? '-'}
                     </span>
                   </div>
                 </div>
