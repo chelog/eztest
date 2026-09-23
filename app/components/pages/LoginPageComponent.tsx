@@ -13,6 +13,9 @@ import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { GlassFooter } from '@/frontend/reusable-components/layout/GlassFooter';
 import { EZTestLogo } from '@/frontend/reusable-components/logo/EZTestLogo';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { NtAuthScreen, NtAuthField, NtAuthSubmit, NtAuthError } from '@/frontend/themes/new/NtAuthScreen';
+import { Lock, Mail } from 'lucide-react';
 
 const navItems: Array<{ label: string; href: string }> = [];
 
@@ -25,27 +28,28 @@ export default function LoginPageComponent() {
   const router = useRouter();
   useAnalytics();
   const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const isNewTheme = useIsNewTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
     {
       image: '/screenshots/TestCase_List_Page1.png',
-      title: 'Complete Control',
+      title: 'Полный контроль',
       description: 'Размещайте у себя и полностью контролируйте данные',
     },
     {
       image: '/screenshots/TestRun_List_Page.png',
-      title: 'Actionable Insights',
+      title: 'Практические выводы',
       description: 'Получайте подробные отчеты и аналитику по каждому тест-рану',
     },
     {
       image: '/screenshots/Defects_List_Page.png',
-      title: 'Streamlined Debugging',
+      title: 'Быстрая отладка',
       description: 'Отслеживайте и управляйте дефектами быстро и точно',
     },
     {
       image: '/screenshots/Project_List_Page.png',
-      title: 'Effortless Organization',
+      title: 'Порядок без усилий',
       description: 'Организуйте тестовые проекты в удобной структуре',
     },
   ];
@@ -252,6 +256,20 @@ export default function LoginPageComponent() {
   };
 
   if (showOtpVerification) {
+    if (isNewTheme) {
+      return (
+        <NtAuthScreen subtitle="Подтверждение входа">
+          <OtpVerification
+            email={formData.email}
+            type="login"
+            onVerified={handleOtpVerified}
+            onCancel={handleOtpCancel}
+          />
+          <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
+        </NtAuthScreen>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[#050608] flex flex-col relative overflow-x-hidden">
         <OtpVerification
@@ -262,6 +280,57 @@ export default function LoginPageComponent() {
         />
         <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
       </div>
+    );
+  }
+
+  if (isNewTheme) {
+    return (
+      <NtAuthScreen
+        subtitle="Система управления тестированием"
+        footer={
+          <>
+            Нет аккаунта?{' '}
+            <Link href="/auth/register" className="text-white hover:text-[var(--nt-accent)] transition-colors">
+              Зарегистрироваться
+            </Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <NtAuthError message={error} />
+          <NtAuthField
+            icon={Mail}
+            type="email"
+            name="email"
+            autoComplete="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onBlur={() => handleFieldBlur('email')}
+            error={fieldErrors.email}
+            required
+          />
+          <NtAuthField
+            icon={Lock}
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="Пароль"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onBlur={() => handleFieldBlur('password')}
+            error={fieldErrors.password}
+            required
+          />
+          <div className="flex justify-end">
+            <Link href="/auth/forgot-password" className="text-xs text-[var(--nt-text-3)] hover:text-white transition-colors">
+              Забыли пароль?
+            </Link>
+          </div>
+          <NtAuthSubmit disabled={isLoading}>{isLoading ? 'Вход...' : 'Продолжить'}</NtAuthSubmit>
+        </form>
+        <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
+      </NtAuthScreen>
     );
   }
 
@@ -290,7 +359,7 @@ export default function LoginPageComponent() {
                   background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
                 }}
               >
-                <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" style={{ backgroundColor: '#050608' }}>
+                <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
                   <EZTestLogo width={24} height={24} patternId="pattern-login-logo" />
                 </div>
               </div>

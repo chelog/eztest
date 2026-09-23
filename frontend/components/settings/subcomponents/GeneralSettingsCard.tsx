@@ -30,17 +30,17 @@ export function GeneralSettingsCard({
 }: GeneralSettingsCardProps) {
   return (
     <DetailCard
-      title="General Information"
-      description="Update your project name and description"
-      contentClassName="p-8"
+      title="Основное"
+      description="Название и описание проекта"
+      contentClassName="space-y-4"
     >
-      <form onSubmit={onSave} className="space-y-6">
+      <form onSubmit={onSave} className="space-y-4">
         <div className="space-y-2">
           <Label
             htmlFor="name"
             className="block text-sm font-medium text-muted-foreground"
           >
-            Project Name *
+            Название проекта *
           </Label>
           <Input
             id="name"
@@ -53,7 +53,7 @@ export function GeneralSettingsCard({
             required
             minLength={3}
             maxLength={255}
-            placeholder="Demo Project"
+            placeholder="Название проекта"
           />
         </div>
 
@@ -62,11 +62,11 @@ export function GeneralSettingsCard({
             htmlFor="key"
             className="block text-sm font-medium text-muted-foreground"
           >
-            Project Key
+            Ключ проекта
           </Label>
           <Input id="key" variant="glass" value={project.key} disabled />
           <p className="text-xs text-muted-foreground">
-            Project key cannot be changed after creation
+            Ключ проекта нельзя изменить после создания
           </p>
         </div>
 
@@ -75,7 +75,7 @@ export function GeneralSettingsCard({
             htmlFor="description"
             className="block text-sm font-medium text-muted-foreground"
           >
-            Description
+            Описание
           </Label>
           <Textarea
             id="description"
@@ -86,28 +86,21 @@ export function GeneralSettingsCard({
             ) => onFormChange({ ...formData, description: e.target.value })}
             disabled={!canUpdate}
             rows={4}
-            placeholder="Welcome to EZTest! This is a demo project to help you get started. Feel free to explore the features and create your own test suites, test cases, and test plans."
+            placeholder="Коротко о проекте"
           />
         </div>
 
-        <div className="flex gap-3 pt-4">
-          {canUpdate && (
-            <>
-              <ButtonPrimary type="submit" disabled={saving}>
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Save Changes"}
-              </ButtonPrimary>
-              <Button
-                type="button"
-                variant="glass"
-                onClick={onCancel}
-                className="!rounded-full"
-              >
-                Cancel
-              </Button>
-            </>
-          )}
-        </div>
+        {canUpdate && (
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="glass" onClick={onCancel}>
+              Отмена
+            </Button>
+            <ButtonPrimary type="submit" disabled={saving}>
+              <Save className="w-4 h-4" />
+              {saving ? "Сохранение..." : "Сохранить"}
+            </ButtonPrimary>
+          </div>
+        )}
       </form>
     </DetailCard>
   );

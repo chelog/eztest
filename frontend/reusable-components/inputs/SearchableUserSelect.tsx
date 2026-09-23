@@ -26,8 +26,8 @@ interface SearchableUserSelectProps {
  * Fetches available users and filters them in real-time
  */
 export const SearchableUserSelect = ({
-  label = 'Select User Email *',
-  placeholder = 'Search by email or name...',
+  label = 'Email пользователя *',
+  placeholder = 'Поиск по email или имени...',
   helperText = 'Start typing to search for users',
   onUserSelect,
   excludeUserIds = [],
@@ -120,7 +120,7 @@ export const SearchableUserSelect = ({
               ))
             ) : (
               <div className="px-4 py-6 text-center text-sm text-white/60">
-                No users found
+                Пользователи не найдены
               </div>
             )}
           </div>

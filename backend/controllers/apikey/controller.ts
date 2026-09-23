@@ -15,7 +15,7 @@ const createApiKeySchema = z.object({
     .transform((val) => (val ? new Date(val) : null))
     .refine(
       (date) => date === null || date.getTime() > Date.now(),
-      { message: 'Expiration date must be in the future' }
+      { message: 'Срок действия должен быть в будущем' }
     ),
 });
 
@@ -81,15 +81,15 @@ export class ApiKeyController {
     try {
       await apiKeyService.deleteApiKey(apiKeyId, userId);
       return {
-        message: 'API key deleted successfully',
+        message: 'API-ключ удалён',
         statusCode: 200,
       };
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === 'API key not found') {
+        if (['API key not found', 'API-ключ не найден'].includes(error.message)) {
           throw new NotFoundException(error.message);
         }
-        if (error.message.includes('Unauthorized')) {
+        if ((error.message.includes('Unauthorized') || error.message.includes('Требуется вход'))) {
           throw new ValidationException(error.message);
         }
       }
@@ -106,7 +106,7 @@ export class ApiKeyController {
     const apiKey = await apiKeyService.getApiKeyById(apiKeyId, userId);
 
     if (!apiKey) {
-      throw new NotFoundException('API key not found');
+      throw new NotFoundException('API-ключ не найден');
     }
 
     return {

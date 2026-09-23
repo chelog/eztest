@@ -160,7 +160,6 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
       title: 'Успешно',
       message: `Тест-ран "${newTestRun.name}" успешно создан`,
     });
-    setTimeout(() => setAlert(null), 5000);
     fetchTestRuns();
   };
 
@@ -181,7 +180,6 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
           title: 'Успешно',
           message: `Тест-ран "${deletedTestRunName}" успешно удален`,
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchTestRuns();
       } else {
         const data = await response.json();
@@ -210,7 +208,6 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
       title: 'Успешно',
       message: `Тест-ран "${newTestRun.name}" создан`,
     });
-    setTimeout(() => setAlert(null), 5000);
     fetchTestRuns();
   };
 

@@ -6,23 +6,13 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSidebarCollapsed } from '@/lib/sidebar-context';
 import { useTestSuites, useTestRuns } from '@/hooks/useSidebarData';
-import {
-  LayoutDashboard,
-  FolderTree,
-  FileCheck,
-  ClipboardList,
-  PlayCircle,
-  Users,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Folder,
-  Shield,
-  Bug,
-} from 'lucide-react';
+import { LayoutDashboard, FolderTree, FileCheck, ClipboardList, PlayCircle, Users, Settings, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Folder, Shield, Bug, FlaskConical } from 'lucide-react';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
+import { UiThemePicker } from './UiThemePicker';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { NtSidebar } from '@/frontend/themes/new/NtSidebar';
+import { setActiveProjectId } from '@/lib/active-project';
+import { useSession } from 'next-auth/react';
 
 export interface SidebarItem {
   label: string;
@@ -65,6 +55,9 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
   const { setIsCollapsed: setContextCollapsed } = useSidebarCollapsed();
   const { testSuites } = useTestSuites(projectId || '');
   const { testRuns } = useTestRuns(projectId || '');
+  const isNewTheme = useIsNewTheme();
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email;
 
   // Handle client-side mounting
   React.useEffect(() => {
@@ -81,7 +74,8 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
             const data = await response.json();
             setProjectName(data.data?.name || null);
           } else if (response.status === 404 || response.status === 403) {
-            // Project was deleted, not found, or no access
+            // Project was deleted, not found, or no access — also drop it from the pinned project
+            setActiveProjectId(userEmail, null);
             setProjectName('Проект не определен');
             
             // Redirect to projects page after a brief moment
@@ -100,12 +94,12 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
     } else {
       setProjectName(null);
     }
-  }, [projectId]);
+  }, [projectId, userEmail]);
 
   // Update display items when test suites or test runs change
   React.useEffect(() => {
     const updatedItems = items.map(item => {
-      if (item.label === 'Test Suites') {
+      if (item.label === 'Test Suites' || item.label === 'Тест-сьюты') {
         return {
           ...item,
           children: testSuites.length > 0 ? testSuites.map(suite => ({
@@ -114,7 +108,7 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
           })) : [], // Keep as empty array if no data, but item will still be treated as expandable
         };
       }
-      if (item.label === 'Test Runs') {
+      if (item.label === 'Test Runs' || item.label === 'Тест-раны') {
         return {
           ...item,
           children: testRuns.length > 0 ? testRuns.map(run => ({
@@ -149,6 +143,20 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
       setExpandedItems(new Set()); // Collapse all items when sidebar collapses
     }
   };
+
+  if (isNewTheme) {
+    return (
+      <NtSidebar
+        items={displayItems}
+        projectId={projectId}
+        projectName={projectName}
+        isCollapsed={isMounted && isCollapsed}
+        expandedItems={expandedItems}
+        onToggleExpanded={toggleExpanded}
+        onToggleSidebar={toggleSidebar}
+      />
+    );
+  }
 
   const renderItem = (item: SidebarItem, level = 0, index = 0) => {
     const hasChildren = item.children !== undefined && item.children !== null;
@@ -351,7 +359,7 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
       }}
     >
       <aside
-        className="h-full relative overflow-hidden flex flex-col rounded-3xl"
+        className="h-full relative overflow-hidden flex flex-col rounded-3xl" data-ui="frame-inner"
         style={{ backgroundColor: '#050608' }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-white/[0.02] backdrop-blur-2xl shadow-lg shadow-black/30 before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:pointer-events-none before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.005),rgba(255,255,255,0.02))] pointer-events-none" />
@@ -364,7 +372,7 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
         {!isCollapsed ? (
           <>
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <span className="text-2xl">🧪</span>
+              <FlaskConical className="w-6 h-6 text-primary" />
               <span className="text-xl font-bold text-white">EZTest</span>
             </Link>
             <Button
@@ -380,7 +388,7 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
         ) : (
           <div className="flex flex-col items-center gap-2 w-full">
             <Link href="/" className="flex items-center justify-center hover:opacity-80 transition-opacity">
-              <span className="text-2xl">🧪</span>
+              <FlaskConical className="w-6 h-6 text-primary" />
             </Link>
             <Button
               variant="ghost"
@@ -458,7 +466,8 @@ export function Sidebar({ items, projectId, className }: SidebarProps) {
       <div className="flex-1" />
 
       {/* User Account Section - Bottom */}
-      <div className={cn('border-t border-white/[0.08] px-3 py-4', isMounted && isCollapsed && 'px-2')}>
+      <div className={cn('border-t border-white/[0.08] px-3 py-4 space-y-3', isMounted && isCollapsed && 'px-2 flex flex-col items-center')}>
+        <UiThemePicker compact={isMounted && isCollapsed} />
         <Link
           href="/settings/profile"
           className={cn(

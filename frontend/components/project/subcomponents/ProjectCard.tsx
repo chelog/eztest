@@ -4,9 +4,9 @@ import { formatDateTime } from '@/lib/date-utils';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
-import { StatsGrid } from '@/frontend/reusable-components/data/StatsGrid';
 import { AvatarStack } from '@/frontend/reusable-components/users/AvatarStack';
-import { Folder, Settings, Users, Trash2, TestTube2, Play, FileText } from 'lucide-react';
+import { Folder, Settings, Users, Trash2 } from 'lucide-react';
+import { ENTITY_ICONS } from '@/lib/entity-icons';
 
 interface ProjectCardProps {
   project: {
@@ -79,32 +79,33 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
     />
   );
 
+  const stats = [
+    { icon: ENTITY_ICONS.testCase, value: project._count?.testCases || 0, label: 'Тест-кейсы', href: `/projects/${project.id}/testcases` },
+    { icon: ENTITY_ICONS.testRun, value: project._count?.testRuns || 0, label: 'Тест-раны', href: `/projects/${project.id}/testruns` },
+    { icon: ENTITY_ICONS.testSuite, value: project._count?.testSuites || 0, label: 'Тест-сьюты', href: `/projects/${project.id}/testsuites` },
+  ];
+
   const content = (
-    <StatsGrid
-      stats={[
-        {
-          icon: TestTube2,
-          value: project._count?.testCases || 0,
-          label: 'Тест-кейсы',
-          iconColor: 'text-primary',
-        },
-        {
-          icon: Play,
-          value: project._count?.testRuns || 0,
-          label: 'Тест-раны',
-          iconColor: 'text-accent',
-        },
-        {
-          icon: FileText,
-          value: project._count?.testSuites || 0,
-          label: 'Тест-сьюты',
-          iconColor: 'text-purple-400',
-        },
-      ]}
-      columns={3}
-      gap="sm"
-      className="mb-2.5"
-    />
+    <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+      {stats.map((stat) => (
+        <button
+          key={stat.label}
+          type="button"
+          onClick={(e) => {
+            // The whole card is a link to the project; stat tiles jump straight to the section
+            e.preventDefault();
+            e.stopPropagation();
+            onNavigate(stat.href);
+          }}
+          className="flex flex-col items-center gap-1 rounded-[12px] py-2.5 hover:bg-white/[0.06] transition-colors cursor-pointer"
+          title={`Открыть: ${stat.label}`}
+        >
+          <stat.icon className="w-4 h-4 text-white/40" strokeWidth={1.75} />
+          <span className="text-2xl font-bold text-white tabular-nums leading-none">{stat.value}</span>
+          <span className="text-xs text-white/50">{stat.label}</span>
+        </button>
+      ))}
+    </div>
   );
 
   const footer = (
@@ -137,6 +138,7 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
       description={project.description || undefined}
       descriptionClassName="line-clamp-2 break-words text-sm text-white/60 min-h-5"
       badges={badges}
+      inlineBadges
       header={header}
       content={content}
       footer={footer}

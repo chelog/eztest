@@ -25,11 +25,11 @@ export function TestSuiteInfoCard({
   onParentClick,
 }: TestSuiteInfoCardProps) {
   return (
-    <DetailCard title="Information" contentClassName="space-y-3">
+    <DetailCard title="Информация" contentClassName="space-y-3">
       {parent && (
         <div>
           <h4 className="text-sm font-medium text-white/60 mb-1">
-            Parent Suite
+            Родительский сьют
           </h4>
           <Button
             variant="glass"
@@ -45,13 +45,13 @@ export function TestSuiteInfoCard({
 
       <StatisticsSection
         statistics={[
-          { label: 'Test Cases', value: testCasesCount },
-          { label: 'Child Suites', value: childrenCount },
+          { label: 'Тест-кейсы', value: testCasesCount },
+          { label: 'Дочерние сьюты', value: childrenCount },
         ]}
       />
 
-      <DateInfoSection label="Created" date={createdAt} />
-      <DateInfoSection label="Last Updated" date={updatedAt} />
+      <DateInfoSection label="Создан" date={createdAt} />
+      <DateInfoSection label="Обновлён" date={updatedAt} />
     </DetailCard>
   );
 }

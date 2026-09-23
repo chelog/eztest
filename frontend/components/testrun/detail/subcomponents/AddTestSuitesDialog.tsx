@@ -13,7 +13,7 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
-import { ChevronDown, ChevronRight, FolderOpen, TestTube2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, FileCheck } from 'lucide-react';
 import { PriorityBadge, Priority } from '@/frontend/reusable-components/badges/PriorityBadge';
 
 interface TestSuite {
@@ -106,7 +106,7 @@ export function AddTestSuitesDialog({
                     <button
                       onClick={() => toggleSuiteExpanded(testSuite.id)}
                       className="text-white/60 hover:text-white p-1 transition-colors cursor-pointer shrink-0"
-                      aria-label="Toggle suite"
+                      aria-label="Свернуть/развернуть сьют"
                     >
                       {expandedSuites.has(testSuite.id) ? (
                         <ChevronDown className="w-5 h-5" />
@@ -158,7 +158,7 @@ export function AddTestSuitesDialog({
                           className="p-3 bg-white/5 rounded border border-white/10 hover:border-white/20 transition-colors"
                         >
                           <div className="flex items-start gap-3">
-                            <TestTube2 className="w-4 h-4 text-white/50 mt-1 shrink-0" />
+                            <FileCheck className="w-4 h-4 text-white/50 mt-1 shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-white/90 line-clamp-1">
                                 {testCase.title || testCase.name}

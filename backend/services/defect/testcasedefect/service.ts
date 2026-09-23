@@ -13,7 +13,7 @@ export class TestCaseDefectService {
     });
 
     if (!testCase) {
-      throw new NotFoundException('Test case not found');
+      throw new NotFoundException('Тест-кейс не найден');
     }
 
     // Get linked defects through join table
@@ -52,7 +52,7 @@ export class TestCaseDefectService {
     });
 
     if (!testCase) {
-      throw new NotFoundException('Test case not found');
+      throw new NotFoundException('Тест-кейс не найден');
     }
 
     // Verify all defects exist
@@ -112,7 +112,7 @@ export class TestCaseDefectService {
         },
       });
     } catch {
-      throw new NotFoundException('Link not found or already removed');
+      throw new NotFoundException('Связь не найдена или уже удалена');
     }
   }
 }

@@ -66,9 +66,9 @@ export function LinkTestCaseDialog({
   const fields: BaseDialogField[] = [
     {
       name: 'testCaseId',
-      label: 'Select Test Case',
+      label: 'Выберите тест-кейс',
       type: 'select',
-      placeholder: 'Choose a test case to link',
+      placeholder: 'Выберите тест-кейс для связи',
       required: true,
       options: testCaseOptions,
       cols: 2,
@@ -76,11 +76,11 @@ export function LinkTestCaseDialog({
   ];
 
   const config: BaseDialogConfig = {
-    title: 'Link Test Case',
-    description: 'Link a test case to this defect to track related failures.',
+    title: 'Связать тест-кейс',
+    description: 'Свяжите тест-кейс с дефектом, чтобы отслеживать связанные падения.',
     fields,
-    submitLabel: 'Link Test Case',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Связать тест-кейс',
+    cancelLabel: 'Отмена',
     triggerOpen: open,
     onOpenChange,
     onSubmit: async (formData) => {
@@ -108,8 +108,8 @@ export function LinkTestCaseDialog({
     onSuccess: () => {
       setAlert({
         type: 'success',
-        title: 'Test Case Linked',
-        message: 'The test case has been successfully linked to this defect',
+        title: 'Тест-кейс связан',
+        message: 'Тест-кейс связан с дефектом',
       });
       onTestCaseLinked();
     },

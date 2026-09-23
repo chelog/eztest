@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { getAvatarColor } from '@/lib/avatar-color';
 
 export interface Avatar {
   id: string;
@@ -52,12 +53,13 @@ export function AvatarStack({
         <div
           key={avatar.id}
           className={cn(
-            'rounded-full bg-primary text-white flex items-center justify-center font-semibold border-background',
+            'rounded-full text-white flex items-center justify-center font-semibold border-background',
             sizeClass.avatar,
             sizeClass.border,
             avatarClassName
           )}
           title={avatar.name}
+          style={{ backgroundColor: getAvatarColor(avatar.email || avatar.name) }}
         >
           {avatar.avatar ? (
             <img

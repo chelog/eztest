@@ -8,7 +8,7 @@ export class CommentController {
    */
   async createCommentAttachment(req: CustomRequest, commentId: string, body: unknown) {
     if (!body || typeof body !== 'object') {
-      throw new ValidationException('Request body is required');
+      throw new ValidationException('Пустой запрос');
     }
 
     const { filename, originalName, mimeType, size, path, fieldName } = body as {
@@ -21,12 +21,12 @@ export class CommentController {
     };
 
     if (!filename || !originalName || !mimeType || !size || !path) {
-      throw new ValidationException('Missing required attachment fields');
+      throw new ValidationException('Не заполнены обязательные поля вложения');
     }
 
     const userId = req.userInfo?.id;
     if (!userId) {
-      throw new ValidationException('User not authenticated');
+      throw new ValidationException('Требуется вход');
     }
 
     const attachment = await commentService.createCommentAttachment(
@@ -60,7 +60,7 @@ export class CommentController {
     const attachment = await commentService.getCommentAttachmentById(attachmentId);
     
     if (!attachment) {
-      throw new ValidationException('Attachment not found');
+      throw new ValidationException('Вложение не найдено');
     }
 
     const downloadUrl = await commentService.getCommentAttachmentDownloadUrl(attachmentId);
@@ -74,7 +74,7 @@ export class CommentController {
     const attachment = await commentService.getCommentAttachmentById(attachmentId);
     
     if (!attachment) {
-      throw new ValidationException('Attachment not found');
+      throw new ValidationException('Вложение не найдено');
     }
 
     const result = await commentService.deleteCommentAttachment(attachmentId, step);

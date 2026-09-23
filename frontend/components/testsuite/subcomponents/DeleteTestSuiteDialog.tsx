@@ -2,6 +2,7 @@
 
 import { BaseConfirmDialog, BaseConfirmDialogConfig } from '@/frontend/reusable-components/dialogs/BaseConfirmDialog';
 import { TestSuite } from '../types';
+import { AlertTriangle } from 'lucide-react';
 
 export interface DeleteTestSuiteDialogProps {
   suite: TestSuite | null;
@@ -29,36 +30,36 @@ export function DeleteTestSuiteDialog({
     <div className="space-y-3">
       {hasTestCases && (
         <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
-          <p className="font-medium">⚠️ This suite contains {suite._count.testCases} test case(s)</p>
+          <p className="font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 shrink-0" />В сьюте тест-кейсов: {suite._count.testCases}</p>
           <p className="mt-1 text-yellow-300/80">
-            Test cases will not be deleted but will become unorganized.
+            Тест-кейсы не удалятся, но останутся без сьюта.
           </p>
         </div>
       )}
 
       {hasChildren && (
         <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
-          <p className="font-medium">⚠️ This suite contains {suite.children?.length} child suite(s)</p>
+          <p className="font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 shrink-0" />Вложенных сьютов: {suite.children?.length}</p>
           <p className="mt-1 text-yellow-300/80">
-            Child suites will be moved to root level.
+            Дочерние сьюты переместятся на верхний уровень.
           </p>
         </div>
       )}
 
       {!hasTestCases && !hasChildren && (
         <p className="text-sm text-gray-300">
-          This action cannot be undone.
+          Действие нельзя отменить.
         </p>
       )}
     </div>
   );
 
   const config: BaseConfirmDialogConfig = {
-    title: 'Delete Test Suite',
-    description: `Are you sure you want to delete "${suite.name}"?`,
+    title: 'Удалить тест-сьют',
+    description: `Удалить «${suite.name}»?`,
     content,
-    submitLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Удалить',
+    cancelLabel: 'Отмена',
     triggerOpen,
     onOpenChange,
     onSubmit: async () => onConfirm(),

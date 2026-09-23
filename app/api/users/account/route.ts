@@ -25,7 +25,7 @@ export async function DELETE(request: NextRequest) {
     where: { id: sessionUser!.id },
   });
   if (!user) {
-    throw new NotFoundException('User not found');
+    throw new NotFoundException('Пользователь не найден');
   }
   // Verify password
   const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     },
   });
   if (!user) {
-    throw new NotFoundException('User not found');
+    throw new NotFoundException('Пользователь не найден');
   }
   return NextResponse.json({
     data: {

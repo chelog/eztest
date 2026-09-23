@@ -101,8 +101,8 @@ export function CreateDefectDialog({
   const fields: BaseDialogField[] = [
     {
       name: 'title',
-      label: 'Title',
-      placeholder: 'Enter defect title',
+      label: 'Название',
+      placeholder: 'Введите название дефекта',
       type: 'text',
       required: true,
       minLength: 5,
@@ -112,7 +112,7 @@ export function CreateDefectDialog({
     // Test Case field - searchable select when from defect list, text input when from test run
     ...(testCaseId ? [{
       name: 'testCaseId',
-      label: 'Test Case (Auto-populated)',
+      label: 'Тест-кейс (заполняется автоматически)',
       type: 'text' as const,
       defaultValue: testCaseId,
       readOnly: true,
@@ -122,7 +122,7 @@ export function CreateDefectDialog({
         : 'Loading test case...',
     }] : [{
       name: 'testCaseId',
-      label: 'Test Case (Optional)',
+      label: 'Тест-кейс (необязательно)',
       type: 'custom' as const,
       cols: 1,
       customRender: (value: string, onChange: (value: string) => void) => (
@@ -133,14 +133,14 @@ export function CreateDefectDialog({
           label=""
           id="testCaseSearch"
           searchPlaceholder="Search by TC-ID or title..."
-          emptyMessage="No test cases found matching"
+          emptyMessage="Не найдено тест-кейсов по запросу"
           maxResults={10}
         />
       ),
     }]),
     {
       name: 'severity',
-      label: 'Severity',
+      label: 'Критичность',
       type: 'select',
       required: true,
       defaultValue: 'MEDIUM',
@@ -149,7 +149,7 @@ export function CreateDefectDialog({
     },
     {
       name: 'priority',
-      label: 'Priority',
+      label: 'Приоритет',
       type: 'select',
       required: true,
       defaultValue: 'MEDIUM',
@@ -158,9 +158,9 @@ export function CreateDefectDialog({
     },
     {
       name: 'assignedToId',
-      label: 'Assignee',
+      label: 'Исполнитель',
       type: 'select',
-      placeholder: 'Select assignee',
+      placeholder: 'Выберите исполнителя',
       options: assigneeOptions,
       cols: 1,
     },
@@ -178,13 +178,13 @@ export function CreateDefectDialog({
     },
     {
       name: 'dueDate',
-      label: 'Due Date (optional)',
+      label: 'Срок (необязательно)',
       type: 'date',
       cols: 1,
     },
     {
       name: 'progressPercentage',
-      label: 'Progress % (optional)',
+      label: 'Прогресс, % (необязательно)',
       type: 'number',
       placeholder: '0-100',
       min: 0,
@@ -193,21 +193,21 @@ export function CreateDefectDialog({
     },
     {
       name: 'description',
-      label: 'Description',
+      label: 'Описание',
       type: 'textarea',
-      placeholder: 'Describe the defect...',
+      placeholder: 'Опишите дефект...',
       rows: 3,
       cols: 2,
       maxLength: 2000,
     },
     {
       name: 'attachments',
-      label: 'Attachments',
+      label: 'Вложения',
       type: 'custom',
       cols: 2,
       customRender: () => (
         <DetailCard
-          title="Attachments"
+          title="Вложения"
           contentClassName="space-y-3"
           headerAction={
             <button
@@ -232,14 +232,14 @@ export function CreateDefectDialog({
                   )}
                   {att.id.startsWith('pending-') && (
                     <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
-                      Pending
+                      Ожидает
                     </span>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-white/40 py-2">No attachments yet</p>
+            <p className="text-sm text-white/40 py-2">Вложений пока нет</p>
           )}
           <FileUploadModal
             isOpen={attachmentModalOpen}
@@ -249,7 +249,7 @@ export function CreateDefectDialog({
             fieldName="attachment"
             entityType="defect"
             projectId={projectId}
-            title="Defect Attachments"
+            title="Вложения дефекта"
           />
         </DetailCard>
       ),
@@ -308,11 +308,11 @@ export function CreateDefectDialog({
   };
 
   const config: BaseDialogConfig = {
-    title: 'Create New Defect',
-    description: 'Fill in the details to create a new defect. Status will be set to New by default.',
+    title: 'Новый дефект',
+    description: 'Заполните поля нового дефекта. По умолчанию статус — «Новый».',
     fields,
-    submitLabel: 'Create Defect',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Создать дефект',
+    cancelLabel: 'Отмена',
     triggerOpen,
     onOpenChange: handleDialogOpenChange,
     formPersistenceKey: `create-defect-${projectId}`,
@@ -373,7 +373,7 @@ export function CreateDefectDialog({
         const defect = result as Defect;
         setAlert({
           type: 'success',
-          title: 'Defect Created',
+          title: 'Дефект создан',
           message: `Defect ${defect.defectId} has been created successfully`,
         });
         // Reset attachments state

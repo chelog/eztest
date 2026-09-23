@@ -47,10 +47,10 @@ export const StatsSection = () => {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-3xl relative transition-all group p-[1px] hover:shadow-xl hover:shadow-primary/10"
+            className="rounded-3xl relative transition-all group p-[1px] hover:shadow-xl hover:shadow-primary/10" data-ui="frame"
             style={{ background: gradientStyle }}
           >
-            <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+            <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
               <div className="rounded-3xl border-0 bg-transparent overflow-visible flex flex-col h-full py-8 px-6 text-center">
                 <div className="text-4xl md:text-5xl font-bold text-primary mb-2 group-hover:scale-110 transition-transform">
                   {stat.value}

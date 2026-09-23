@@ -35,8 +35,8 @@ export function CreateTestSuiteDialog({
   const fields: BaseDialogField[] = [
     {
       name: 'name',
-      label: 'Test Suite Name',
-      placeholder: 'Authentication Tests',
+      label: 'Название тест-сьюта',
+      placeholder: 'Авторизация',
       type: 'text',
       required: true,
       minLength: 3,
@@ -44,20 +44,20 @@ export function CreateTestSuiteDialog({
     },
     {
       name: 'description',
-      label: 'Description',
-      placeholder: 'Brief description of the test suite...',
+      label: 'Описание',
+      placeholder: 'Краткое описание тест-сьюта...',
       type: 'textarea',
       rows: 3,
       maxLength: 250,
     },
     {
       name: 'parentId',
-      label: 'Parent Suite',
+      label: 'Родительский сьют',
       type: 'select',
-      placeholder: 'Select parent suite',
+      placeholder: 'Выберите родительский сьют',
       defaultValue: 'none',
       options: [
-        { value: 'none', label: 'None (Root Level)' },
+        { value: 'none', label: 'Нет (корневой уровень)' },
         ...parentOptions,
       ],
     },
@@ -86,11 +86,11 @@ export function CreateTestSuiteDialog({
   };
 
   const config: BaseDialogConfig<TestSuite> = {
-    title: 'Create Test Suite',
-    description: 'Organize your test cases into suites to keep your testing structured and manageable.',
+    title: 'Создать тест-сьют',
+    description: 'Объединяйте тест-кейсы в сьюты, чтобы тестирование было структурированным.',
     fields,
-    submitLabel: 'Create Test Suite',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Создать тест-сьют',
+    cancelLabel: 'Отмена',
     triggerOpen,
     onOpenChange,
     onSubmit: handleSubmit,

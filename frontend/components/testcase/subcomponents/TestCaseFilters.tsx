@@ -27,12 +27,12 @@ export function TestCaseFilters({
 
   // Map to FilterOption format with "All" option
   const priorityOptions: FilterOption[] = [
-    { value: 'all', label: 'All Priorities' },
+    { value: 'all', label: 'Все приоритеты' },
     ...priorityOptionsData.map(opt => ({ value: opt.value, label: opt.label })),
   ];
 
   const statusOptions: FilterOption[] = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: 'Все статусы' },
     ...statusOptionsData.map(opt => ({ value: opt.value, label: opt.label })),
   ];
   return (
@@ -42,7 +42,7 @@ export function TestCaseFilters({
           <SearchInput
             value={searchQuery}
             onChange={onSearchChange}
-            placeholder="Search test cases..."
+            placeholder="Поиск тест-кейсов..."
           />
         </div>
 
@@ -50,7 +50,7 @@ export function TestCaseFilters({
           <FilterDropdown
             value={priorityFilter}
             onValueChange={onPriorityChange}
-            placeholder="Priority"
+            placeholder="Приоритет"
             options={priorityOptions}
           />
         </div>
@@ -59,7 +59,7 @@ export function TestCaseFilters({
           <FilterDropdown
             value={statusFilter}
             onValueChange={onStatusChange}
-            placeholder="Status"
+            placeholder="Статус"
             options={statusOptions}
           />
         </div>

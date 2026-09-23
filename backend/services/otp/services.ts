@@ -40,7 +40,7 @@ export class OtpService {
       if (!user) {
         return {
           success: false,
-          message: 'Invalid email or password',
+          message: 'Неверный email или пароль',
         };
       }
 
@@ -48,7 +48,7 @@ export class OtpService {
       if (user.deletedAt) {
         return {
           success: false,
-          message: 'Your account has been deleted. Please contact your administrator.',
+          message: 'Аккаунт удалён. Обратитесь к администратору.',
         };
       }
 
@@ -58,7 +58,7 @@ export class OtpService {
         if (!isPasswordValid) {
           return {
             success: false,
-            message: 'Invalid email or password',
+            message: 'Неверный email или пароль',
           };
         }
       }
@@ -73,7 +73,7 @@ export class OtpService {
       if (existingUser) {
         return {
           success: false,
-          message: 'User with this email already exists',
+          message: 'Пользователь с таким email уже есть',
         };
       }
     }
@@ -86,7 +86,7 @@ export class OtpService {
       console.log('[OTP] SMTP disabled - skipping OTP verification');
       return {
         success: true,
-        message: 'Authentication will proceed without email verification.',
+        message: 'Вход выполняется без подтверждения по почте.',
         smtpDisabled: true,
       };
     }
@@ -110,7 +110,7 @@ export class OtpService {
       if (recentOtp) {
         return {
           success: false,
-          message: 'Please wait before requesting a new OTP. Try again in 1 minute.',
+          message: 'Новый код можно запросить через минуту.',
         };
       }
 
@@ -139,7 +139,7 @@ export class OtpService {
       if (!emailSent) {
         return {
           success: false,
-          message: 'Failed to send OTP email. Please try again.',
+          message: 'Не удалось отправить письмо с кодом. Попробуйте ещё раз.',
         };
       }
 
@@ -151,7 +151,7 @@ export class OtpService {
       console.error('Error sending OTP:', error);
       return {
         success: false,
-        message: 'Failed to send OTP. Please try again.',
+        message: 'Не удалось отправить код. Попробуйте ещё раз.',
       };
     }
   }
@@ -169,7 +169,7 @@ export class OtpService {
       console.log('[OTP] SMTP disabled - auto-verifying OTP');
       return {
         success: true,
-        message: 'Verification successful',
+        message: 'Подтверждение выполнено',
       };
     }
 
@@ -187,7 +187,7 @@ export class OtpService {
       if (!otpRecord) {
         return {
           success: false,
-          message: 'No OTP found. Please request a new one.',
+          message: 'Код не найден. Запросите новый.',
         };
       }
 
@@ -195,7 +195,7 @@ export class OtpService {
       if (new Date() > otpRecord.expiresAt) {
         return {
           success: false,
-          message: 'OTP has expired. Please request a new one.',
+          message: 'Срок действия кода истёк. Запросите новый.',
         };
       }
 
@@ -203,7 +203,7 @@ export class OtpService {
       if (otpRecord.attempts >= 5) {
         return {
           success: false,
-          message: 'Too many failed attempts. Please request a new OTP.',
+          message: 'Слишком много попыток. Запросите новый код.',
         };
       }
 
@@ -230,13 +230,13 @@ export class OtpService {
 
       return {
         success: true,
-        message: 'OTP verified successfully',
+        message: 'Код подтверждён',
       };
     } catch (error) {
       console.error('Error verifying OTP:', error);
       return {
         success: false,
-        message: 'Failed to verify OTP. Please try again.',
+        message: 'Не удалось проверить код. Попробуйте ещё раз.',
       };
     }
   }

@@ -90,7 +90,7 @@ export default function ProjectList() {
         setProjects(data.data || []);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
         title: 'Ошибка соединения',
@@ -110,7 +110,6 @@ export default function ProjectList() {
       title: 'Успешно',
       message: `Проект "${newProject.name}" успешно создан`,
     });
-    setTimeout(() => setAlert(null), 5000);
   };
 
   const handleProjectDeleted = (projectId: string) => {
@@ -123,7 +122,6 @@ export default function ProjectList() {
         title: 'Успешно',
         message: `Проект "${deletedProject.name}" успешно удален`,
       });
-      setTimeout(() => setAlert(null), 5000);
     }
   };
 

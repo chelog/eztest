@@ -1,6 +1,7 @@
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
+import { suggestRegistrationEmails } from '@/lib/allowed-email-domains';
 
 interface FieldErrors {
   name?: string;
@@ -81,11 +82,18 @@ export const RegisterForm = ({
             onFormDataChange({ ...formData, email: e.target.value })
           }
           onBlur={() => onFieldBlur?.('email')}
-          placeholder="abc@gmail.com"
+          placeholder="имя@work.majestic-rp.ru"
+          list="registration-email-domains"
+          autoComplete="off"
           className={`h-10 bg-transparent border-[#BAB8B8]/60 rounded-full px-5 text-white placeholder:text-white/30 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all ${
             fieldErrors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-400/50' : ''
           }`}
         />
+        <datalist id="registration-email-domains">
+          {suggestRegistrationEmails(formData.email).map((email) => (
+            <option key={email} value={email} />
+          ))}
+        </datalist>
         {fieldErrors.email && (
           <p className="text-xs text-red-400 mt-1 pl-2">{fieldErrors.email}</p>
         )}

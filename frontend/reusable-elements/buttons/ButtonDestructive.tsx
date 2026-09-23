@@ -3,6 +3,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useAnalytics } from "@/hooks/useAnalytics"
+import { useIsNewTheme } from "@/frontend/context/UiThemeContext"
+import { NtButton } from "@/frontend/themes/new/NtButton"
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,6 +18,7 @@ export interface ButtonProps
 
 const ButtonDestructive = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", buttonName, disableTracking = false, onClick, ...props }, ref) => {
+    const isNewTheme = useIsNewTheme()
     const { trackButton } = useAnalytics();
 
     const handleClick = React.useCallback(
@@ -39,6 +42,19 @@ const ButtonDestructive = React.forwardRef<HTMLButtonElement, ButtonProps>(
       },
       [onClick, trackButton, buttonName, disableTracking, variant, size]
     );
+
+    if (isNewTheme) {
+      return (
+        <NtButton
+          ref={ref}
+          tone={'danger'}
+          size={size}
+          className={className}
+          onClick={handleClick}
+          {...props}
+        />
+      )
+    }
 
     const sizes = {
       default: "h-auto px-4 py-2",

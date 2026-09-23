@@ -17,13 +17,13 @@ export function MembersHeader({ project, isAdminOrManager, onAddMember }: Member
         {isAdminOrManager && (
           <ButtonPrimary onClick={onAddMember} className="cursor-pointer">
             <Plus className="w-4 h-4 mr-2" />
-            Add Member
+            Добавить участника
           </ButtonPrimary>
         )}
       </div>
       
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">Project Members</h1>
+        <h1 className="text-2xl font-bold text-white mb-1">Участники проекта</h1>
         <p className="text-white/70 text-sm">
           Manage team members for{' '}
           <span className="font-semibold text-white">{project.name}</span>

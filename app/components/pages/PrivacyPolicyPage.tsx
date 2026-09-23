@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
               background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
             }}
           >
-            <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" style={{ backgroundColor: '#050608' }}>
+            <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
               <svg
                 width="24"
                 height="24"

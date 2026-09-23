@@ -9,7 +9,7 @@ interface LoaderProps {
 
 export const Loader: React.FC<LoaderProps> = ({ 
   size = 'md', 
-  text = 'Loading...', 
+  text = 'Загрузка...', 
   fullScreen = false,
   className = '' 
 }) => {
@@ -30,7 +30,7 @@ export const Loader: React.FC<LoaderProps> = ({
       <div
         className={`${sizeClasses[size]} border-primary border-t-transparent rounded-full animate-spin`}
         role="status"
-        aria-label="Loading"
+        aria-label="Загрузка"
       />
       {text && (
         <div className={`${textSizeClasses[size]} text-muted-foreground`}>

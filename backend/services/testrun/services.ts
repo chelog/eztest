@@ -1591,7 +1591,7 @@ export class TestRunService {
       console.log('[TEST RUN] SMTP disabled - skipping report email');
       return {
         success: true,
-        message: 'Email service is not configured. Report not sent.',
+        message: 'Почтовый сервис не настроен, отчёт не отправлен.',
         recipientCount: 0,
         totalRecipients: 0,
         failedRecipients: [],
@@ -1607,7 +1607,7 @@ export class TestRunService {
       // Return result instead of throwing error - show alert but don't block
       return {
         success: false,
-        message: 'No recipients found for this test run report. No email sent.',
+        message: 'Для отчёта нет получателей, письмо не отправлено.',
         recipientCount: 0,
         totalRecipients: 0,
         failedRecipients: [],

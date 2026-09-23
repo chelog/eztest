@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { DetailPageHeader } from '@/frontend/reusable-components/layout/DetailPageHeader';
-import { Edit, Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { TestCase, TestCaseFormData } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -96,7 +96,7 @@ export function TestCaseHeader({
       actions={[
         { 
           label: 'Редактировать', 
-          icon: Edit, 
+          icon: Pencil, 
           onClick: onEdit, 
           show: canUpdate,
           buttonName: 'TestCase Detail - Edit',

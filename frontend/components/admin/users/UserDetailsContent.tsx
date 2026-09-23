@@ -2,14 +2,14 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/frontend/reusable-elements/cards/Card';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { formatDateTime } from '@/lib/date-utils';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
-import { Mail, Calendar, Briefcase } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { getRoleLabel, getRoleTextColor } from '@/lib/role-labels';
+import { getAvatarColor } from '@/lib/avatar-color';
 
 interface UserRole {
   id: string;
@@ -81,29 +81,21 @@ export default function UserDetailsContent({ userId }: UserDetailsContentProps) 
     return null;
   }
 
-  const getRoleBadgeColor = (roleName: string) => {
-    switch (roleName) {
-      case 'ADMIN':
-        return 'bg-red-500/10 text-red-500 border-red-500/20';
-      case 'PROJECT_MANAGER':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'TESTER':
-        return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'VIEWER':
-        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-      default:
-        return 'bg-muted text-foreground border-border';
-    }
-  };
+  const facts = [
+    { label: 'Email', value: user.email },
+    { label: 'Роль', value: getRoleLabel(user.role.name) },
+    { label: 'Создано проектов', value: String(user._count.createdProjects) },
+    { label: 'В системе с', value: formatDateTime(user.createdAt) },
+    { label: 'Последнее обновление', value: formatDateTime(user.updatedAt) },
+  ];
 
   return (
     <div className="flex-1">
-      {/* Navbar */}
       <Navbar
         brandLabel={null}
         items={[]}
         breadcrumbs={
-          <Breadcrumbs 
+          <Breadcrumbs
             items={[
               { label: 'Админка', href: '/admin' },
               { label: 'Пользователи', href: '/admin/users' },
@@ -114,157 +106,36 @@ export default function UserDetailsContent({ userId }: UserDetailsContentProps) 
         actions={navbarActions}
       />
 
-      <div className="max-w-4xl mx-auto px-8 py-10">
-        {/* Profile Header Card */}
-        <div
-          className="rounded-3xl relative transition-all p-[1px] mb-8"
-          style={{
-            background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
-          }}
-        >
-          <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
-            <Card
-              variant="glass"
-              className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible transition-all flex flex-col h-full"
-            >
-              <CardHeader>
-                <CardTitle>Профиль</CardTitle>
-                <CardDescription>Обзор учетной записи пользователя</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                  {/* Avatar */}
-                  <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-5xl font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 text-center md:text-left">
-                    <div className="mb-4">
-                      <h1 className="text-4xl font-bold text-foreground mb-2">{user.name}</h1>
-                      <Badge variant="outline" className={`border ${getRoleBadgeColor(user.role.name)} cursor-default`}>
-                        <Briefcase className="w-3 h-3 mr-1" />
-                        {user.role.name}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        <span>{user.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>Присоединился: {formatDateTime(user.createdAt)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" />
-                        <span>Создано проектов: {user._count.createdProjects}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="max-w-4xl mx-auto px-8 pt-2 pb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="w-14 h-14 shrink-0 rounded-full flex items-center justify-center text-xl font-bold text-white"
+            style={{ backgroundColor: getAvatarColor(user.email || user.name) }}
+          >
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold text-white truncate">{user.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/55">
+              <span className={`font-semibold ${getRoleTextColor(user.role.name)}`}>{getRoleLabel(user.role.name)}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" />
+                {user.email}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Details Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* User Information */}
-          <DetailCard
-            title="Информация о пользователе"
-            description="Основные данные пользователя"
-            contentClassName="space-y-4"
-            headerClassName=""
-          >
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">Имя</label>
-                <p className="text-foreground font-medium mt-1">{user.name}</p>
+        <DetailCard title="Данные пользователя" contentClassName="p-0">
+          <dl className="divide-y divide-white/[0.06]">
+            {facts.map((fact) => (
+              <div key={fact.label} className="flex items-center justify-between gap-6 py-3">
+                <dt className="text-sm text-white/50">{fact.label}</dt>
+                <dd className="text-sm font-semibold text-white text-right truncate">{fact.value}</dd>
               </div>
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">Email</label>
-                <p className="text-foreground font-medium mt-1">{user.email}</p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">Роль</label>
-                <p className="text-foreground font-medium mt-1">{user.role.name}</p>
-              </div>
-              {user.phone && (
-                <div>
-                  <label className="text-xs uppercase tracking-wide text-muted-foreground">Телефон</label>
-                  <p className="text-foreground font-medium mt-1">{user.phone}</p>
-                </div>
-              )}
-              {user.location && (
-                <div>
-                  <label className="text-xs uppercase tracking-wide text-muted-foreground">Локация</label>
-                  <p className="text-foreground font-medium mt-1">{user.location}</p>
-                </div>
-              )}
-              {user.bio && (
-                <div>
-                  <label className="text-xs uppercase tracking-wide text-muted-foreground">О себе</label>
-                  <p className="text-foreground font-medium mt-1">{user.bio}</p>
-                </div>
-              )}
-            </div>
-          </DetailCard>
-
-          {/* Statistics */}
-          <DetailCard
-            title="Статистика"
-            description="Метрики активности пользователя"
-            contentClassName="space-y-4"
-            headerClassName=""
-          >
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">Создано проектов</label>
-                <p className="text-foreground font-medium mt-1 text-2xl">{user._count.createdProjects}</p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">С нами с</label>
-                <p className="text-foreground font-medium mt-1">{formatDateTime(user.createdAt)}</p>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wide text-muted-foreground">Последнее обновление</label>
-                <p className="text-foreground font-medium mt-1">{formatDateTime(user.updatedAt)}</p>
-              </div>
-            </div>
-          </DetailCard>
-        </div>
-
-        {/* Footer */}
-        <div
-          className="rounded-3xl relative transition-all p-[1px] mt-12"
-          style={{
-            background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
-          }}
-        >
-          <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
-            <Card
-              variant="glass"
-              className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible transition-all flex flex-col h-full"
-            >
-              <CardHeader>
-                <CardTitle>О разделе</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} EZTest Admin</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="hidden sm:inline">Детали пользователя</span>
-                    <span className="text-primary">v0.1.0</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+            ))}
+          </dl>
+        </DetailCard>
       </div>
     </div>
   );

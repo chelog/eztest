@@ -48,7 +48,7 @@ export function AttachmentUpload({
     if (files) {
       const remainingSlots = maxFiles - attachments.length;
       if (files.length > remainingSlots) {
-        alert(`Maximum ${maxFiles} files allowed. ${remainingSlots} slot(s) remaining.`);
+        alert(`Можно прикрепить не больше ${maxFiles} файлов, осталось мест: ${remainingSlots}.`);
         return;
       }
       handleFileSelect(files);
@@ -85,7 +85,7 @@ export function AttachmentUpload({
         />
         <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
         <p className="text-sm font-medium text-gray-700">
-          Click to upload or drag and drop
+          Нажмите или перетащите файл
         </p>
         <p className="text-xs text-gray-500 mt-1">
           ({attachments.length}/{maxFiles} files)
@@ -103,7 +103,7 @@ export function AttachmentUpload({
       {/* Attachments List */}
       {attachments.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Attachments</p>
+          <p className="text-sm font-medium text-gray-700">Вложения</p>
           {attachments.map((attachment) => (
             <div
               key={attachment.id}
@@ -158,7 +158,7 @@ export function AttachmentUpload({
                 <button
                   onClick={() => handleRemove(attachment.id)}
                   className="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Remove file"
+                  title="Убрать файл"
                 >
                   <X className="w-4 h-4" />
                 </button>

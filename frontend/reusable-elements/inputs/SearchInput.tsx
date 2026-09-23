@@ -14,11 +14,11 @@ interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = 'Search...',
+  placeholder = 'Поиск...',
   className = '',
 }: SearchInputProps) {
   return (
-    <div className={`relative ${className}`}>
+    <div data-ui="search-input" className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none" />
       <Input
         variant="glass"

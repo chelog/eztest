@@ -54,7 +54,7 @@ function Textarea({
           "text-xs mt-1 text-right",
           isOverLimit ? "text-red-500" : "text-white/60"
         )}>
-          {charCount}/{maxLength} characters
+          {charCount}/{maxLength}
         </div>
       )}
     </div>

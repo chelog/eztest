@@ -251,7 +251,7 @@ export function AttachmentField({
 
       {attachmentsEnabled && (
         <p className="text-xs text-white/40">
-          Maximum file size: 500MB. All file formats supported.
+          До 500 МБ, любые форматы.
         </p>
       )}
     </div>

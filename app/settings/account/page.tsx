@@ -13,7 +13,7 @@ import { GlassPanel } from '@/frontend/reusable-components/layout/GlassPanel';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/frontend/reusable-elements/dialogs/Dialog';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { SettingsSidebar } from '@/app/components/layout/SettingsSidebar';
-import { Key, Copy, Trash2, Eye, EyeOff, Plus } from 'lucide-react';
+import { Key, Copy, Trash2, Eye, EyeOff, Plus, AlertTriangle } from 'lucide-react';
 
 interface AccountStatus {
   isMarkedForDeletion: boolean;
@@ -38,7 +38,7 @@ interface ApiKey {
 
 export default function AccountSettingsPage() {
   useEffect(() => {
-    document.title = 'Account Settings | EZTest';
+    document.title = 'Настройки аккаунта | EZTest';
   }, []);
 
   const router = useRouter();
@@ -76,10 +76,10 @@ export default function AccountSettingsPage() {
         ]);
 
         if (!userResponse.ok) {
-          throw new Error('Failed to fetch user info');
+          throw new Error('Не удалось загрузить данные пользователя');
         }
         if (!accountResponse.ok) {
-          throw new Error('Failed to fetch account status');
+          throw new Error('Не удалось получить статус аккаунта');
         }
 
         const userData = await userResponse.json();
@@ -88,7 +88,7 @@ export default function AccountSettingsPage() {
         setUserInfo(userData.data);
         setAccountStatus(accountData.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error loading account settings');
+        setError(err instanceof Error ? err.message : 'Не удалось загрузить настройки аккаунта');
       } finally {
         setLoading(false);
       }
@@ -150,7 +150,7 @@ export default function AccountSettingsPage() {
       setShowNewKeyDialog(false);
       await fetchApiKeys();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creating API key');
+      setError(err instanceof Error ? err.message : 'Не удалось создать API-ключ');
     } finally {
       setCreatingKey(false);
     }
@@ -175,7 +175,7 @@ export default function AccountSettingsPage() {
       await fetchApiKeys();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error revoking API key');
+      setError(err instanceof Error ? err.message : 'Не удалось отозвать API-ключ');
     }
   };
 
@@ -190,17 +190,17 @@ export default function AccountSettingsPage() {
     setError(null);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match');
+      setError('Пароли не совпадают');
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      setError('New password must be at least 8 characters');
+      setError('Новый пароль должен быть не короче 8 символов');
       return;
     }
 
     if (passwordData.newPassword === passwordData.currentPassword) {
-      setError('New password must be different from current password');
+      setError('Новый пароль должен отличаться от текущего');
       return;
     }
 
@@ -232,7 +232,7 @@ export default function AccountSettingsPage() {
       setChangePasswordForm(false);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error changing password');
+      setError(err instanceof Error ? err.message : 'Не удалось сменить пароль');
     } finally {
       setChangingPassword(false);
     }
@@ -240,7 +240,7 @@ export default function AccountSettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (!password.trim()) {
-      setError('Please enter your password to confirm account deletion');
+      setError('Введите пароль, чтобы подтвердить удаление аккаунта');
       return;
     }
 
@@ -271,14 +271,14 @@ export default function AccountSettingsPage() {
         router.push('/auth/login');
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting account');
+      setError(err instanceof Error ? err.message : 'Не удалось удалить аккаунт');
     } finally {
       setDeleting(false);
     }
   };
 
   if (loading) {
-    return <Loader fullScreen text="Loading account settings..." />;
+    return <Loader fullScreen text="Загрузка настроек аккаунта..." />;
   }
 
   return (
@@ -287,8 +287,8 @@ export default function AccountSettingsPage() {
       <div className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Account & Security</h1>
-          <p className="text-muted-foreground">Manage password, security settings, and account deletion</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Аккаунт и безопасность</h1>
+          <p className="text-muted-foreground">Пароль, безопасность и удаление аккаунта</p>
         </div>
 
         {/* User Info Display */}
@@ -296,12 +296,12 @@ export default function AccountSettingsPage() {
           <div className="mb-8 p-4 rounded-lg border border-primary/30 bg-primary/5">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Logged in as</p>
+                <p className="text-sm text-muted-foreground mb-1">Вы вошли как</p>
                 <h2 className="text-2xl font-bold text-foreground">{userInfo.name}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{userInfo.email}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground mb-1">Role</p>
+                <p className="text-sm text-muted-foreground mb-1">Роль</p>
                 <p className="text-lg font-semibold text-primary">{userInfo.role}</p>
               </div>
             </div>
@@ -326,10 +326,10 @@ export default function AccountSettingsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <Key className="w-6 h-6" />
-                API Keys
+                API-ключи
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                Manage API keys for programmatic access to EZTest
+                API-ключи для программного доступа к EZTest
               </p>
             </div>
             <ButtonPrimary
@@ -341,16 +341,16 @@ export default function AccountSettingsPage() {
               className="rounded-[10px]"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create API Key
+              Создать API-ключ
             </ButtonPrimary>
           </div>
 
           {loadingKeys ? (
-            <p className="text-muted-foreground text-sm">Loading API keys...</p>
+            <p className="text-muted-foreground text-sm">Загрузка API-ключей...</p>
           ) : apiKeys.length === 0 ? (
             <div className="rounded-lg p-4 border border-primary/30 bg-primary/5">
               <p className="text-muted-foreground text-sm">
-                No API keys created yet. Create one to get started.
+                Ключей пока нет.
               </p>
             </div>
           ) : (
@@ -365,7 +365,7 @@ export default function AccountSettingsPage() {
                       <h3 className="font-medium text-foreground">{apiKey.name}</h3>
                       {apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date() && (
                         <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">
-                          Expired
+                          Истёк
                         </span>
                       )}
                     </div>
@@ -405,8 +405,8 @@ export default function AccountSettingsPage() {
         <GlassPanel className="mb-6" contentClassName="p-8">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Password</h2>
-                <p className="text-muted-foreground text-sm mt-1">Change your password to keep your account secure</p>
+                <h2 className="text-2xl font-bold text-foreground">Пароль</h2>
+                <p className="text-muted-foreground text-sm mt-1">Регулярно меняйте пароль для безопасности аккаунта</p>
               </div>
             </div>
 
@@ -415,7 +415,7 @@ export default function AccountSettingsPage() {
                 {/* Current Password */}
                 <div>
                   <Label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Current Password
+                    Текущий пароль
                   </Label>
                   <Input
                     type="password"
@@ -428,14 +428,14 @@ export default function AccountSettingsPage() {
                       }))
                     }
                     required
-                    placeholder="Enter your current password"
+                    placeholder="Введите текущий пароль"
                   />
                 </div>
 
                 {/* New Password */}
                 <div>
                   <Label className="block text-sm font-medium text-muted-foreground mb-2">
-                    New Password
+                    Новый пароль
                   </Label>
                   <Input
                     type="password"
@@ -448,14 +448,14 @@ export default function AccountSettingsPage() {
                       }))
                     }
                     required
-                    placeholder="Enter new password (min 8 characters)"
+                    placeholder="Новый пароль (минимум 8 символов)"
                   />
                 </div>
 
                 {/* Confirm Password */}
                 <div>
                   <Label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Confirm New Password
+                    Повторите новый пароль
                   </Label>
                   <Input
                     type="password"
@@ -468,16 +468,16 @@ export default function AccountSettingsPage() {
                       }))
                     }
                     required
-                    placeholder="Confirm your new password"
+                    placeholder="Повторите новый пароль"
                   />
                 </div>
 
                 <div className="rounded-lg p-3 text-sm border border-primary/30 bg-primary/5">
-                  <p className="font-medium mb-2 text-foreground">Password requirements:</p>
+                  <p className="font-medium mb-2 text-foreground">Требования к паролю:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>At least 8 characters long</li>
-                    <li>Must be different from current password</li>
-                    <li>Must match in both new password fields</li>
+                    <li>Не короче 8 символов</li>
+                    <li>Должен отличаться от текущего</li>
+                    <li>Оба поля нового пароля должны совпадать</li>
                   </ul>
                 </div>
 
@@ -502,7 +502,7 @@ export default function AccountSettingsPage() {
                     variant="glass"
                     className="flex-1 rounded-[10px] cursor-pointer"
                   >
-                    Cancel
+                    Отмена
                   </Button>
                 </div>
               </form>
@@ -511,7 +511,7 @@ export default function AccountSettingsPage() {
                 onClick={() => setChangePasswordForm(true)}
                 className="rounded-[10px]"
               >
-                Change Password
+                Сменить пароль
               </ButtonPrimary>
             )}
         </GlassPanel>
@@ -519,19 +519,19 @@ export default function AccountSettingsPage() {
         {/* Account Deletion Section */}
   <GlassPanel className="border-red-500/30" contentClassName="p-8">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Delete Account</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Удалить аккаунт</h2>
               <p className="text-muted-foreground text-sm">
-                Permanently delete your account and all associated data
+                Безвозвратно удалить аккаунт и все его данные
               </p>
             </div>
 
             {accountStatus?.isMarkedForDeletion ? (
               <div className="rounded-lg p-4 mb-6 border border-yellow-500/40 bg-yellow-500/10">
-                <h3 className="font-medium text-yellow-200 mb-2">Account Marked for Deletion</h3>
+                <h3 className="font-medium text-yellow-200 mb-2">Аккаунт помечен на удаление</h3>
                 <p className="text-yellow-200/90 text-sm mb-2">
                   Your account is scheduled for permanent deletion on{' '}
                   <strong>
-                    {new Date(accountStatus.permanentDeleteDate!).toLocaleDateString('en-US', {
+                    {new Date(accountStatus.permanentDeleteDate!).toLocaleDateString('ru-RU', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -548,12 +548,12 @@ export default function AccountSettingsPage() {
             ) : (
               <>
                 <div className="rounded-lg p-4 mb-6 border border-red-500/40 bg-red-500/10">
-                  <h4 className="font-medium text-red-200 mb-2">⚠️ Important Information</h4>
+                  <h4 className="font-medium text-red-200 mb-2 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" />Важно</h4>
                   <ul className="text-red-200/90 text-sm space-y-2 list-disc list-inside">
-                    <li>Your account will be marked for deletion immediately</li>
-                    <li>You will have 30 days to restore your account</li>
-                    <li>After 30 days, all your data will be permanently deleted</li>
-                    <li>This action cannot be undone after the 30-day period expires</li>
+                    <li>Аккаунт будет сразу помечен на удаление</li>
+                    <li>У вас будет 30 дней, чтобы восстановить аккаунт</li>
+                    <li>Через 30 дней все данные будут удалены безвозвратно</li>
+                    <li>Через 30 дней действие станет необратимым</li>
                   </ul>
                 </div>
 
@@ -561,7 +561,7 @@ export default function AccountSettingsPage() {
                   onClick={() => setShowDeleteDialog(true)}
                   className="rounded-[10px]"
                 >
-                  Delete My Account
+                  Удалить мой аккаунт
                 </ButtonDestructive>
               </>
             )}
@@ -570,7 +570,7 @@ export default function AccountSettingsPage() {
         {/* Navigation */}
         <div className="mt-8 text-center">
           <Link href="/settings/profile" className="text-primary hover:text-primary/90 font-medium">
-            Back to Profile Settings
+            К настройкам профиля
           </Link>
         </div>
       </div>
@@ -579,7 +579,7 @@ export default function AccountSettingsPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Account?</DialogTitle>
+            <DialogTitle>Удалить аккаунт?</DialogTitle>
             <DialogDescription>
               This action will mark your account for deletion. You&apos;ll have 30 days to restore it before permanent deletion.
             </DialogDescription>
@@ -589,13 +589,13 @@ export default function AccountSettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-2">
-                Enter your password to confirm
+                Введите пароль для подтверждения
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Введите пароль"
                 className="w-full px-4 py-2 rounded-[10px] border border-border bg-transparent focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && password.trim()) {
@@ -621,7 +621,7 @@ export default function AccountSettingsPage() {
                 variant="glass"
                 className="rounded-[10px] cursor-pointer"
               >
-                Cancel
+                Отмена
               </Button>
               <ButtonDestructive
                 onClick={handleDeleteAccount}
@@ -639,7 +639,7 @@ export default function AccountSettingsPage() {
       <Dialog open={showNewKeyDialog} onOpenChange={setShowNewKeyDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Create API Key</DialogTitle>
+            <DialogTitle>Создать API-ключ</DialogTitle>
             <DialogDescription>
               {newKey
                 ? 'Copy your API key now. You won&apos;t be able to see it again!'
@@ -651,15 +651,15 @@ export default function AccountSettingsPage() {
             <div className="space-y-4">
               <div className="rounded-lg p-4 border border-yellow-500/40 bg-yellow-500/10">
                 <p className="text-sm text-yellow-200 mb-2 font-medium">
-                  ⚠️ Important: Copy this API key now
+                  <span className="inline-flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" />Скопируйте ключ сейчас</span>
                 </p>
                 <p className="text-xs text-yellow-200/90">
-                  This is the only time you&apos;ll be able to see the full API key. Make sure to store it securely.
+                  Полный ключ показывается только один раз — сохраните его в надёжном месте.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Your API Key</Label>
+                <Label>Ваш API-ключ</Label>
                 <div className="flex gap-2">
                   <Input
                     type={showKey ? 'text' : 'password'}
@@ -696,7 +696,7 @@ export default function AccountSettingsPage() {
                   }}
                   className="flex-1 rounded-[10px]"
                 >
-                  Done
+                  Готово
                 </ButtonPrimary>
               </div>
             </div>
@@ -704,24 +704,24 @@ export default function AccountSettingsPage() {
             <form onSubmit={handleCreateApiKey} className="space-y-4">
               <div>
                 <Label className="block text-sm font-medium text-muted-foreground mb-2">
-                  API Key Name
+                  Название ключа
                 </Label>
                 <Input
                   variant="glass"
                   value={newApiKeyName}
                   onChange={(e) => setNewApiKeyName(e.target.value)}
                   required
-                  placeholder="e.g., CI/CD Pipeline, Local Development"
+                  placeholder="например, CI/CD, локальная разработка"
                   maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Give your token a descriptive name to identify its purpose
+                  Дайте ключу понятное название
                 </p>
               </div>
 
               <div>
                 <Label className="block text-sm font-medium text-muted-foreground mb-2">
-                  Expiration (Optional)
+                  Срок действия (необязательно)
                 </Label>
                 <Input
                   type="number"
@@ -732,12 +732,12 @@ export default function AccountSettingsPage() {
                       e.target.value ? parseInt(e.target.value, 10) : undefined
                     )
                   }
-                  placeholder="Days (leave empty for no expiration)"
+                  placeholder="Дней (пусто — бессрочно)"
                   min={1}
                   max={3650}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Token will expire after this many days (max 3650 days / 10 years)
+                  Через сколько дней ключ истечёт (максимум 3650)
                 </p>
               </div>
 
@@ -759,7 +759,7 @@ export default function AccountSettingsPage() {
                   variant="glass"
                   className="flex-1 rounded-[10px] cursor-pointer"
                 >
-                  Cancel
+                  Отмена
                 </Button>
               </div>
             </form>

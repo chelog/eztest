@@ -46,7 +46,7 @@ export function FileUploadModal({
   entityId,
   projectId,
   entityType = 'testcase',
-  title = 'Manage Files',
+  title = 'Файлы',
   maxFiles = 20,
   onDeleteMarked,
 }: FileUploadModalProps) {
@@ -287,10 +287,10 @@ export function FileUploadModal({
             size="icon"
             onClick={onClose}
             className="rounded-md opacity-70 transition-all hover:opacity-100 hover:bg-accent/50 cursor-pointer"
-            title="Close"
+            title="Закрыть"
           >
             <X className="w-5 h-5" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">Закрыть</span>
           </Button>
         </div>
 
@@ -344,10 +344,10 @@ export function FileUploadModal({
                   <FileIcon className="w-6 h-6 text-white/60" />
                 </div>
                 <p className="text-white/90 text-base">
-                  Drag & Drop or <span className="text-blue-400 font-semibold cursor-pointer hover:text-blue-300">Choose File</span> to upload
+                  Drag & Drop or <span className="text-blue-400 font-semibold cursor-pointer hover:text-blue-300">Выбрать файл</span> to upload
                 </p>
                 <p className="text-white/50 text-sm">
-                  Doc, pdf, png, jpeg
+                  doc, pdf, png, jpeg
                 </p>
               </div>
 
@@ -367,7 +367,7 @@ export function FileUploadModal({
           {hasFiles && (
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 className="text-base font-semibold text-white/90">Uploaded Files</h3>
+                <h3 className="text-base font-semibold text-white/90">Загруженные файлы</h3>
                 <span className="text-sm text-white/50">{visibleAttachments.length} file{visibleAttachments.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
@@ -414,7 +414,7 @@ export function FileUploadModal({
                       {isPending && (
                         <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 bg-yellow-500/90 backdrop-blur-sm rounded-md">
                           <Loader className="w-3 h-3 text-white animate-spin" />
-                          <span className="text-xs font-medium text-white">Pending</span>
+                          <span className="text-xs font-medium text-white">Ожидает</span>
                         </div>
                       )}
 
@@ -429,7 +429,7 @@ export function FileUploadModal({
                             size="sm"
                             variant="glass"
                             onClick={() => handleDownload(attachment)}
-                            title="Download"
+                            title="Скачать"
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -437,7 +437,7 @@ export function FileUploadModal({
                         <ButtonDestructive
                           size="sm"
                           onClick={() => handleDeleteClick(attachment.id)}
-                          title="Delete"
+                          title="Удалить"
                         >
                           <X className="w-4 h-4" />
                         </ButtonDestructive>
@@ -455,7 +455,7 @@ export function FileUploadModal({
                         </p>
                         {isPending && (
                           <p className="text-xs text-yellow-400">
-                            Will upload on save
+                            Загрузится при сохранении
                           </p>
                         )}
                       </div>
@@ -469,8 +469,8 @@ export function FileUploadModal({
               <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
                 <FileIcon className="w-10 h-10 text-white/30" />
               </div>
-              <p className="text-white/60 text-lg font-medium">No files uploaded yet</p>
-              <p className="text-white/40 text-sm mt-2">Drag files here or click the area above to start uploading</p>
+              <p className="text-white/60 text-lg font-medium">Файлы не загружены</p>
+              <p className="text-white/40 text-sm mt-2">Перетащите файлы сюда или нажмите на область выше</p>
             </div>
           )}
         </div>
@@ -485,7 +485,7 @@ export function FileUploadModal({
             className="cursor-pointer"
           >
             <Check className="w-4 h-4 mr-2" />
-            Done
+            Готово
           </ButtonPrimary>
         </div>
 
@@ -501,11 +501,11 @@ export function FileUploadModal({
             }}
           >
             <div className="bg-[#0f0f12] border border-white/20 rounded-lg shadow-2xl p-6 w-full max-w-[520px] mx-4">
-              <h3 className="text-lg font-semibold text-white/90 mb-2">Delete Attachment</h3>
+              <h3 className="text-lg font-semibold text-white/90 mb-2">Удалить вложение</h3>
               <p className="text-white/70 mb-4">
-                This attachment will be deleted when you save the form.
+                Вложение удалится при сохранении формы.
               </p>
-              <p className="text-sm text-white/50 mb-6">This action cannot be undone.</p>
+              <p className="text-sm text-white/50 mb-6">Действие нельзя отменить.</p>
               <div className="flex items-center gap-3 justify-end">
                 <Button
                   type="button"
@@ -513,7 +513,7 @@ export function FileUploadModal({
                   onClick={() => setDeleteConfirmOpen(false)}
                   className="cursor-pointer"
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <ButtonDestructive
                   type="button"
@@ -522,7 +522,7 @@ export function FileUploadModal({
                   }}
                   className="cursor-pointer"
                 >
-                  Mark for Deletion
+                  Пометить на удаление
                 </ButtonDestructive>
               </div>
             </div>

@@ -2,7 +2,7 @@ import AgentTestRunResults from "@/frontend/components/agent-testing/AgentTestRu
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Test Run Results | EZTest",
+  title: "Результаты тест-рана | EZTest",
   description:
     "View agent test run results, AQS score breakdown, and trace details.",
 };

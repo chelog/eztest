@@ -64,7 +64,7 @@ export class AdminUserService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Пользователь не найден');
     }
 
     return user;
@@ -83,7 +83,7 @@ export class AdminUserService {
     });
 
     if (!existingUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Пользователь не найден');
     }
 
     // If email is being changed, check for conflicts
@@ -93,7 +93,7 @@ export class AdminUserService {
       });
 
       if (emailConflict) {
-        throw new ValidationException('Email already in use');
+        throw new ValidationException('Email уже используется');
       }
     }
 
@@ -189,7 +189,7 @@ export class AdminUserService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Пользователь не найден');
     }
 
     // Soft delete user

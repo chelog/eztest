@@ -49,7 +49,7 @@ export function DataTable<T>({
   onRowClick,
   getRowHref,
   isLoading = false,
-  emptyMessage = 'No data available',
+  emptyMessage = 'Нет данных',
   rowClassName = 'cursor-pointer hover:bg-white/5',
   resizable = false,
   activeRowKey,
@@ -133,7 +133,7 @@ export function DataTable<T>({
     <div className="space-y-0">
       {isLoading ? (
         <div className="text-center py-8">
-          <div className="text-white/60">Loading...</div>
+          <div className="text-white/60">Загрузка...</div>
         </div>
       ) : data.length === 0 ? (
         <div className="text-center py-8">

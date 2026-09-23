@@ -90,7 +90,7 @@ export default function HouseOfFOSSPage() {
               background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
             }}
           >
-            <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" style={{ backgroundColor: '#050608' }}>
+            <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
               <Image 
                 src="/favicon.png" 
                 alt="EZTest" 
@@ -501,7 +501,7 @@ export default function HouseOfFOSSPage() {
               return (
                 <div
                   key={index}
-                  className="rounded-3xl relative p-[1px]"
+                  className="rounded-3xl relative p-[1px]" data-ui="frame"
                   style={{ background: gradientStyle }}
                 >
                   <div className="relative rounded-3xl h-full" style={{ 
@@ -579,7 +579,7 @@ export default function HouseOfFOSSPage() {
                     return (
                       <div
                         key={index}
-                        className="rounded-3xl relative p-[1px]"
+                        className="rounded-3xl relative p-[1px]" data-ui="frame"
                         style={{ background: gradientStyle }}
                       >
                         <div className="relative rounded-3xl h-full" style={{ 

@@ -89,7 +89,7 @@ export function TestCaseTable({
     },
     {
       key: 'title',
-      label: 'TITLE',
+      label: 'Название',
       className: 'min-w-0',
       minWidth: 150,
       hideable: false,
@@ -103,7 +103,7 @@ export function TestCaseTable({
     },
     {
       key: 'priority',
-      label: 'PRIORITY',
+      label: 'Приоритет',
       width: '100px',
       minWidth: 80,
       hideable: true,
@@ -123,7 +123,7 @@ export function TestCaseTable({
     },
     {
       key: 'status',
-      label: 'STATUS',
+      label: 'Статус',
       width: '90px',
       minWidth: 70,
       hideable: true,
@@ -143,7 +143,7 @@ export function TestCaseTable({
     },
     {
       key: 'owner',
-      label: 'OWNER',
+      label: 'Автор',
       width: '140px',
       minWidth: 80,
       hideable: true,
@@ -158,7 +158,7 @@ export function TestCaseTable({
             {row.createdBy?.name && row.createdBy.name.length > 20 && (
               <HoverCardContent side="top" className="w-60">
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold text-white/60">Owner</h4>
+                  <h4 className="text-xs font-semibold text-white/60">Автор</h4>
                   <p className="text-sm text-white/90">{row.createdBy.name}</p>
                 </div>
               </HoverCardContent>
@@ -169,7 +169,7 @@ export function TestCaseTable({
     },
     {
       key: 'runs',
-      label: 'RUNS',
+      label: 'Запуски',
       width: '70px',
       minWidth: 50,
       hideable: true,
@@ -216,7 +216,7 @@ export function TestCaseTable({
       ? {
           items: [
             {
-              label: 'Delete',
+              label: 'Удалить',
               icon: Trash2,
               onClick: onDelete,
               variant: 'destructive',
@@ -238,7 +238,7 @@ export function TestCaseTable({
       groupConfig={groupConfig}
       actions={actions}
       resizable={true}
-      emptyMessage="No test cases available"
+      emptyMessage="Нет тест-кейсов"
     />
   );
 }

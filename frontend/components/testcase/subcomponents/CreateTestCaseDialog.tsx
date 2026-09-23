@@ -90,8 +90,8 @@ export function CreateTestCaseDialog({
   const fields: BaseDialogField[] = [
     {
       name: 'title',
-      label: 'Title',
-      placeholder: 'Enter test case title',
+      label: 'Название',
+      placeholder: 'Введите название тест-кейса',
       type: 'text',
       required: true,
       minLength: 3,
@@ -100,7 +100,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'priority',
-      label: 'Priority',
+      label: 'Приоритет',
       type: 'select',
       defaultValue: 'MEDIUM',
       options: priorityOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -108,7 +108,7 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'status',
-      label: 'Status',
+      label: 'Статус',
       type: 'select',
       defaultValue: 'DRAFT',
       options: statusOptions.map(opt => ({ value: opt.value, label: opt.label })),
@@ -116,63 +116,63 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'moduleId',
-      label: 'Module',
+      label: 'Модуль',
       type: 'select',
-      placeholder: 'Select a module',
+      placeholder: 'Выберите модуль',
       defaultValue: defaultModuleId || 'none',
       options: [
-        { value: 'none', label: 'None (No Module)' },
+        { value: 'none', label: 'Без модуля' },
         ...moduleOptions,
       ],
       cols: 1,
     },
     {
       name: 'estimatedTime',
-      label: 'Estimated Time (minutes)',
+      label: 'Оценка времени (мин)',
       type: 'number',
-      placeholder: 'Enter estimated time',
+      placeholder: 'Введите оценку времени',
       cols: 1,
     },
     {
       name: 'description',
-      label: 'Description',
+      label: 'Описание',
       type: 'textarea',
-      placeholder: 'Enter test case description',
+      placeholder: 'Введите описание тест-кейса',
       rows: 3,
       cols: 1,
     },
     {
       name: 'preconditions',
-      label: 'Preconditions',
+      label: 'Предусловия',
       type: 'textarea',
-      placeholder: 'Enter preconditions',
+      placeholder: 'Введите предусловия',
       rows: 3,
       cols: 1,
     },
     {
       name: 'postconditions',
-      label: 'Postconditions',
+      label: 'Постусловия',
       type: 'textarea',
-      placeholder: 'Enter postconditions',
+      placeholder: 'Введите постусловия',
       rows: 3,
       cols: 1,
     },
     {
       name: 'testData',
-      label: 'Test Data',
+      label: 'Тестовые данные',
       type: 'textarea',
-      placeholder: 'Enter test data or input values',
+      placeholder: 'Введите тестовые данные',
       rows: 3,
       cols: 1,
     },
     {
       name: 'attachments',
-      label: 'Attachments',
+      label: 'Вложения',
       type: 'custom',
       cols: 2,
       customRender: () => (
         <DetailCard
-          title="Attachments"
+          title="Вложения"
           contentClassName="space-y-3"
           headerAction={
             <button
@@ -187,7 +187,7 @@ export function CreateTestCaseDialog({
           <div className="space-y-2">
             {commonAttachments.length === 0 ? (
               <p className="text-white/60 text-center py-4">
-                No attachments yet. Click the paperclip icon to add files.
+                Вложений пока нет. Нажмите на скрепку, чтобы добавить файлы.
               </p>
             ) : (
               <div className="max-h-48 overflow-y-auto space-y-1">
@@ -202,7 +202,7 @@ export function CreateTestCaseDialog({
                     )}
                     {att.id.startsWith('pending-') && (
                       <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
-                        Pending
+                        Ожидает
                       </span>
                     )}
                   </div>
@@ -217,7 +217,7 @@ export function CreateTestCaseDialog({
               fieldName="attachment"
               entityType="testcase"
               projectId={projectId}
-              title="Test Case Attachments"
+              title="Вложения тест-кейса"
             />
           </div>
         </DetailCard>
@@ -225,18 +225,18 @@ export function CreateTestCaseDialog({
     },
     {
       name: 'steps',
-      label: 'Test Steps',
+      label: 'Шаги',
       type: 'custom',
       cols: 2,
       customRender: () => (
         <DetailCard
-          title="Test Steps"
+          title="Шаги"
           contentClassName="space-y-3"
         >
           <div className="space-y-3">
             {steps.length === 0 ? (
               <p className="text-white/60 text-center py-4">
-                No test steps defined yet. Add steps to break down this test case.
+                Шагов пока нет. Добавьте шаги тест-кейса.
               </p>
             ) : (
               steps.map((step: TestStep) => (
@@ -252,7 +252,7 @@ export function CreateTestCaseDialog({
                       <div className="flex-1 space-y-3">
                         <div>
                           <Label className="text-xs font-medium text-white/60 mb-1">
-                            Action
+                            Действие
                           </Label>
                           <TextareaWithAttachments
                             variant="glass"
@@ -260,7 +260,7 @@ export function CreateTestCaseDialog({
                             onChange={(value) =>
                               handleStepChange(step.stepNumber, 'action', value)
                             }
-                            placeholder="Enter action"
+                            placeholder="Введите действие"
                             fieldName="action"
                             attachments={stepAttachments[String(step.stepNumber)]?.action || []}
                             onAttachmentsChange={(attachments) => {
@@ -285,7 +285,7 @@ export function CreateTestCaseDialog({
                         </div>
                         <div>
                           <Label className="text-xs font-medium text-white/60 mb-1">
-                            Expected Result
+                            Ожидаемый результат
                           </Label>
                           <TextareaWithAttachments
                             variant="glass"
@@ -297,7 +297,7 @@ export function CreateTestCaseDialog({
                                 value,
                               )
                             }
-                            placeholder="Enter expected result"
+                            placeholder="Введите ожидаемый результат"
                             fieldName="expectedResult"
                             attachments={stepAttachments[String(step.stepNumber)]?.expectedResult || []}
                             onAttachmentsChange={(attachments) => {
@@ -338,14 +338,14 @@ export function CreateTestCaseDialog({
 
             <div className="border border-blue-500/50 rounded-lg p-4 space-y-3 bg-blue-500/5">
               <div className="space-y-2">
-                <Label>Action</Label>
+                <Label>Действие</Label>
                 <TextareaWithAttachments
                   variant="glass"
                   value={newStep.action}
                   onChange={(value) =>
                     setNewStep((prev) => ({ ...prev, action: value }))
                   }
-                  placeholder="Enter action"
+                  placeholder="Введите действие"
                   fieldName="action"
                   attachments={newStepActionAttachments}
                   onAttachmentsChange={setNewStepActionAttachments}
@@ -357,14 +357,14 @@ export function CreateTestCaseDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Expected Result</Label>
+                <Label>Ожидаемый результат</Label>
                 <TextareaWithAttachments
                   variant="glass"
                   value={newStep.expectedResult}
                   onChange={(value) =>
                     setNewStep((prev) => ({ ...prev, expectedResult: value }))
                   }
-                  placeholder="Enter expected result"
+                  placeholder="Введите ожидаемый результат"
                   fieldName="expectedResult"
                   attachments={newStepExpectedResultAttachments}
                   onAttachmentsChange={setNewStepExpectedResultAttachments}
@@ -383,7 +383,7 @@ export function CreateTestCaseDialog({
                   type="button"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add Step
+                  Добавить шаг
                 </ButtonPrimary>
               </div>
             </div>
@@ -615,13 +615,13 @@ export function CreateTestCaseDialog({
         if (!attachmentResponse.ok) {
           const errorData = await attachmentResponse.json();
           console.error('Failed to associate attachments:', errorData);
-          throw new Error('Failed to link attachments to test case');
+          throw new Error('Не удалось прикрепить вложения к тест-кейсу');
         }
 
         await attachmentResponse.json();
       } catch (error) {
         console.error('Error associating attachments:', error);
-        throw new Error('Failed to link attachments. Test case was created but attachments were not saved.');
+        throw new Error('Тест-кейс создан, но вложения не сохранились.');
       }
     }
 
@@ -673,11 +673,11 @@ export function CreateTestCaseDialog({
   };
 
   const config: BaseDialogConfig<TestCase> = {
-    title: 'Create Test Case',
-    description: 'Add a new test case to this project. Fill in the details to get started.',
+    title: 'Создать тест-кейс',
+    description: 'Новый тест-кейс в этом проекте. Заполните поля ниже.',
     fields,
-    submitLabel: 'Create Test Case',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Создать тест-кейс',
+    cancelLabel: 'Отмена',
     triggerOpen: open !== undefined ? open : triggerOpen,
     onOpenChange: (isOpen) => {
       if (!isOpen) {

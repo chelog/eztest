@@ -1,0 +1,50 @@
+-- Translate default dropdown labels to Russian.
+-- Only rows that still carry the original English default label are changed,
+-- so labels customised by admins are kept. Values are untouched.
+
+UPDATE "DropdownOption" SET "label" = 'Критический' WHERE "entity" = 'TestCase' AND "field" = 'priority' AND "value" = 'CRITICAL' AND "label" = 'CRITICAL';
+UPDATE "DropdownOption" SET "label" = 'Высокий' WHERE "entity" = 'TestCase' AND "field" = 'priority' AND "value" = 'HIGH' AND "label" = 'HIGH';
+UPDATE "DropdownOption" SET "label" = 'Средний' WHERE "entity" = 'TestCase' AND "field" = 'priority' AND "value" = 'MEDIUM' AND "label" = 'MEDIUM';
+UPDATE "DropdownOption" SET "label" = 'Низкий' WHERE "entity" = 'TestCase' AND "field" = 'priority' AND "value" = 'LOW' AND "label" = 'LOW';
+UPDATE "DropdownOption" SET "label" = 'Активный' WHERE "entity" = 'TestCase' AND "field" = 'status' AND "value" = 'ACTIVE' AND "label" = 'ACTIVE';
+UPDATE "DropdownOption" SET "label" = 'Устаревший' WHERE "entity" = 'TestCase' AND "field" = 'status' AND "value" = 'DEPRECATED' AND "label" = 'DEPRECATED';
+UPDATE "DropdownOption" SET "label" = 'Черновик' WHERE "entity" = 'TestCase' AND "field" = 'status' AND "value" = 'DRAFT' AND "label" = 'DRAFT';
+UPDATE "DropdownOption" SET "label" = 'Запланирован' WHERE "entity" = 'TestRun' AND "field" = 'status' AND "value" = 'PLANNED' AND "label" = 'PLANNED';
+UPDATE "DropdownOption" SET "label" = 'В работе' WHERE "entity" = 'TestRun' AND "field" = 'status' AND "value" = 'IN_PROGRESS' AND "label" = 'IN PROGRESS';
+UPDATE "DropdownOption" SET "label" = 'Завершён' WHERE "entity" = 'TestRun' AND "field" = 'status' AND "value" = 'COMPLETED' AND "label" = 'COMPLETED';
+UPDATE "DropdownOption" SET "label" = 'Отменён' WHERE "entity" = 'TestRun' AND "field" = 'status' AND "value" = 'CANCELLED' AND "label" = 'CANCELLED';
+UPDATE "DropdownOption" SET "label" = 'Пройден' WHERE "entity" = 'TestResult' AND "field" = 'status' AND "value" = 'PASSED' AND "label" = 'PASSED';
+UPDATE "DropdownOption" SET "label" = 'Провален' WHERE "entity" = 'TestResult' AND "field" = 'status' AND "value" = 'FAILED' AND "label" = 'FAILED';
+UPDATE "DropdownOption" SET "label" = 'Заблокирован' WHERE "entity" = 'TestResult' AND "field" = 'status' AND "value" = 'BLOCKED' AND "label" = 'BLOCKED';
+UPDATE "DropdownOption" SET "label" = 'Не запускался' WHERE "entity" = 'TestResult' AND "field" = 'status' AND "value" = 'SKIPPED' AND "label" = 'SKIPPED';
+UPDATE "DropdownOption" SET "label" = 'Ретест' WHERE "entity" = 'TestResult' AND "field" = 'status' AND "value" = 'RETEST' AND "label" = 'RETEST';
+UPDATE "DropdownOption" SET "label" = 'Черновик' WHERE "entity" = 'Requirement' AND "field" = 'status' AND "value" = 'DRAFT' AND "label" = 'DRAFT';
+UPDATE "DropdownOption" SET "label" = 'Утверждено' WHERE "entity" = 'Requirement' AND "field" = 'status' AND "value" = 'APPROVED' AND "label" = 'APPROVED';
+UPDATE "DropdownOption" SET "label" = 'Реализовано' WHERE "entity" = 'Requirement' AND "field" = 'status' AND "value" = 'IMPLEMENTED' AND "label" = 'IMPLEMENTED';
+UPDATE "DropdownOption" SET "label" = 'Проверено' WHERE "entity" = 'Requirement' AND "field" = 'status' AND "value" = 'VERIFIED' AND "label" = 'VERIFIED';
+UPDATE "DropdownOption" SET "label" = 'Устарело' WHERE "entity" = 'Requirement' AND "field" = 'status' AND "value" = 'DEPRECATED' AND "label" = 'DEPRECATED';
+UPDATE "DropdownOption" SET "label" = 'Критический' WHERE "entity" = 'Requirement' AND "field" = 'priority' AND "value" = 'CRITICAL' AND "label" = 'CRITICAL';
+UPDATE "DropdownOption" SET "label" = 'Высокий' WHERE "entity" = 'Requirement' AND "field" = 'priority' AND "value" = 'HIGH' AND "label" = 'HIGH';
+UPDATE "DropdownOption" SET "label" = 'Средний' WHERE "entity" = 'Requirement' AND "field" = 'priority' AND "value" = 'MEDIUM' AND "label" = 'MEDIUM';
+UPDATE "DropdownOption" SET "label" = 'Низкий' WHERE "entity" = 'Requirement' AND "field" = 'priority' AND "value" = 'LOW' AND "label" = 'LOW';
+UPDATE "DropdownOption" SET "label" = 'Критический' WHERE "entity" = 'Defect' AND "field" = 'severity' AND "value" = 'CRITICAL' AND "label" = 'CRITICAL';
+UPDATE "DropdownOption" SET "label" = 'Высокий' WHERE "entity" = 'Defect' AND "field" = 'severity' AND "value" = 'HIGH' AND "label" = 'HIGH';
+UPDATE "DropdownOption" SET "label" = 'Средний' WHERE "entity" = 'Defect' AND "field" = 'severity' AND "value" = 'MEDIUM' AND "label" = 'MEDIUM';
+UPDATE "DropdownOption" SET "label" = 'Низкий' WHERE "entity" = 'Defect' AND "field" = 'severity' AND "value" = 'LOW' AND "label" = 'LOW';
+UPDATE "DropdownOption" SET "label" = 'Новый' WHERE "entity" = 'Defect' AND "field" = 'status' AND "value" = 'NEW' AND "label" = 'NEW';
+UPDATE "DropdownOption" SET "label" = 'В работе' WHERE "entity" = 'Defect' AND "field" = 'status' AND "value" = 'IN_PROGRESS' AND "label" = 'IN PROGRESS';
+UPDATE "DropdownOption" SET "label" = 'Исправлен' WHERE "entity" = 'Defect' AND "field" = 'status' AND "value" = 'FIXED' AND "label" = 'FIXED';
+UPDATE "DropdownOption" SET "label" = 'Проверен' WHERE "entity" = 'Defect' AND "field" = 'status' AND "value" = 'TESTED' AND "label" = 'TESTED';
+UPDATE "DropdownOption" SET "label" = 'Закрыт' WHERE "entity" = 'Defect' AND "field" = 'status' AND "value" = 'CLOSED' AND "label" = 'CLOSED';
+UPDATE "DropdownOption" SET "label" = 'Критический' WHERE "entity" = 'Defect' AND "field" = 'priority' AND "value" = 'CRITICAL' AND "label" = 'CRITICAL';
+UPDATE "DropdownOption" SET "label" = 'Высокий' WHERE "entity" = 'Defect' AND "field" = 'priority' AND "value" = 'HIGH' AND "label" = 'HIGH';
+UPDATE "DropdownOption" SET "label" = 'Средний' WHERE "entity" = 'Defect' AND "field" = 'priority' AND "value" = 'MEDIUM' AND "label" = 'MEDIUM';
+UPDATE "DropdownOption" SET "label" = 'Низкий' WHERE "entity" = 'Defect' AND "field" = 'priority' AND "value" = 'LOW' AND "label" = 'LOW';
+UPDATE "DropdownOption" SET "label" = 'Продакшн' WHERE "entity" = 'TestRun' AND "field" = 'environment' AND "value" = 'Production' AND "label" = 'PRODUCTION';
+UPDATE "DropdownOption" SET "label" = 'Стейджинг' WHERE "entity" = 'TestRun' AND "field" = 'environment' AND "value" = 'Staging' AND "label" = 'STAGING';
+UPDATE "DropdownOption" SET "label" = 'QA' WHERE "entity" = 'TestRun' AND "field" = 'environment' AND "value" = 'QA' AND "label" = 'QA';
+UPDATE "DropdownOption" SET "label" = 'Разработка' WHERE "entity" = 'TestRun' AND "field" = 'environment' AND "value" = 'Development' AND "label" = 'DEVELOPMENT';
+UPDATE "DropdownOption" SET "label" = 'Продакшн' WHERE "entity" = 'Defect' AND "field" = 'environment' AND "value" = 'Production' AND "label" = 'PRODUCTION';
+UPDATE "DropdownOption" SET "label" = 'Стейджинг' WHERE "entity" = 'Defect' AND "field" = 'environment' AND "value" = 'Staging' AND "label" = 'STAGING';
+UPDATE "DropdownOption" SET "label" = 'QA' WHERE "entity" = 'Defect' AND "field" = 'environment' AND "value" = 'QA' AND "label" = 'QA';
+UPDATE "DropdownOption" SET "label" = 'Разработка' WHERE "entity" = 'Defect' AND "field" = 'environment' AND "value" = 'Development' AND "label" = 'DEVELOPMENT';

@@ -7,7 +7,7 @@ import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { ButtonDestructive } from '@/frontend/reusable-elements/buttons/ButtonDestructive';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { TestTube2, Folder } from 'lucide-react';
+import { Folder, FileCheck } from 'lucide-react';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Module, TestCase } from '../types';
@@ -159,14 +159,12 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
           title: 'Успешно',
           message: `Модуль «${data.data.name}» успешно обновлен`,
         });
-        setTimeout(() => setAlert(null), 5000);
       } else {
         setAlert({
           type: 'error',
           title: 'Ошибка',
           message: data.error || 'Не удалось обновить модуль',
         });
-        setTimeout(() => setAlert(null), 5000);
       }
     } catch (error) {
       console.error('Error updating module:', error);
@@ -175,7 +173,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
         title: 'Ошибка',
         message: 'Не удалось обновить модуль',
       });
-      setTimeout(() => setAlert(null), 5000);
     }
   };
 
@@ -189,7 +186,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
       title: 'Успешно',
       message: `Тест-кейс «${newTestCase.title}» успешно создан`,
     });
-    setTimeout(() => setAlert(null), 5000);
     fetchTestCases();
   };
 
@@ -199,7 +195,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
       title: 'Успешно',
       message: 'Тест-кейсы успешно добавлены в модуль',
     });
-    setTimeout(() => setAlert(null), 5000);
     fetchTestCases();
   };
 
@@ -225,7 +220,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
           title: 'Успешно',
           message: `Тест-кейс «${deletedTestCaseName}» успешно удален`,
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchTestCases();
       } else {
         const data = await response.json();
@@ -234,7 +228,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
           title: 'Ошибка',
           message: data.error || 'Не удалось удалить тест-кейс',
         });
-        setTimeout(() => setAlert(null), 5000);
       }
     } catch (error) {
       console.error('Error deleting test case:', error);
@@ -243,7 +236,6 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
         title: 'Ошибка',
         message: 'Не удалось удалить тест-кейс',
       });
-      setTimeout(() => setAlert(null), 5000);
     }
   };
 
@@ -325,7 +317,7 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
           buttons={[
             {
               label: 'Все тест-кейсы',
-              icon: TestTube2,
+              icon: FileCheck,
               onClick: () => router.push(`/projects/${projectId}/testcases`),
               variant: 'secondary',
               buttonName: 'Module Detail - View All Test Cases',

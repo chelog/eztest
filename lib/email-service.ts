@@ -1070,15 +1070,15 @@ export async function sendTestRunReportEmail(
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;">
             <div style="background-color: #dcfce7; padding: 15px; border-radius: 6px; text-align: center;">
               <div style="font-size: 24px; font-weight: bold; color: #166534;">${data.stats.passed}</div>
-              <div style="font-size: 12px; color: #166534; margin-top: 5px;">Passed</div>
+              <div style="font-size: 12px; color: #166534; margin-top: 5px;">Пройдено</div>
             </div>
             <div style="background-color: #fee2e2; padding: 15px; border-radius: 6px; text-align: center;">
               <div style="font-size: 24px; font-weight: bold; color: #991b1b;">${data.stats.failed}</div>
-              <div style="font-size: 12px; color: #991b1b; margin-top: 5px;">Failed</div>
+              <div style="font-size: 12px; color: #991b1b; margin-top: 5px;">Провалено</div>
             </div>
             <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; text-align: center;">
               <div style="font-size: 24px; font-weight: bold; color: #854d0e;">${data.stats.blocked}</div>
-              <div style="font-size: 12px; color: #854d0e; margin-top: 5px;">Blocked</div>
+              <div style="font-size: 12px; color: #854d0e; margin-top: 5px;">Заблокировано</div>
             </div>
             <div style="background-color: #dbeafe; padding: 15px; border-radius: 6px; text-align: center;">
               <div style="font-size: 24px; font-weight: bold; color: #1e40af;">${data.stats.skipped}</div>

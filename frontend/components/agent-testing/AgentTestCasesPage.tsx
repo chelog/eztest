@@ -170,7 +170,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
         fetch(`/api/agent-test-configs/${configId}/generate-tests`),
         fetch(`/api/agent-test-configs/${configId}/run-tests`),
       ]);
-      if (!configRes.ok) throw new Error("Config not found");
+      if (!configRes.ok) throw new Error("Конфигурация не найдена");
       const configData = await configRes.json();
       setConfig(configData.data);
       if (casesRes.ok) {
@@ -198,8 +198,8 @@ export default function AgentTestCasesPage({ configId }: Props) {
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to load configuration.",
+        title: "Ошибка",
+        message: "Не удалось загрузить конфигурацию.",
       });
     } finally {
       setLoading(false);
@@ -210,7 +210,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
 
   const validateForm = (form: TestCaseFormData): Partial<TestCaseFormData> => {
     const errors: Partial<TestCaseFormData> = {};
-    if (!form.title.trim()) errors.title = "Title is required";
+    if (!form.title.trim()) errors.title = "Введите название";
     if (!form.input.trim()) errors.input = "Input is required";
     if (!form.rubric.trim()) errors.rubric = "Rubric is required";
     if (!form.expectedBehavior.trim())
@@ -246,15 +246,15 @@ export default function AgentTestCasesPage({ configId }: Props) {
       setShowAddForm(false);
       setAlert({
         type: "success",
-        title: "Created",
-        message: `Test case "${data.data.title}" created.`,
+        title: "Создан",
+        message: `Тест-кейс «${data.data.title}» создан.`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Error",
+        title: "Ошибка",
         message:
-          err instanceof Error ? err.message : "Failed to create test case.",
+          err instanceof Error ? err.message : "Не удалось создать тест-кейс.",
       });
     } finally {
       setAddSubmitting(false);
@@ -299,15 +299,15 @@ export default function AgentTestCasesPage({ configId }: Props) {
       setEditingId(null);
       setAlert({
         type: "success",
-        title: "Updated",
+        title: "Обновлён",
         message: `Test case "${data.data.title}" updated.`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Error",
+        title: "Ошибка",
         message:
-          err instanceof Error ? err.message : "Failed to update test case.",
+          err instanceof Error ? err.message : "Не удалось обновить тест-кейс.",
       });
     } finally {
       setEditSubmitting(false);
@@ -317,26 +317,26 @@ export default function AgentTestCasesPage({ configId }: Props) {
   // ─── Delete test case ─────────────────────────────────────────────────────
 
   const handleDelete = async (tc: AgentTestCase) => {
-    if (!confirm(`Delete test case "${tc.title}"? This cannot be undone.`))
+    if (!confirm(`Удалить тест-кейс «${tc.title}»? Действие нельзя отменить.`))
       return;
     try {
       const res = await fetch(`/api/agent-test-cases/${tc.id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Не удалось удалить");
       setTestCases((prev) => prev.filter((c) => c.id !== tc.id));
       if (expandedId === tc.id) setExpandedId(null);
       if (editingId === tc.id) setEditingId(null);
       setAlert({
         type: "success",
-        title: "Deleted",
+        title: "Удалён",
         message: `Test case "${tc.title}" deleted.`,
       });
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to delete test case.",
+        title: "Ошибка",
+        message: "Не удалось удалить тест-кейс.",
       });
     }
   };
@@ -357,15 +357,15 @@ export default function AgentTestCasesPage({ configId }: Props) {
       setTestCases(data.data);
       setAlert({
         type: "success",
-        title: "Generated",
+        title: "Сгенерировано",
         message: `${data.data.length} test cases generated.`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Generation Failed",
+        title: "Ошибка генерации",
         message:
-          err instanceof Error ? err.message : "Failed to generate test cases.",
+          err instanceof Error ? err.message : "Не удалось сгенерировать тест-кейсы.",
       });
     } finally {
       setGenerating(false);
@@ -395,9 +395,9 @@ export default function AgentTestCasesPage({ configId }: Props) {
       setRunning(false);
       setAlert({
         type: "error",
-        title: "Run Failed",
+        title: "Запуск провален",
         message:
-          err instanceof Error ? err.message : "Failed to start test run.",
+          err instanceof Error ? err.message : "Не удалось запустить тест-ран.",
       });
     }
   };
@@ -425,13 +425,13 @@ export default function AgentTestCasesPage({ configId }: Props) {
   const navbarActions = [{ type: "signout" as const, showConfirmation: true }];
 
   if (status === "loading" || loading) {
-    return <Loader fullScreen text="Loading test cases..." />;
+    return <Loader fullScreen text="Загрузка тест-кейсов..." />;
   }
 
   if (!config) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-white/50">Configuration not found.</p>
+        <p className="text-white/50">Конфигурация не найдена.</p>
       </div>
     );
   }
@@ -447,7 +447,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
               href="/agent-testing/setup"
               className="cursor-pointer hover:text-white/80 transition-colors"
             >
-              Agent Testing
+              Тестирование агентов
             </Link>
             <ChevronRight className="w-3 h-3" />
             <Link
@@ -457,7 +457,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
               {config.name}
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-white/90 font-medium">Test Cases</span>
+            <span className="text-white/90 font-medium">Тест-кейсы</span>
           </span>
         }
         actions={navbarActions}
@@ -475,7 +475,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
               </div>
               <div>
                 <p className="font-medium text-white">
-                  Re-generate Test Cases?
+                  Сгенерировать тест-кейсы заново?
                 </p>
                 <p className="text-sm text-white/50 mt-1">
                   This will permanently delete all {testCases.length} existing
@@ -489,14 +489,14 @@ export default function AgentTestCasesPage({ configId }: Props) {
                 variant="ghost"
                 onClick={() => setShowRegenConfirm(false)}
               >
-                Cancel
+                Отмена
               </ButtonPrimary>
               <button
                 onClick={handleRegenerate}
                 className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border border-yellow-500/20 transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Yes, Re-generate
+                Да, сгенерировать заново
               </button>
             </div>
           </div>
@@ -560,7 +560,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                   {generating ? (
                     <>
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      Generating...
+                      Генерация...
                     </>
                   ) : (
                     <>
@@ -580,7 +580,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                   className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-white/70 hover:bg-white/10 border border-white/10 transition-colors"
                 >
                   <Plus className="w-3 h-3" />
-                  Add Manually
+                  Добавить вручную
                 </button>
 
                 {/* Run Tests */}
@@ -599,7 +599,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                     activeRun?.status === "pending" ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        Running...
+                        Выполняется...
                       </>
                     ) : (
                       <>
@@ -621,7 +621,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                     className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-colors"
                   >
                     <ExternalLink className="w-3 h-3" />
-                    View Results
+                    Результаты
                   </button>
                 )}
               </div>
@@ -719,14 +719,14 @@ export default function AgentTestCasesPage({ configId }: Props) {
           {showAddForm && (
             <div className="mb-6">
               <DetailCard
-                title="Add Test Case Manually"
+                title="Добавить тест-кейс вручную"
                 contentClassName="space-y-4"
               >
                 <form onSubmit={handleAddSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Category */}
                     <div className="space-y-2">
-                      <Label htmlFor="add-category">Category</Label>
+                      <Label htmlFor="add-category">Категория</Label>
                       <div className="relative">
                         <select
                           id="add-category"
@@ -761,7 +761,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         onChange={(e) =>
                           setAddForm((f) => ({ ...f, title: e.target.value }))
                         }
-                        placeholder="Short descriptive title"
+                        placeholder="Краткое понятное название"
                       />
                       {addErrors.title && (
                         <p className="text-xs text-red-400">
@@ -777,7 +777,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                       User Input <span className="text-red-400">*</span>
                     </Label>
                     <p className="text-xs text-white/40">
-                      The exact message that will be sent to your agent.
+                      Сообщение, которое получит агент.
                     </p>
                     <Textarea
                       id="add-input"
@@ -787,7 +787,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                       onChange={(e) =>
                         setAddForm((f) => ({ ...f, input: e.target.value }))
                       }
-                      placeholder="e.g. What is the refund policy for cancelled orders?"
+                      placeholder="например, Как вернуть деньги за отменённый заказ?"
                     />
                     {addErrors.input && (
                       <p className="text-xs text-red-400">{addErrors.input}</p>
@@ -810,7 +810,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                           expectedBehavior: e.target.value,
                         }))
                       }
-                      placeholder="Describe what the agent should do or say."
+                      placeholder="Опишите, что агент должен сделать или ответить."
                     />
                     {addErrors.expectedBehavior && (
                       <p className="text-xs text-red-400">
@@ -839,7 +839,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                       onChange={(e) =>
                         setAddForm((f) => ({ ...f, rubric: e.target.value }))
                       }
-                      placeholder="Criterion 1 | Criterion 2 | Criterion 3"
+                      placeholder="Критерий 1 | Критерий 2 | Критерий 3"
                     />
                     {addErrors.rubric && (
                       <p className="text-xs text-red-400">{addErrors.rubric}</p>
@@ -856,7 +856,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         setAddErrors({});
                       }}
                     >
-                      Cancel
+                      Отмена
                     </ButtonPrimary>
                     <ButtonPrimary
                       type="submit"
@@ -866,7 +866,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                       {addSubmitting ? (
                         <>
                           <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                          Saving...
+                          Сохранение...
                         </>
                       ) : (
                         "Add Test Case"
@@ -917,7 +917,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                   <FlaskConical className="w-8 h-8 text-white/30" />
                 </div>
                 <div>
-                  <p className="font-medium text-white/70">No test cases yet</p>
+                  <p className="font-medium text-white/70">Тест-кейсов пока нет</p>
                   <p className="text-sm text-white/40 mt-1">
                     Generate test cases automatically from your agent
                     description, or add them manually.
@@ -932,12 +932,12 @@ export default function AgentTestCasesPage({ configId }: Props) {
                     {generating ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Generating...
+                        Генерация...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-3.5 h-3.5" />
-                        Generate Tests
+                        Сгенерировать тесты
                       </>
                     )}
                   </button>
@@ -946,14 +946,14 @@ export default function AgentTestCasesPage({ configId }: Props) {
                     className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-white/5 text-white/70 hover:bg-white/10 border border-white/10 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Add Manually
+                    Добавить вручную
                   </button>
                 </div>
               </div>
             </DetailCard>
           ) : filtered.length === 0 && testCases.length > 0 ? (
             <p className="text-sm text-white/40 text-center py-8">
-              No test cases in this category.
+              В этой категории нет тест-кейсов.
             </p>
           ) : (
             <div className="space-y-2">
@@ -970,7 +970,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm font-medium text-white/70">
-                            Editing test case
+                            Редактирование тест-кейса
                           </p>
                           <button
                             type="button"
@@ -984,7 +984,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor={`edit-cat-${tc.id}`}>
-                              Category
+                              Категория
                             </Label>
                             <div className="relative">
                               <select
@@ -1084,7 +1084,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                             <span className="text-red-400">*</span>
                           </Label>
                           <p className="text-xs text-white/40">
-                            Pipe-separated pass/fail criteria.
+                            Критерии через «|».
                           </p>
                           <Textarea
                             id={`edit-rubric-${tc.id}`}
@@ -1111,7 +1111,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                             variant="ghost"
                             onClick={() => setEditingId(null)}
                           >
-                            Cancel
+                            Отмена
                           </ButtonPrimary>
                           <ButtonPrimary
                             type="submit"
@@ -1121,7 +1121,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                             {editSubmitting ? (
                               <>
                                 <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                                Saving...
+                                Сохранение...
                               </>
                             ) : (
                               "Save Changes"
@@ -1170,14 +1170,14 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         <button
                           onClick={() => handleStartEdit(tc)}
                           className="cursor-pointer p-1.5 rounded text-white/30 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                          title="Edit"
+                          title="Редактировать"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(tc)}
                           className="cursor-pointer p-1.5 rounded text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Delete"
+                          title="Удалить"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1190,7 +1190,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         {/* Input */}
                         <div>
                           <p className="text-xs font-medium text-blue-400/70 uppercase tracking-wider mb-1.5">
-                            User Input
+                            Ввод пользователя
                           </p>
                           <p className="text-sm text-white/75 bg-white/5 rounded-lg px-3 py-2">
                             {tc.input}
@@ -1200,7 +1200,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         {/* Expected behavior */}
                         <div>
                           <p className="text-xs font-medium text-green-400/70 uppercase tracking-wider mb-1.5">
-                            Expected Behavior
+                            Ожидаемое поведение
                           </p>
                           <p className="text-sm text-white/75 bg-white/5 rounded-lg px-3 py-2">
                             {tc.expectedBehavior}
@@ -1210,7 +1210,7 @@ export default function AgentTestCasesPage({ configId }: Props) {
                         {/* Rubric */}
                         <div>
                           <p className="text-xs font-medium text-purple-400/70 uppercase tracking-wider mb-1.5">
-                            Rubric Criteria
+                            Критерии оценки
                           </p>
                           <ul className="space-y-1">
                             {rubricItems.map((item, i) => (

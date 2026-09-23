@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { TestTube2, Play, FileText, Folder, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { ENTITY_ICONS } from '@/lib/entity-icons';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs, type BreadcrumbItem } from '@/frontend/reusable-components/layout/Breadcrumbs';
@@ -15,6 +16,8 @@ import { BaseConfirmDialog } from '@/frontend/reusable-components/dialogs/BaseCo
 import { ProjectHeader } from './subcomponents/ProjectHeader';
 import { ProjectDetail as ProjectDetailType } from './types';
 import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { ProjectStatistics } from './statistics/ProjectStatistics';
 
 type Project = ProjectDetailType;
 
@@ -28,6 +31,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [signOutDialogOpen, setSignOutDialogOpen] = useState(false);
+  const isNewTheme = useIsNewTheme();
 
   useEffect(() => {
     fetchProject();
@@ -78,7 +82,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
       <NotFoundState
         title="Проект не найден"
         message="Проект, который вы ищете, не существует или был удален."
-        icon={Folder}
+        icon={ENTITY_ICONS.project}
         redirectingMessage="Перенаправление на страницу проектов..."
         showRedirecting={true}
       />
@@ -100,7 +104,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
           />
         }
         hideNavbarContainer={true}
-        actions={
+        actions={isNewTheme ? undefined : (
           <div className="flex items-center gap-2">
             <ButtonDestructive 
               type="button" 
@@ -113,7 +117,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
               Выйти
             </ButtonDestructive>
           </div>
-        }
+        )}
       />
 
       <BaseConfirmDialog
@@ -137,10 +141,10 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
         <ResponsiveGrid
           columns={{ default: 1, md: 3, lg: 5 }}
           gap="lg"
-          className="mb-8"
+          className="mb-10"
         >
           <ClickableStatCard
-            icon={<TestTube2 className="w-4 h-4" />}
+            icon={<ENTITY_ICONS.testCase className="w-4 h-4" />}
             label="Тест-кейсы"
             value={project._count.testCases}
             borderColor="border-l-primary/30"
@@ -148,7 +152,7 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             href={`/projects/${projectId}/testcases`}
           />
           <ClickableStatCard
-            icon={<Play className="w-4 h-4" />}
+            icon={<ENTITY_ICONS.testRun className="w-4 h-4" />}
             label="Тест-раны"
             value={project._count.testRuns}
             borderColor="border-l-accent/30"
@@ -156,15 +160,15 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             href={`/projects/${projectId}/testruns`}
           />
           <ClickableStatCard
-            icon={<FileText className="w-4 h-4" />}
-            label="Наборы тестов"
+            icon={<ENTITY_ICONS.testSuite className="w-4 h-4" />}
+            label="Тест-сьюты"
             value={project._count.testSuites}
             borderColor="border-l-purple-400/30"
             hoverColor="group-hover:bg-purple-400/10"
             href={`/projects/${projectId}/testsuites`}
           />
           <ClickableStatCard
-            icon={<Folder className="w-4 h-4" />}
+            icon={<ENTITY_ICONS.members className="w-4 h-4" />}
             label="Участники"
             value={project.members?.length || 0}
             borderColor="border-l-green-400/30"
@@ -172,6 +176,8 @@ export default function ProjectDetail({ projectId }: ProjectDetailProps) {
             href={`/projects/${projectId}/members`}
           />
         </ResponsiveGrid>
+
+        <ProjectStatistics projectId={projectId} />
       </div>
     </>
   );

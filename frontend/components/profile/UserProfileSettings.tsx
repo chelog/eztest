@@ -1,31 +1,42 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
-import { Textarea } from '@/frontend/reusable-elements/textareas/Textarea';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/frontend/reusable-elements/cards/Card';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
-import { Lock, Mail, Phone, MapPin, User, Save, Key, LogOut } from 'lucide-react';
+import { KeyRound, LogOut, Save, ShieldCheck, UserRound } from 'lucide-react';
 import { ApiKeysManagement } from '@/frontend/components/apikeys/ApiKeysManagement';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { ButtonDestructive } from '@/frontend/reusable-elements/buttons/ButtonDestructive';
 import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { ROLE_LABELS } from '@/lib/role-labels';
+import { getAvatarColor } from '@/lib/avatar-color';
+
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof UserRound; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2.5">
+      <span className="w-8 h-8 rounded-[10px] bg-white/[0.06] flex items-center justify-center">
+        <Icon className="w-4 h-4 text-white/70" />
+      </span>
+      {children}
+    </span>
+  );
+}
 
 export default function UserProfileSettings() {
+  const { data: session } = useSession();
+  const isNewTheme = useIsNewTheme();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    bio: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '' });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -33,9 +44,7 @@ export default function UserProfileSettings() {
   });
 
   const handleSignOut = () => {
-    // Clear all persisted form data before signing out
     clearAllPersistedForms();
-    // Clear project context from session storage
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('lastProjectId');
     }
@@ -46,80 +55,79 @@ export default function UserProfileSettings() {
     fetchProfile();
   }, []);
 
-
   const fetchProfile = async () => {
     try {
       const response = await fetch('/api/users/profile');
-      if (!response.ok) throw new Error('Failed to fetch profile');
+      if (!response.ok) throw new Error('Не удалось загрузить профиль');
       const data = await response.json();
       setFormData({
         name: data.data.name || '',
         email: data.data.email || '',
-        phone: data.data.phone || '',
-        location: data.data.location || '',
-        bio: data.data.bio || '',
       });
     } catch (err) {
       setAlert({
         type: 'error',
-        title: 'Failed to Load Profile',
-        message: err instanceof Error ? err.message : 'Error loading profile',
+        title: 'Ошибка загрузки профиля',
+        message: err instanceof Error ? err.message : 'Не удалось загрузить профиль',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
+    setSavingProfile(true);
 
     try {
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ name: formData.name }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update profile');
+        throw new Error('Не удалось сохранить профиль');
       }
 
       setAlert({
         type: 'success',
-        title: 'Profile Updated',
-        message: 'Your profile has been updated successfully.',
+        title: 'Профиль сохранён',
+        message: 'Изменения профиля сохранены.',
       });
     } catch (err) {
       setAlert({
         type: 'error',
-        title: 'Failed to Update Profile',
-        message: err instanceof Error ? err.message : 'Error updating profile',
+        title: 'Ошибка сохранения',
+        message: err instanceof Error ? err.message : 'Не удалось сохранить профиль',
       });
     } finally {
-      setSaving(false);
+      setSavingProfile(false);
     }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+    if (passwordData.newPassword.length < 8) {
       setAlert({
         type: 'error',
-        title: 'Password Mismatch',
-        message: 'New passwords do not match.',
+        title: 'Слишком короткий пароль',
+        message: 'Новый пароль должен быть не короче 8 символов.',
       });
       return;
     }
 
-    setSaving(true);
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setAlert({
+        type: 'error',
+        title: 'Пароли не совпадают',
+        message: 'Новый пароль и подтверждение должны совпадать.',
+      });
+      return;
+    }
+
+    setSavingPassword(true);
 
     try {
       const response = await fetch('/api/users/profile/password', {
@@ -132,282 +140,183 @@ export default function UserProfileSettings() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to change password');
+        throw new Error(
+          response.status === 400 || response.status === 401
+            ? 'Проверьте текущий пароль'
+            : 'Не удалось изменить пароль'
+        );
       }
 
       setAlert({
         type: 'success',
-        title: 'Password Changed',
-        message: 'Your password has been changed successfully.',
+        title: 'Пароль изменён',
+        message: 'Новый пароль сохранён.',
       });
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
       setAlert({
         type: 'error',
-        title: 'Failed to Change Password',
-        message: err instanceof Error ? err.message : 'Error changing password',
+        title: 'Ошибка смены пароля',
+        message: err instanceof Error ? err.message : 'Не удалось изменить пароль',
       });
     } finally {
-      setSaving(false);
+      setSavingPassword(false);
     }
   };
 
-
   if (loading) {
-    return <Loader fullScreen text="Loading profile..." />;
+    return <Loader fullScreen text="Загрузка профиля..." />;
   }
+
+  const displayName = formData.name || formData.email;
+  const roleLabel = ROLE_LABELS[session?.user?.roleName ?? ''] ?? session?.user?.roleName ?? '';
 
   return (
     <>
-      {/* Alert Messages */}
       <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
 
-      {/* Navbar */}
       <Navbar
         brandLabel={null}
         items={[]}
         hideNavbarContainer={true}
         actions={
-          <form action="/api/auth/signout" method="POST" onSubmit={handleSignOut}>
-            <ButtonDestructive type="submit" size="default" className="px-5">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </ButtonDestructive>
-          </form>
+          // New theme: sign out lives in the sidebar profile block
+          isNewTheme ? undefined : (
+            <form action="/api/auth/signout" method="POST" onSubmit={handleSignOut}>
+              <ButtonDestructive type="submit" size="default" className="px-5">
+                <LogOut className="w-4 h-4 mr-2" />
+                Выйти
+              </ButtonDestructive>
+            </form>
+          )
         }
       />
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-8 py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Account Settings</h1>
-          <p className="text-white/70">Manage your account information and security</p>
+      <div className="max-w-5xl mx-auto px-8 pt-2 pb-8">
+        {/* Profile header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="w-14 h-14 rounded-full text-white flex items-center justify-center text-xl font-bold shrink-0"
+            style={{ backgroundColor: getAvatarColor(formData.email || displayName) }}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold text-white truncate">{displayName}</h1>
+            <p className="text-sm text-white/55 truncate">
+              {formData.email}
+              {roleLabel && <span className="text-white/35"> · {roleLabel}</span>}
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Profile Information */}
-          <DetailCard 
-            title={
-              <span className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Profile Information
-              </span>
-            }
-            contentClassName="space-y-4"
-          >
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleProfileChange}
-                      variant="glass"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Profile */}
+          <DetailCard title={<SectionTitle icon={UserRound}>Профиль</SectionTitle>} contentClassName="flex-1 flex flex-col">
+            <form onSubmit={handleSaveProfile} className="flex flex-col gap-4 h-full">
+              <div className="space-y-2">
+                <Label htmlFor="name">Имя</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                  variant="glass"
+                  placeholder="Как вас зовут"
+                  required
+                />
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email Address
-                    </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      disabled
-                      variant="glass"
-                      className="disabled:opacity-60 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-white/60">Email cannot be changed. Contact support for assistance.</p>
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  variant="glass"
+                  className="disabled:opacity-60 cursor-not-allowed"
+                />
+                <p className="text-xs text-white/45">Email меняет администратор.</p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleProfileChange}
-                      variant="glass"
-                      placeholder="Your phone number"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleProfileChange}
-                      variant="glass"
-                      placeholder="City, Country"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleProfileChange}
-                    variant="glass"
-                    placeholder="Tell us about yourself..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <ButtonPrimary
-                    type="submit"
-                    disabled={saving}
-                    className="gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </ButtonPrimary>
-                </div>
-              </form>
+              <div className="mt-auto pt-2">
+                <ButtonPrimary type="submit" disabled={savingProfile} className="gap-2 w-full">
+                  <Save className="w-4 h-4" />
+                  {savingProfile ? 'Сохранение...' : 'Сохранить'}
+                </ButtonPrimary>
+              </div>
+            </form>
           </DetailCard>
 
-          {/* Password & Security */}
-          <DetailCard 
-            title={
-              <span className="flex items-center gap-2">
-                <Lock className="w-5 h-5" />
-                Security
-              </span>
-            }
-            contentClassName="space-y-4"
-          >
-            <form onSubmit={handleChangePassword} className="space-y-4">
+          {/* Password */}
+          <DetailCard title={<SectionTitle icon={ShieldCheck}>Безопасность</SectionTitle>} contentClassName="flex-1 flex flex-col">
+            <form onSubmit={handleChangePassword} className="flex flex-col gap-4 h-full">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Текущий пароль</Label>
+                <Input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  variant="glass"
+                  placeholder="Введите текущий пароль"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currentPassword" className="flex items-center gap-2">
-                    <Key className="w-4 h-4" />
-                    Current Password
-                  </Label>
+                  <Label htmlFor="newPassword">Новый пароль</Label>
                   <Input
-                    id="currentPassword"
-                    name="currentPassword"
+                    id="newPassword"
+                    name="newPassword"
                     type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, currentPassword: e.target.value })
-                    }
+                    autoComplete="new-password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     variant="glass"
-                    placeholder="Enter current password"
+                    placeholder="Минимум 8 символов"
+                    required
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, newPassword: e.target.value })
-                      }
-                      variant="glass"
-                      placeholder="Enter new password"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-                      }
-                      variant="glass"
-                      placeholder="Confirm new password"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Повторите пароль</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    variant="glass"
+                    placeholder="Ещё раз"
+                    required
+                  />
                 </div>
+              </div>
 
-                <div className="flex justify-end pt-4">
-                  <ButtonPrimary
-                    type="submit"
-                    disabled={saving}
-                    className="gap-2"
-                  >
-                    <Key className="w-4 h-4" />
-                    {saving ? 'Updating...' : 'Change Password'}
-                  </ButtonPrimary>
-                </div>
-              </form>
+              <div className="mt-auto pt-2">
+                <ButtonPrimary type="submit" disabled={savingPassword} className="gap-2 w-full">
+                  <KeyRound className="w-4 h-4" />
+                  {savingPassword ? 'Сохранение...' : 'Сменить пароль'}
+                </ButtonPrimary>
+              </div>
+            </form>
           </DetailCard>
+        </div>
 
-          {/* API Keys */}
-          <DetailCard 
-            title={
-              <span className="flex items-center gap-2">
-                <Lock className="w-5 h-5" />
-                API Keys
-              </span>
-            }
-          >
+        {/* API keys */}
+        <div className="mt-5">
+          <DetailCard title={<SectionTitle icon={KeyRound}>API-ключи</SectionTitle>}>
             <ApiKeysManagement />
           </DetailCard>
         </div>
-
-        {/* Footer */}
-        <div
-          className="rounded-3xl relative transition-all p-[1px] mt-12"
-          style={{
-            background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
-          }}
-        >
-          <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
-            <Card
-              variant="glass"
-              className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible transition-all flex flex-col h-full"
-            >
-              <CardHeader>
-                <CardTitle>About</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Belsterns Technologies</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="text-primary">v0.1.0</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </div>
-
-      {/* Alerts */}
-      {alert && <FloatingAlert alert={alert} onClose={() => setAlert(null)} />}
-
     </>
   );
 }

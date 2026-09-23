@@ -106,7 +106,7 @@ export function DefectTable({
           <Checkbox
             checked={allSelected}
             onCheckedChange={onSelectAll}
-            aria-label="Select all defects"
+            aria-label="Выбрать все дефекты"
             className={someSelected ? 'data-[state=checked]:bg-primary/50' : ''}
           />
         </div>
@@ -165,7 +165,7 @@ export function DefectTable({
       {/* Defect Rows */}
       {defects.length === 0 ? (
         <div className="text-center py-8 text-white/50">
-          No defects to display
+          Дефектов нет
         </div>
       ) : (
         defects.map((defect, rowIndex) => (
@@ -203,11 +203,11 @@ export function DefectTable({
                 {defect.title && defect.title.length > 50 && (
                   <HoverCardContent side="top" className="w-96">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-white">Defect Title</h4>
+                      <h4 className="text-sm font-semibold text-white">Название дефекта</h4>
                       <p className="text-sm text-white/80 break-words">{defect.title}</p>
                       {defect.description && (
                         <>
-                          <h4 className="text-sm font-semibold text-white mt-3">Description</h4>
+                          <h4 className="text-sm font-semibold text-white mt-3">Описание</h4>
                           <p className="text-sm text-white/70 break-words line-clamp-3">{defect.description}</p>
                         </>
                       )}
@@ -279,14 +279,14 @@ export function DefectTable({
                   </HoverCardTrigger>
                   <HoverCardContent side="top" className="w-60">
                     <div className="space-y-1">
-                      <h4 className="text-xs font-semibold text-white/60">Assigned To</h4>
+                      <h4 className="text-xs font-semibold text-white/60">Исполнитель</h4>
                       <p className="text-sm text-white/90">{defect.assignedTo.name}</p>
                       <p className="text-xs text-white/60">{defect.assignedTo.email}</p>
                     </div>
                   </HoverCardContent>
                 </HoverCard>
               ) : (
-                <span className="text-xs text-white/40 italic">Unassigned</span>
+                <span className="text-xs text-white/40 italic">Не назначен</span>
               )}
             </div>
 
@@ -300,7 +300,7 @@ export function DefectTable({
                 </HoverCardTrigger>
                 <HoverCardContent side="top" className="w-60">
                   <div className="space-y-1">
-                    <h4 className="text-xs font-semibold text-white/60">Reporter</h4>
+                    <h4 className="text-xs font-semibold text-white/60">Автор</h4>
                     <p className="text-sm text-white/90">{defect.createdBy.name}</p>
                     <p className="text-xs text-white/60">{defect.createdBy.email}</p>
                   </div>
@@ -324,7 +324,7 @@ export function DefectTable({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onDelete(defect)} className="text-red-400 hover:bg-red-400/10">
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
+                      Удалить
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

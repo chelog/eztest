@@ -14,10 +14,10 @@ export const StatCard = ({ icon, label, value, borderColor }: StatCardProps) => 
 
   return (
     <div
-      className="rounded-3xl relative transition-all p-[1px]"
+      className="rounded-3xl relative transition-all p-[1px]" data-ui="frame"
       style={{ background: gradientStyle }}
     >
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
+      <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: 'var(--item-card-bg)' }}>
         <Card 
           variant="glass" 
           className={`!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible transition-all flex flex-col h-full border-l-4 ${borderColor}`}

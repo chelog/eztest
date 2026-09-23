@@ -33,7 +33,7 @@ export function SendTestRunReportDialog({
       await onConfirm();
       onOpenChange(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send report';
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось отправить отчёт';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -44,9 +44,9 @@ export function SendTestRunReportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Send Test Run Report</DialogTitle>
+          <DialogTitle>Отправить отчёт по тест-рану</DialogTitle>
           <DialogDescription>
-            Would you like to send the test run report via email to admin, project managers, and defect assignees?
+            Отправить отчёт по тест-рану администраторам, менеджерам проектов и исполнителям дефектов?
           </DialogDescription>
         </DialogHeader>
         {error && (

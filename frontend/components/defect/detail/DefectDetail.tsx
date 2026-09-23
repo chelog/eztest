@@ -11,7 +11,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { List, TestTube2, PlayCircle } from 'lucide-react';
+import { List, PlayCircle, FileCheck } from 'lucide-react';
 import { Defect, DefectFormData } from './types';
 import type { Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
@@ -234,7 +234,6 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
           title: 'Успешно',
           message: 'Дефект успешно обновлен',
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchDefect();
       } else {
         const errorMessage = Array.isArray(data.data) 
@@ -297,7 +296,6 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
           title: 'Успешно',
           message: 'Дефект успешно переоткрыт',
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchDefect();
       } else {
         setAlert({
@@ -403,7 +401,7 @@ export default function DefectDetail({ projectId, defectId }: DefectDetailProps)
             },
             {
               label: 'Все тест-кейсы',
-              icon: TestTube2,
+              icon: FileCheck,
               onClick: () => router.push(`/projects/${defect.project.id}/testcases`),
               variant: 'secondary',
               buttonName: 'Defect Detail - View All Test Cases',

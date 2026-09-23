@@ -37,7 +37,7 @@ export function parseCSV(content: string): ParseResult {
   } catch (error) {
     return {
       data: [],
-      errors: [`Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      errors: [`Failed to parse CSV: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`],
     };
   }
 }
@@ -86,7 +86,7 @@ export function parseExcel(buffer: Buffer): ParseResult {
   } catch (error) {
     return {
       data: [],
-      errors: [`Failed to parse Excel: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      errors: [`Failed to parse Excel: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`],
     };
   }
 }

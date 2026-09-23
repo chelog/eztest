@@ -56,7 +56,7 @@ export function DefectStatistics({ projectId, refreshTrigger }: DefectStatistics
 
   // if (loading) {
   //   return (
-  //     <DetailCard title="Defect Status Statistics" contentClassName="space-y-3" className="mb-4">
+  //     <DetailCard title="Дефекты по статусам" contentClassName="space-y-3" className="mb-4">
   //       <div className="animate-pulse space-y-3">
   //         <div className="h-4 bg-white/10 rounded w-1/3"></div>
   //         <div className="h-20 bg-white/10 rounded"></div>
@@ -171,7 +171,7 @@ export function DefectStatistics({ projectId, refreshTrigger }: DefectStatistics
 
 // return (
 //   <DetailCard 
-//     title="Defect Status Statistics"
+//     title="Дефекты по статусам"
 //     headerAction={
 //       <BarChart3 className="w-4 h-4 text-primary" />
 //     }
@@ -181,7 +181,7 @@ export function DefectStatistics({ projectId, refreshTrigger }: DefectStatistics
 //     {/* Stacked Progress Bar */}
 //     <div>
 //       <div className="flex items-center justify-between mb-1.5">
-//         <span className="text-xs text-white/60">By Status</span>
+//         <span className="text-xs text-white/60">По статусам</span>
 //         <span className="text-xs text-white/60">Total: {statistics.total}</span>
 //       </div>
       

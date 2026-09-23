@@ -52,7 +52,7 @@ export class AttachmentController {
       if (error instanceof Error) {
         console.error('Upload initialization error:', error.message);
       }
-      throw new InternalServerException('Failed to initialize upload');
+      throw new InternalServerException('Не удалось начать загрузку');
     }
   }
 
@@ -92,7 +92,7 @@ export class AttachmentController {
       if (error instanceof Error && error.message.includes('not allowed')) {
         throw new BadRequestException(error.message);
       }
-      throw new InternalServerException('Failed to complete upload');
+      throw new InternalServerException('Не удалось завершить загрузку');
     }
   }
 
@@ -123,7 +123,7 @@ export class AttachmentController {
       if (error instanceof Error && error.message.includes('Missing required')) {
         throw new BadRequestException(error.message);
       }
-      throw new InternalServerException('Failed to abort upload');
+      throw new InternalServerException('Не удалось отменить загрузку');
     }
   }
 
@@ -139,10 +139,10 @@ export class AttachmentController {
         statusCode: 200,
       };
     } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'Attachment not found') {
-        throw new NotFoundException('Attachment not found');
+      if (error instanceof Error && ['Attachment not found', 'Вложение не найдено'].includes(error.message)) {
+        throw new NotFoundException('Вложение не найдено');
       }
-      throw new InternalServerException('Failed to generate download URL');
+      throw new InternalServerException('Не удалось получить ссылку для скачивания');
     }
   }
 
@@ -165,7 +165,7 @@ export class AttachmentController {
         statusCode: 200,
       };
     } catch {
-      throw new InternalServerException('Failed to update attachment');
+      throw new InternalServerException('Не удалось обновить вложение');
     }
   }
 
@@ -181,10 +181,10 @@ export class AttachmentController {
         statusCode: 200,
       };
     } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'Attachment not found') {
-        throw new NotFoundException('Attachment not found');
+      if (error instanceof Error && ['Attachment not found', 'Вложение не найдено'].includes(error.message)) {
+        throw new NotFoundException('Вложение не найдено');
       }
-      throw new InternalServerException('Failed to prepare deletion');
+      throw new InternalServerException('Не удалось подготовить удаление');
     }
   }
 
@@ -200,10 +200,10 @@ export class AttachmentController {
         statusCode: 200,
       };
     } catch (error: unknown) {
-      if (error instanceof Error && error.message === 'Attachment not found') {
-        throw new NotFoundException('Attachment not found');
+      if (error instanceof Error && ['Attachment not found', 'Вложение не найдено'].includes(error.message)) {
+        throw new NotFoundException('Вложение не найдено');
       }
-      throw new InternalServerException('Failed to delete attachment');
+      throw new InternalServerException('Не удалось удалить вложение');
     }
   }
 }

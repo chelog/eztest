@@ -14,7 +14,7 @@ export interface DateInfoSectionProps {
  * @example
  * ```tsx
  * <DateInfoSection
- *   label="Created"
+ *   label="Создан"
  *   date={testCase.createdAt}
  * />
  * ```

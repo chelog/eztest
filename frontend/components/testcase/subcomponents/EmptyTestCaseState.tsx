@@ -13,7 +13,7 @@ export function EmptyTestCaseState({ hasFilters, onCreateClick, canCreate = true
   return (
     <EmptyStateCard
       icon={AlertCircle}
-      title="No test cases found"
+      title="Тест-кейсы не найдены"
       description={hasFilters
         ? 'Try adjusting your filters'
         : 'Get started by creating your first test case'}

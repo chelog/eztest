@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { DetailPageHeader } from '@/frontend/reusable-components/layout/DetailPageHeader';
-import { Edit, Trash2, RotateCcw } from 'lucide-react';
+import { Trash2, RotateCcw, Pencil } from 'lucide-react';
 import { Defect, DefectFormData } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -137,7 +137,7 @@ export function DefectHeader({
         },
         { 
           label: 'Редактировать', 
-          icon: Edit, 
+          icon: Pencil, 
           onClick: onEdit, 
           show: canUpdate,
           buttonName: 'Defect Detail - Edit',

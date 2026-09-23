@@ -2,6 +2,7 @@
 
 import { BaseDialog, type BaseDialogField } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { Role, UserFormData } from '../types';
+import { getRoleLabel } from '@/lib/role-labels';
 
 interface AddUserDialogProps {
   open: boolean;
@@ -18,34 +19,34 @@ export function AddUserDialog({ open, roles, onOpenChange, onAdd }: AddUserDialo
   const fields: BaseDialogField[] = [
     {
       name: 'name',
-      label: 'Full Name',
+      label: 'Имя',
       placeholder: 'John Doe',
       type: 'text',
       required: true,
     },
     {
       name: 'email',
-      label: 'Email Address',
+      label: 'Email',
       placeholder: 'john@example.com',
       type: 'email',
       required: true,
     },
     {
       name: 'password',
-      label: 'Password',
+      label: 'Пароль',
       placeholder: '••••••••',
       type: 'password',
       required: true,
     },
     {
       name: 'roleId',
-      label: 'User Role',
+      label: 'Роль пользователя',
       type: 'select',
       required: true,
       defaultValue: defaultRoleId,
       options: roles.map((role) => ({
         value: role.id,
-        label: role.name,
+        label: getRoleLabel(role.name),
       })),
     },
   ];

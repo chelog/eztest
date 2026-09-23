@@ -30,8 +30,8 @@ export function UploadTestNGXMLDialog({
   const dialogProps: UploadXMLDialogProps = {
     open,
     onOpenChange,
-    title: 'Upload TestNG XML Results',
-    description: 'Upload TestNG XML results file to import test execution results. Test methods will be matched with test case IDs.',
+    title: 'Загрузить результаты TestNG XML',
+    description: 'Загрузите XML-отчёт TestNG, чтобы импортировать результаты. Тестовые методы сопоставляются с ID тест-кейсов.',
     acceptedFileTypes: ['.xml'],
     acceptedFileExtensions: ['xml'],
     checkEndpoint: `/api/projects/${projectId}/testruns/check-xml`,
@@ -46,7 +46,7 @@ export function UploadTestNGXMLDialog({
     environmentOptions: environmentOptions.map(opt => ({ value: opt.value, label: opt.label })),
     createRequestBody: (filename, generatedName, environment) => ({
       name: generatedName,
-      description: `Test run created from XML file: ${filename}`,
+      description: `Тест-ран создан из XML-файла: ${filename}`,
       status: 'COMPLETED',
       environment: environment,
       executionType: 'AUTOMATION',

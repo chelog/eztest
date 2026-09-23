@@ -60,10 +60,10 @@ export function TestCaseCard({ testCase, onDelete, onClick }: TestCaseCardProps)
   return (
     <div
       className="rounded-3xl relative transition-all cursor-pointer group p-[1px]"
-      onClick={onClick}
+      onClick={onClick} data-ui="frame"
       style={{ background: gradientStyle }}
     >
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+      <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
         <Card
           variant="glass"
           className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
@@ -94,7 +94,7 @@ export function TestCaseCard({ testCase, onDelete, onClick }: TestCaseCardProps)
           <ActionMenu
             items={[
               {
-                label: 'Delete',
+                label: 'Удалить',
                 icon: Trash2,
                 onClick: () => onDelete(testCase),
                 variant: 'destructive',

@@ -40,42 +40,38 @@ export function getCurrentUtcDate(): Date {
 }
 
 /**
- * Format date in DD-MMM-YYYY format (e.g., 01-Apr-2000)
+ * Format date as DD.MM.YYYY (e.g., 01.04.2000)
  * Automatically converts UTC to user's local timezone
  */
 export function formatDate(date: string | Date): string {
   const dateObj = utcToLocal(date);
-  
+
   if (isNaN(dateObj.getTime())) {
-    return 'Invalid date';
+    return 'Некорректная дата';
   }
-  
+
   const day = String(dateObj.getDate()).padStart(2, '0');
-  const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const year = dateObj.getFullYear();
-  
-  return `${day}-${month}-${year}`;
+
+  return `${day}.${month}.${year}`;
 }
 
 /**
- * Format date with time in DD-MMM-YYYY HH:MM:SS format
+ * Format date with time as DD.MM.YYYY HH:MM
  * Automatically converts UTC to user's local timezone
  */
 export function formatDateTime(date: string | Date): string {
   const dateObj = utcToLocal(date);
-  
+
   if (isNaN(dateObj.getTime())) {
-    return 'Invalid date';
+    return 'Некорректная дата';
   }
-  
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
-  const year = dateObj.getFullYear();
+
   const hours = String(dateObj.getHours()).padStart(2, '0');
   const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-  
-  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+
+  return `${formatDate(dateObj)} ${hours}:${minutes}`;
 }
 
 /**
@@ -86,10 +82,10 @@ export function formatDateWithTimezone(date: string | Date): string {
   const dateObj = utcToLocal(date);
   
   if (isNaN(dateObj.getTime())) {
-    return 'Invalid date';
+    return 'Некорректная дата';
   }
   
-  const formatted = dateObj.toLocaleDateString('en-US', {
+  const formatted = dateObj.toLocaleDateString('ru-RU', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

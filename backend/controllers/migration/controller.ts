@@ -14,27 +14,27 @@ export class MigrationController {
       const file = formData.get('file') as File;
 
       if (!file) {
-        throw new ValidationException('No file uploaded');
+        throw new ValidationException('Файл не загружен');
       }
 
       // Parse the file
       const parseResult = await parseFile(file);
 
       if (parseResult.errors.length > 0) {
-        throw new ValidationException('File parsing errors', parseResult.errors);
+        throw new ValidationException('Ошибки разбора файла', parseResult.errors);
       }
 
       // Validate required fields using dedicated validator
       if (type === 'testcases') {
         const validationErrors = validateTestCaseImportColumns(parseResult.data);
         if (validationErrors.length > 0) {
-          throw new ValidationException('Missing required fields', validationErrors);
+          throw new ValidationException('Не заполнены обязательные поля', validationErrors);
         }
       } else {
         // For defects, use dedicated validator
         const validationErrors = validateDefectImportColumns(parseResult.data);
         if (validationErrors.length > 0) {
-          throw new ValidationException('Missing required fields', validationErrors);
+          throw new ValidationException('Не заполнены обязательные поля', validationErrors);
         }
       }
 

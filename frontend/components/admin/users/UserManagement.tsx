@@ -21,6 +21,7 @@ import { AddUserDialog } from './subcomponents/AddUserDialog';
 import { EditUserDialog } from './subcomponents/EditUserDialog';
 import { DeleteUserDialog } from './subcomponents/DeleteUserDialog';
 import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
+import { getRoleLabel } from '@/lib/role-labels';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -154,7 +155,7 @@ export default function UserManagement() {
     { value: 'all', label: 'Все роли' },
     ...roles.map((role) => ({
       value: role.id,
-      label: role.name,
+      label: getRoleLabel(role.name),
     })),
   ];
 

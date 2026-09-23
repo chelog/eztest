@@ -1,5 +1,5 @@
 ﻿import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
-import { Folder, TestTube2 } from 'lucide-react';
+import { Folder, FileCheck } from 'lucide-react';
 import { ChildSuite } from '../types';
 
 interface ChildSuitesCardProps {
@@ -31,7 +31,7 @@ export function ChildSuitesCard({
               <span className="text-sm text-white font-medium truncate">{child.name}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-white/60">
-              <TestTube2 className="w-4 h-4" />
+              <FileCheck className="w-4 h-4" />
               <span>{child._count.testCases}</span>
             </div>
           </div>

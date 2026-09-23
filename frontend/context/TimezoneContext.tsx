@@ -21,7 +21,7 @@ export function TimezoneProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get timezone name using Intl API
-    const formatter = new Intl.DateTimeFormat('en-US', { timeZoneName: 'long' });
+    const formatter = new Intl.DateTimeFormat('ru-RU', { timeZoneName: 'long' });
     const parts = formatter.formatToParts(new Date());
     const tzName = parts.find(part => part.type === 'timeZoneName')?.value || 'UTC';
     setTimezone(tzName);

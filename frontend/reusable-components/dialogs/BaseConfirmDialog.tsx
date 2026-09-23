@@ -84,7 +84,7 @@ export const BaseConfirmDialog = ({
         <div className="space-y-5">
           {content && <div>{content}</div>}
           <InlineError message={error} />
-          <div className="flex gap-3 justify-end">
+          <div data-ui="dialog-footer" className="flex gap-3 justify-end">
             <Button
               type="button"
               variant="glass"

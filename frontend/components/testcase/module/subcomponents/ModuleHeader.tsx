@@ -2,7 +2,7 @@
 
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { DetailPageHeader } from '@/frontend/reusable-components/layout/DetailPageHeader';
-import { Edit, Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 import { Module } from '../../types';
 
 interface ModuleHeaderProps {
@@ -56,7 +56,7 @@ export function ModuleHeader({
         actions={[
           { 
             label: 'Редактировать', 
-            icon: Edit, 
+            icon: Pencil, 
             onClick: onEdit, 
             show: canUpdate,
             buttonName: 'Module Detail - Edit',

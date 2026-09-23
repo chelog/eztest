@@ -15,8 +15,8 @@ export interface NotFoundStateProps {
 }
 
 export function NotFoundState({
-  title = 'Not Found',
-  message = 'The item you&apos;re looking for doesn&apos;t exist or has been deleted.',
+  title = 'Не найдено',
+  message = 'Запись не найдена или была удалена.',
   icon: Icon = Folder,
   iconColor = 'text-red-400',
   redirectingMessage = 'Redirecting...',

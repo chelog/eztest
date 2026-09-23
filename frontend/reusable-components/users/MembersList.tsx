@@ -45,11 +45,11 @@ export interface MembersListProps {
  * ```tsx
  * <MembersList
  *   members={members}
- *   title="Project Members (5)"
- *   description="People who have access to this project"
+ *   title="Участники проекта"
+ *   description="Люди с доступом к проекту"
  *   onDelete={(id, name) => handleRemove(id, name)}
  *   emptyTitle="No members yet"
- *   emptyDescription="Add project members to collaborate"
+ *   emptyDescription="Добавьте участников для совместной работы"
  * />
  * ```
  */

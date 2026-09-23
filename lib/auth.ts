@@ -12,6 +12,9 @@ import { CustomRequest } from '@/backend/utils/interceptor';
 // Validate environment on import
 const env = getEnv();
 
+/** How often the JWT re-reads the user's role/permissions from the database */
+const ROLE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -19,11 +22,11 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        password: { label: 'Пароль', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          throw new Error('Введите email и пароль');
         }
 
         const user = await prisma.user.findUnique({
@@ -31,12 +34,12 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          throw new Error('Invalid email or password');
+          throw new Error('Неверный email или пароль');
         }
 
         // Check if user is deleted
         if (user.deletedAt) {
-          throw new Error('Your account has been deleted. Please contact your administrator.');
+          throw new Error('Аккаунт удалён. Обратитесь к администратору.');
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -45,7 +48,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          throw new Error('Invalid email or password');
+          throw new Error('Неверный email или пароль');
         }
 
         // Fetch role to get role name
@@ -77,9 +80,11 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
       }
-      // Refresh role and permissions from the database on every token read,
-      // so role changes (e.g. promotion to ADMIN) apply without re-login.
-      if (token.id) {
+      // Refresh role and permissions from the database periodically (and on sign-in),
+      // so role changes (e.g. promotion to ADMIN) apply without re-login but without
+      // a DB round-trip on every session read.
+      const checkedAt = typeof token.roleCheckedAt === 'number' ? token.roleCheckedAt : 0;
+      if (token.id && (user || Date.now() - checkedAt > ROLE_REFRESH_INTERVAL_MS)) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           include: {
@@ -104,6 +109,7 @@ export const authOptions: NextAuthOptions = {
         token.permissions = dbUser?.role.permissions?.map(
           (rp) => rp.permission.name
         ) || [];
+        token.roleCheckedAt = Date.now();
       }
       return token;
     },

@@ -14,28 +14,25 @@ interface DangerZoneCardProps {
 export function DangerZoneCard({ project, deleting, onDelete }: DangerZoneCardProps) {
   return (
     <DetailCard
-      title="Danger Zone"
-      description="Irreversible and destructive actions"
+      title="Опасная зона"
+      description="Необратимые действия"
       contentClassName=""
-      headerClassName="border-b border-red-400/20"
-      className="border-red-400/30"
     >
-        <div className="flex items-center justify-between p-4 border border-red-400/20 rounded-lg bg-red-400/5">
+        <div className="space-y-3">
           <div>
-            <h4 className="font-semibold text-red-300 mb-1">Delete this project</h4>
-            <p className="text-sm text-red-300/70">
-              Once you delete a project, there is no going back. All data will be
-              permanently deleted.
+            <h4 className="text-sm font-semibold text-red-300">Удалить проект</h4>
+            <p className="mt-1 text-sm text-white/50">
+              Проект и все его данные будут удалены безвозвратно.
             </p>
           </div>
           <ButtonDestructive
             onClick={onDelete}
             disabled={deleting}
             buttonName={`Project Settings - Delete Project (${project.name})`}
-            // className="ml-4"
+            className="w-full"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Project
+            <Trash2 className="w-4 h-4" />
+            Удалить проект
           </ButtonDestructive>
         </div>
     </DetailCard>

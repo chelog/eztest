@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./GlassFooter.module.css";
+import { FlaskConical } from 'lucide-react';
 
 type GlassFooterProps = {
   variant?: "full" | "simple";
@@ -21,7 +22,7 @@ export function GlassFooter({ variant = "full", description, className, hidePriv
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-2xl ring-1 ring-white/5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)] before:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] px-6 py-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🧪</span>
+                <FlaskConical className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-primary">EZTest</span>
               </div>
               <p className="text-sm text-muted-foreground">

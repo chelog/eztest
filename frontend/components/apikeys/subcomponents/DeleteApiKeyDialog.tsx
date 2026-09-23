@@ -30,10 +30,10 @@ export function DeleteApiKeyDialog({
   };
 
   const config: BaseConfirmDialogConfig = {
-    title: 'Delete API Key',
-    description: `Are you sure you want to delete the API key "${apiKey.name}"? This action cannot be undone. Any applications using this key will stop working immediately.`,
-    submitLabel: 'Delete API Key',
-    cancelLabel: 'Cancel',
+    title: 'Удалить API-ключ',
+    description: `Удалить API-ключ «${apiKey.name}»? Действие нельзя отменить: всё, что использует этот ключ, сразу перестанет работать.`,
+    submitLabel: 'Удалить API-ключ',
+    cancelLabel: 'Отмена',
     triggerOpen: open,
     onOpenChange,
     onSubmit: handleDelete,

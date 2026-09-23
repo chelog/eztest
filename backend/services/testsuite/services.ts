@@ -176,7 +176,7 @@ export class TestSuiteService {
         select: { projectId: true },
       });
       if (!parent || parent.projectId !== data.projectId) {
-        throw new BadRequestException('Parent suite not found or does not belong to this project');
+        throw new BadRequestException('Родительский сьют не найден или из другого проекта');
       }
     }
 
@@ -213,7 +213,7 @@ export class TestSuiteService {
   ) {
     if (data.parentId !== undefined) {
       if (data.parentId === suiteId) {
-        throw new BadRequestException('A suite cannot be its own parent');
+        throw new BadRequestException('Сьют не может быть родителем сам себе');
       }
 
       if (data.parentId !== null) {
@@ -222,7 +222,7 @@ export class TestSuiteService {
           select: { projectId: true },
         });
         if (!currentSuite) {
-          throw new BadRequestException('Test suite not found');
+          throw new BadRequestException('Тест-сьют не найден');
         }
 
         const parent = await prisma.testSuite.findUnique({
@@ -230,10 +230,10 @@ export class TestSuiteService {
           select: { projectId: true },
         });
         if (!parent) {
-          throw new BadRequestException('Parent suite not found');
+          throw new BadRequestException('Родительский сьют не найден');
         }
         if (parent.projectId !== currentSuite.projectId) {
-          throw new BadRequestException('Parent suite does not belong to the same project');
+          throw new BadRequestException('Родительский сьют из другого проекта');
         }
       }
 
@@ -241,7 +241,7 @@ export class TestSuiteService {
       let currentId: string | null = data.parentId;
       while (currentId) {
         if (currentId === suiteId) {
-          throw new BadRequestException('Cannot set a descendant as parent (cycle detected)');
+          throw new BadRequestException('Нельзя сделать дочерний сьют родителем (получится цикл)');
         }
         if (visited.has(currentId)) break;
         visited.add(currentId);

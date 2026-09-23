@@ -1,5 +1,6 @@
 import { otpService } from '@/backend/services/otp/services';
 import { getDefaultAdminEmail } from '@/lib/auth-utils';
+import { REGISTRATION_DOMAIN_ERROR, isAllowedRegistrationEmail } from '@/lib/allowed-email-domains';
 
 interface SendOtpInput {
   email: string;
@@ -61,7 +62,7 @@ export class OtpController {
       if (!email || !type) {
         return {
           success: false,
-          message: 'Email and type are required',
+          message: 'Укажите email и тип',
         };
       }
 
@@ -69,14 +70,22 @@ export class OtpController {
       if (!isValidEmailForOtp(email)) {
         return {
           success: false,
-          message: 'Invalid email format. Email addresses with .local, .invalid, .test, .example domains are not allowed (except default admin email).',
+          message: 'Некорректный email: адреса в доменах .local, .invalid, .test, .example не допускаются (кроме стандартного администратора).',
         };
       }
 
       if (!['login', 'register'].includes(type)) {
         return {
           success: false,
-          message: 'Invalid type. Must be "login" or "register"',
+          message: 'Неверный тип: допустимы login или register',
+        };
+      }
+
+      // Registration is limited to corporate domains; reject before sending a code
+      if (type === 'register' && !isAllowedRegistrationEmail(email)) {
+        return {
+          success: false,
+          message: REGISTRATION_DOMAIN_ERROR,
         };
       }
 
@@ -94,7 +103,7 @@ export class OtpController {
       console.error('Error in sendOtp controller:', error);
       return {
         success: false,
-        message: 'Failed to send OTP. Please try again.',
+        message: 'Не удалось отправить код. Попробуйте ещё раз.',
       };
     }
   }
@@ -110,7 +119,7 @@ export class OtpController {
       if (!email || !otp || !type) {
         return {
           success: false,
-          message: 'Email, OTP, and type are required',
+          message: 'Укажите email, код и тип',
         };
       }
 
@@ -118,21 +127,21 @@ export class OtpController {
       if (!isValidEmailForOtp(email)) {
         return {
           success: false,
-          message: 'Invalid email format. Email addresses with .local, .invalid, .test, .example domains are not allowed (except default admin email).',
+          message: 'Некорректный email: адреса в доменах .local, .invalid, .test, .example не допускаются (кроме стандартного администратора).',
         };
       }
 
       if (!['login', 'register'].includes(type)) {
         return {
           success: false,
-          message: 'Invalid type. Must be "login" or "register"',
+          message: 'Неверный тип: допустимы login или register',
         };
       }
 
       if (!/^\d{6}$/.test(otp)) {
         return {
           success: false,
-          message: 'Invalid OTP format. Must be 6 digits.',
+          message: 'Код должен состоять из 6 цифр.',
         };
       }
 
@@ -147,7 +156,7 @@ export class OtpController {
       console.error('Error in verifyOtp controller:', error);
       return {
         success: false,
-        message: 'Failed to verify OTP. Please try again.',
+        message: 'Не удалось проверить код. Попробуйте ещё раз.',
       };
     }
   }
@@ -163,7 +172,7 @@ export class OtpController {
       if (!email || !type) {
         return {
           success: false,
-          message: 'Email and type are required',
+          message: 'Укажите email и тип',
         };
       }
 
@@ -171,14 +180,14 @@ export class OtpController {
       if (!isValidEmailForOtp(email)) {
         return {
           success: false,
-          message: 'Invalid email format. Email addresses with .local, .invalid, .test, .example domains are not allowed (except default admin email).',
+          message: 'Некорректный email: адреса в доменах .local, .invalid, .test, .example не допускаются (кроме стандартного администратора).',
         };
       }
 
       if (!['login', 'register'].includes(type)) {
         return {
           success: false,
-          message: 'Invalid type. Must be "login" or "register"',
+          message: 'Неверный тип: допустимы login или register',
         };
       }
 
@@ -195,7 +204,7 @@ export class OtpController {
       console.error('Error in resendOtp controller:', error);
       return {
         success: false,
-        message: 'Failed to resend OTP. Please try again.',
+        message: 'Не удалось отправить код повторно. Попробуйте ещё раз.',
       };
     }
   }

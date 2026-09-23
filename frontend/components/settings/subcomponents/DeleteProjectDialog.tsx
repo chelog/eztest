@@ -23,7 +23,7 @@ export function DeleteProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Project</DialogTitle>
+          <DialogTitle>Удалить проект</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete &quot;{projectName}&quot;? This action cannot be
             undone.
@@ -31,13 +31,13 @@ export function DeleteProjectDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-sm text-red-300">
-            <p className="font-semibold mb-2">This will permanently delete:</p>
+            <p className="font-semibold mb-2">Будут удалены безвозвратно:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>All test cases</li>
-              <li>All test runs</li>
-              <li>All test suites</li>
-              <li>All requirements</li>
-              <li>All project data</li>
+              <li>Все тест-кейсы</li>
+              <li>Все тест-раны</li>
+              <li>Все тест-сьюты</li>
+              <li>Все требования</li>
+              <li>Все данные проекта</li>
             </ul>
           </div>
           <div className="flex gap-3 justify-end">
@@ -49,7 +49,7 @@ export function DeleteProjectDialog({
               data-analytics-button="Delete Project Dialog (Settings) - Cancel"
               className="cursor-pointer"
             >
-              Cancel
+              Отмена
             </Button>
             <ButtonDestructive
               type="button"

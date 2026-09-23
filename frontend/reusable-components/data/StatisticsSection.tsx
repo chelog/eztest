@@ -17,17 +17,17 @@ export interface StatisticsSectionProps {
  * @example
  * ```tsx
  * <StatisticsSection
- *   label="Statistics"
+ *   label="Статистика"
  *   statistics={[
- *     { label: 'Test Runs', value: 10 },
- *     { label: 'Comments', value: 5 },
- *     { label: 'Attachments', value: 3 },
+ *     { label: 'Тест-раны', value: 10 },
+ *     { label: 'Комментарии', value: 5 },
+ *     { label: 'Вложения', value: 3 },
  *   ]}
  * />
  * ```
  */
 export function StatisticsSection({
-  label = 'Statistics',
+  label = 'Статистика',
   statistics,
   className = '',
 }: StatisticsSectionProps) {

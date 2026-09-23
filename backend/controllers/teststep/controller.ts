@@ -18,7 +18,7 @@ export class TestStepController {
       };
 
       if (!attachments || !Array.isArray(attachments)) {
-        throw new BadRequestException('Attachments array is required');
+        throw new BadRequestException('Передайте список вложений');
       }
 
       const linkedAttachments = await attachmentService.associateAttachments(
@@ -41,7 +41,7 @@ export class TestStepController {
       if (error instanceof Error && error.message.includes('not found')) {
         throw new NotFoundException(error.message);
       }
-      throw new InternalServerException('Failed to associate attachments');
+      throw new InternalServerException('Не удалось прикрепить вложения');
     }
   }
 
@@ -66,7 +66,7 @@ export class TestStepController {
       if (error instanceof Error && error.message.includes('Unsupported entity type')) {
         throw new BadRequestException(error.message);
       }
-      throw new InternalServerException('Failed to fetch attachments');
+      throw new InternalServerException('Не удалось загрузить вложения');
     }
   }
 }

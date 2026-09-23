@@ -57,12 +57,12 @@ export interface DetailPageHeaderProps {
  *   editTitle={formData.title}
  *   onTitleChange={(title) => setFormData({ ...formData, title })}
  *   badges={[
- *     { label: 'Priority', value: testCase.priority, className: getPriorityColor(testCase.priority) },
- *     { label: 'Status', value: testCase.status, className: getStatusColor(testCase.status) },
+ *     { label: 'Приоритет', value: testCase.priority, className: getPriorityColor(testCase.priority) },
+ *     { label: 'Статус', value: testCase.status, className: getStatusColor(testCase.status) },
  *   ]}
  *   actions={[
- *     { label: 'Edit', icon: Edit, onClick: onEdit, show: canUpdate },
- *     { label: 'Delete', icon: Trash2, onClick: onDelete, variant: 'destructive', show: canDelete },
+ *     { label: 'Редактировать', icon: Edit, onClick: onEdit, show: canUpdate },
+ *     { label: 'Удалить', icon: Trash2, onClick: onDelete, variant: 'destructive', show: canDelete },
  *   ]}
  *   editActions={{
  *     onSave: handleSave,
@@ -140,7 +140,7 @@ export function DetailPageHeader({
                 data-analytics-button={`${title} - Cancel Edit`}
               >
                 <X className="w-4 h-4 mr-2" />
-                Cancel
+                Отмена
               </Button>
               <ButtonPrimary 
                 onClick={editActions.onSave} 
@@ -151,12 +151,12 @@ export function DetailPageHeader({
                 {editActions.saving ? (
                   <>
                     <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
+                    Сохранение...
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save
+                    Сохранить
                   </>
                 )}
               </ButtonPrimary>

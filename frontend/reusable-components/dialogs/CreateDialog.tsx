@@ -32,8 +32,8 @@ export function CreateDialog({
   children,
   onOpenChange,
   onConfirm,
-  cancelLabel = 'Cancel',
-  confirmLabel = 'Create',
+  cancelLabel = 'Отмена',
+  confirmLabel = 'Создать',
 }: CreateDialogProps) {
   const handleConfirm = async () => {
     await onConfirm();

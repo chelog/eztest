@@ -30,21 +30,21 @@ export function SettingsHeader({ project, projectId }: SettingsHeaderProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
+              { label: 'Проекты', href: '/projects' },
               { label: project.name, href: `/projects/${pid}` },
-              { label: 'Settings' },
+              { label: 'Настройки' },
             ]}
           />
         }
         actions={navbarActions}
       />
 
-      <div className="px-8 pt-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="px-8 pt-2">
+        <div className="max-w-6xl mx-auto">
           <PageHeaderWithBadge
             badge={project.key}
-            title="Project Settings"
-            description={`Manage project information and settings for ${project.name}`}
+            title="Настройки проекта"
+            description={`Основные данные и управление проектом ${project.name}`}
             className="mb-6"
           />
         </div>

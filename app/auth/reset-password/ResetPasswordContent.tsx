@@ -84,7 +84,7 @@ function ResetPasswordForm() {
         router.push('/auth/login');
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Произошла ошибка');
     } finally {
       setLoading(false);
     }

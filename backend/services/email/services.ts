@@ -135,12 +135,12 @@ export class EmailService {
       });
 
       if (!defect) {
-        throw new NotFoundException('Defect not found');
+        throw new NotFoundException('Дефект не найден');
       }
 
       // Verify the creator matches
       if (defect.createdBy.id !== creatorId) {
-        throw new NotFoundException('Creator mismatch');
+        throw new NotFoundException('Автор не совпадает');
       }
 
       // Get ADMIN and PROJECT_MANAGER roles
@@ -284,7 +284,7 @@ export class EmailService {
       });
 
       if (!defect) {
-        throw new NotFoundException('Defect not found');
+        throw new NotFoundException('Дефект не найден');
       }
 
       // Get assignee
@@ -296,7 +296,7 @@ export class EmailService {
       }
 
       if (!assignee) {
-        throw new NotFoundException('Assignee not found');
+        throw new NotFoundException('Исполнитель не найден');
       }
 
       // Get the user who performed the assignment
@@ -305,7 +305,7 @@ export class EmailService {
       });
 
       if (!assignedBy) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Watchers as additional recipients (exclude assignee and soft-deleted)
@@ -369,7 +369,7 @@ export class EmailService {
       });
 
       if (!defect) {
-        throw new NotFoundException('Defect not found');
+        throw new NotFoundException('Дефект не найден');
       }
 
       // Get the user who performed the update
@@ -378,7 +378,7 @@ export class EmailService {
       });
 
       if (!updatedBy) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Get ADMIN and PROJECT_MANAGER roles
@@ -511,7 +511,7 @@ export class EmailService {
       });
 
       if (!testRun) {
-        throw new NotFoundException('Test run not found');
+        throw new NotFoundException('Тест-ран не найден');
       }
 
       // Get recipient - prioritize recipientId parameter over testRun.assignedTo
@@ -525,7 +525,7 @@ export class EmailService {
       }
 
       if (!recipient) {
-        throw new NotFoundException('Recipient not found');
+        throw new NotFoundException('Получатель не найден');
       }
 
       // Get the user who started the test run
@@ -534,7 +534,7 @@ export class EmailService {
       });
 
       if (!startedBy) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Calculate statistics
@@ -607,7 +607,7 @@ export class EmailService {
       });
 
       if (!defect) {
-        throw new NotFoundException('Defect not found');
+        throw new NotFoundException('Дефект не найден');
       }
 
       // Get comment author
@@ -616,7 +616,7 @@ export class EmailService {
       });
 
       if (!commentAuthor) {
-        throw new NotFoundException('Comment author not found');
+        throw new NotFoundException('Автор комментария не найден');
       }
 
       // Collect all users to notify (remove duplicates and exclude comment author)
@@ -700,7 +700,7 @@ export class EmailService {
       });
 
       if (!project) {
-        throw new NotFoundException('Project not found');
+        throw new NotFoundException('Проект не найден');
       }
 
       // Get new member
@@ -709,7 +709,7 @@ export class EmailService {
       });
 
       if (!newMember) {
-        throw new NotFoundException('Member not found');
+        throw new NotFoundException('Участник не найден');
       }
 
       // Get the user who added the member
@@ -718,7 +718,7 @@ export class EmailService {
       });
 
       if (!addedByUser) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Send email via utility function
@@ -757,7 +757,7 @@ export class EmailService {
       });
 
       if (!project) {
-        throw new NotFoundException('Project not found');
+        throw new NotFoundException('Проект не найден');
       }
 
       // Get removed member
@@ -766,7 +766,7 @@ export class EmailService {
       });
 
       if (!removedMember) {
-        throw new NotFoundException('Member not found');
+        throw new NotFoundException('Участник не найден');
       }
 
       // Get the user who removed the member
@@ -775,7 +775,7 @@ export class EmailService {
       });
 
       if (!removedByUser) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Send email via utility function
@@ -814,7 +814,7 @@ export class EmailService {
       });
 
       if (!defect) {
-        throw new NotFoundException('Defect not found');
+        throw new NotFoundException('Дефект не найден');
       }
 
       const watcher = await prisma.user.findUnique({
@@ -822,7 +822,7 @@ export class EmailService {
       });
 
       if (!watcher) {
-        throw new NotFoundException('Watcher not found');
+        throw new NotFoundException('Наблюдатель не найден');
       }
 
       const addedByUser = await prisma.user.findUnique({
@@ -830,7 +830,7 @@ export class EmailService {
       });
 
       if (!addedByUser) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       const emailSent = await sendDefectWatcherAddedEmailUtil({
@@ -872,7 +872,7 @@ export class EmailService {
       });
 
       if (!invitedUser) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Get the user who invited/created the user
@@ -881,7 +881,7 @@ export class EmailService {
       });
 
       if (!invitedByUser) {
-        throw new NotFoundException('Inviting user not found');
+        throw new NotFoundException('Приглашающий пользователь не найден');
       }
 
       // Send email via utility function
@@ -920,7 +920,7 @@ export class EmailService {
       });
 
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Get the user who updated the account
@@ -929,7 +929,7 @@ export class EmailService {
       });
 
       if (!updatedByUser) {
-        throw new NotFoundException('Updating user not found');
+        throw new NotFoundException('Пользователь, выполняющий изменение, не найден');
       }
 
       // Send email via utility function
@@ -968,7 +968,7 @@ export class EmailService {
       });
 
       if (!user) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Пользователь не найден');
       }
 
       // Get the user who deleted the account
@@ -977,7 +977,7 @@ export class EmailService {
       });
 
       if (!deletedByUser) {
-        throw new NotFoundException('Deleting user not found');
+        throw new NotFoundException('Пользователь, выполняющий удаление, не найден');
       }
 
       // Send email via utility function

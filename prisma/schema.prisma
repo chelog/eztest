@@ -330,6 +330,7 @@ model TestResult {
   @@index([testCaseId])
   @@index([executedById])
   @@index([status])
+  @@index([executedAt])
 }
 
 // Requirements Management

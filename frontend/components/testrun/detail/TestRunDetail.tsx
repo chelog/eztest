@@ -84,7 +84,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
   const executionTypeLabel = useMemo(() => {
     const type = (testRun?.executionType || 'MANUAL').toString().toUpperCase();
-    return type === 'AUTOMATION' ? 'AUTOMATION' : 'MANUAL';
+    return type === 'AUTOMATION' ? 'Авто' : 'Ручной';
   }, [testRun?.executionType]);
 
   const navbarActions = useMemo(() => {
@@ -530,7 +530,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       }
     } catch (error) {
       console.error('Error saving result:', error);
-      alert('Failed to save result');
+      alert('Не удалось сохранить результат');
     }
   };
 
@@ -598,7 +598,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         });
 
         if (!response.ok) {
-          let errorMessage = `Failed to add test case (Status: ${response.status})`;
+          let errorMessage = `Не удалось добавить тест-кейс (код ${response.status})`;
           try {
             const data = await response.json();
             console.error('API error response:', data);
@@ -624,7 +624,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       await fetchAvailableTestSuites();
     } catch (error) {
       console.error('Error adding test cases:', error);
-      alert(`Failed to add test cases: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Не удалось добавить тест-кейсы: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setAddingTestCases(false);
     }
@@ -698,7 +698,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             availableSuites.push({
               id: 'ungrouped',
               name: 'Ungrouped Test Cases',
-              description: 'Test cases not assigned to any test suite',
+              description: 'Тест-кейсы вне сьютов',
               projectId: testRun.project.id,
               testCases: ungroupedTestCases,
               _count: {
@@ -765,7 +765,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         });
 
         if (!response.ok) {
-          let errorMessage = `Failed to add test case (Status: ${response.status})`;
+          let errorMessage = `Не удалось добавить тест-кейс (код ${response.status})`;
           try {
             const data = await response.json();
             errorMessage = data.message || data.error || errorMessage;
@@ -789,7 +789,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       await fetchAvailableTestCases();
     } catch (error) {
       console.error('Error adding test cases from suites:', error);
-      alert(`Failed to add test cases from suites: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Не удалось добавить тест-кейсы из сьютов: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setAddingTestSuites(false);
     }
@@ -896,7 +896,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         actions={navbarActions}
       />
 
-      <div className="space-y-6 p-4 pt-8 md:p-6 lg:p-8">
+      <div className="space-y-4 px-4 pb-6 pt-3 md:px-6 lg:px-8">
         <TestRunHeader
           testRun={testRun}
           executionTypeLabel={executionTypeLabel}
@@ -905,6 +905,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           onStartTestRun={handleStartTestRun}
           onCompleteTestRun={handleCompleteTestRun}
           onNameUpdate={handleNameUpdate}
+          assigneeName={testRun.assignedTo?.name}
+          createdAt={testRun.createdAt}
+          startedAt={testRun.startedAt}
         />
 
         <TestRunStatsCards

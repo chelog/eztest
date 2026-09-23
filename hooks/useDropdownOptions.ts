@@ -47,7 +47,7 @@ export function useDropdownOptions(entity: string, field: string): UseDropdownOp
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch dropdown options');
+        throw new Error('Не удалось загрузить значения списков');
       }
 
       const data = await response.json();
@@ -99,7 +99,7 @@ export function useGroupedDropdownOptions() {
       const response = await fetch('/api/dropdown-options/grouped');
 
       if (!response.ok) {
-        throw new Error('Failed to fetch dropdown options');
+        throw new Error('Не удалось загрузить значения списков');
       }
 
       const data = await response.json();

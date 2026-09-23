@@ -2,7 +2,7 @@
 
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { GroupedDataTable, ColumnDef, GroupConfig, ActionConfig } from '@/frontend/reusable-components/tables/GroupedDataTable';
-import { Edit2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { DropdownOption } from './types';
 
 interface DropdownField {
@@ -177,7 +177,7 @@ export function DropdownOptionsTable({
     items: [
       {
         label: 'Редактировать',
-        icon: Edit2,
+        icon: Pencil,
         onClick: (row) => onEdit(row.entity, row.field, row.options),
         variant: 'default',
       },

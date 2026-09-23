@@ -52,7 +52,7 @@ export interface SignOutButtonProps {
  * <SignOutButton />
  * 
  * // With custom label
- * <SignOutButton label="Logout" />
+ * <SignOutButton label="Выйти" />
  * 
  * // Without confirmation dialog
  * <SignOutButton showConfirmation={false} />

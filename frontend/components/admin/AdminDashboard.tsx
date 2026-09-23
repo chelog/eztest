@@ -3,9 +3,23 @@
 import { useMemo } from 'react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { PageHeaderWithBadge } from '@/frontend/reusable-components/layout/PageHeaderWithBadge';
-import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
-import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
-import { Users, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronRight, ListChecks, UsersRound } from 'lucide-react';
+
+const ADMIN_SECTIONS = [
+  {
+    title: 'Пользователи',
+    description: 'Учётные записи и роли',
+    href: '/admin/users',
+    icon: UsersRound,
+  },
+  {
+    title: 'Выпадающие списки',
+    description: 'Статусы, приоритеты и другие значения',
+    href: '/admin/dropdown-options',
+    icon: ListChecks,
+  },
+];
 
 export default function AdminDashboard() {
   const navbarActions = useMemo(() => [
@@ -33,45 +47,24 @@ export default function AdminDashboard() {
             className="mb-6"
           />
 
-          <ResponsiveGrid columns={{ default: 1, md: 2, lg: 3 }} gap="md">
-            {/* User Management */}
-            <ItemCard
-              title="Пользователи"
-              description="Добавление, редактирование и управление пользователями приложения"
-              badges={
-                <div className="p-3 bg-blue-500/10 rounded-lg">
-                  <Users className="w-6 h-6 text-blue-500" />
-                </div>
-              }
-              content={
-                <p className="text-sm text-muted-foreground">
-                  Управление учетными записями и назначение ролей на уровне приложения
-                </p>
-              }
-              borderColor="primary"
-              href="/admin/users"
-              className="hover:shadow-xl hover:shadow-primary/10 transition-all"
-            />
-
-            {/* Dropdown Options Management */}
-            <ItemCard
-              title="Опции выпадающих списков"
-              description="Управление значениями выпадающих списков для разных сущностей"
-              badges={
-                <div className="p-3 bg-purple-500/10 rounded-lg">
-                  <Settings className="w-6 h-6 text-purple-500" />
-                </div>
-              }
-              content={
-                <p className="text-sm text-muted-foreground">
-                  Настройка значений для приоритетов, статусов и других полей
-                </p>
-              }
-              borderColor="primary"
-              href="/admin/dropdown-options"
-              className="hover:shadow-xl hover:shadow-primary/10 transition-all"
-            />
-          </ResponsiveGrid>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-4xl">
+            {ADMIN_SECTIONS.map((section) => (
+              <Link
+                key={section.href}
+                href={section.href}
+                className="group flex items-center gap-4 rounded-[14px] bg-white/[0.04] hover:bg-white/[0.07] px-5 py-4 transition-colors"
+              >
+                <span className="w-11 h-11 shrink-0 rounded-[12px] bg-white/[0.06] flex items-center justify-center">
+                  <section.icon className="w-5 h-5 text-white/80" strokeWidth={1.75} />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-base font-bold text-white">{section.title}</span>
+                  <span className="block text-sm text-white/50 truncate">{section.description}</span>
+                </span>
+                <ChevronRight className="w-5 h-5 shrink-0 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>

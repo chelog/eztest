@@ -133,7 +133,7 @@ export function UploadXMLDialog({
         const fileType = selectedFile.name.toLowerCase();
         const isValid = acceptedFileExtensions.some(ext => fileType.endsWith(`.${ext}`));
         if (!isValid) {
-          setError(`Please select a file with one of the following extensions: ${acceptedFileExtensions.map(e => `.${e}`).join(', ')}`);
+          setError(`Выберите файл с расширением: ${acceptedFileExtensions.map(e => `.${e}`).join(', ')}`);
           setFile(null);
           return;
         }
@@ -145,12 +145,12 @@ export function UploadXMLDialog({
 
   const handleImport = async () => {
     if (!file) {
-      setError('Please select a file');
+      setError('Выберите файл');
       return;
     }
 
     if (showEnvironmentField && environmentRequired && !environment) {
-      setError('Please select an environment');
+      setError('Выберите окружение');
       return;
     }
 
@@ -178,7 +178,7 @@ export function UploadXMLDialog({
 
         if (matchCount === 0) {
           setError(
-            `No matching items found. The file contains ${totalTestMethods} item(s), but none match existing records.`
+            `Совпадений нет: в файле ${totalTestMethods} записей, но ни одна не совпала с существующими.`
           );
           setUploading(false);
           return;
@@ -193,7 +193,7 @@ export function UploadXMLDialog({
             ? createRequestBody(file.name, generatedName, environment || undefined)
             : {
                 name: generatedName,
-                description: `Created from file: ${file.name}`,
+                description: `Создан из файла: ${file.name}`,
                 ...(environment && { environment }),
               };
 
@@ -213,7 +213,7 @@ export function UploadXMLDialog({
 
           resourceId = createData.data.id;
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to create resource');
+          setError(err instanceof Error ? err.message : 'Не удалось создать запись');
           setUploading(false);
           return;
         }
@@ -251,7 +251,7 @@ export function UploadXMLDialog({
       
       if (!resultData || typeof resultData !== 'object') {
         console.error('Unexpected response structure:', data);
-        throw new Error('Invalid response format from server');
+        throw new Error('Неожиданный ответ сервера');
       }
       
       const finalResult: ImportResult = {
@@ -279,7 +279,7 @@ export function UploadXMLDialog({
         }, 2000);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Import failed');
+      setError(error instanceof Error ? error.message : 'Ошибка импорта');
     } finally {
       setUploading(false);
     }
@@ -318,7 +318,7 @@ export function UploadXMLDialog({
         const fileType = droppedFile.name.toLowerCase();
         const isValid = acceptedFileExtensions.some(ext => fileType.endsWith(`.${ext}`));
         if (!isValid) {
-          setError(`Please select a file with one of the following extensions: ${acceptedFileExtensions.map(e => `.${e}`).join(', ')}`);
+          setError(`Выберите файл с расширением: ${acceptedFileExtensions.map(e => `.${e}`).join(', ')}`);
           return;
         }
       }
@@ -357,12 +357,12 @@ export function UploadXMLDialog({
                         <div className="mt-2 p-3 bg-[#1e293b] border border-white/10 rounded text-sm">
                           <span className="font-medium text-white/90">{generatedName}</span>
                           <p className="text-xs text-white/50 mt-1">
-                            A new resource will be created with this name
+                            Будет создана новая запись с этим названием
                           </p>
                         </div>
                       ) : (
                         <p className="text-sm text-white/50 mt-2">
-                          Upload a file to generate resource name from filename
+                          Загрузите файл — название возьмётся из имени файла
                         </p>
                       )}
                     </div>
@@ -378,7 +378,7 @@ export function UploadXMLDialog({
                   </Label>
                   <Select value={environment} onValueChange={setEnvironment}>
                     <SelectTrigger variant="glass" className="w-full">
-                      <SelectValue placeholder="Select environment" />
+                      <SelectValue placeholder="Выберите окружение" />
                     </SelectTrigger>
                     <SelectContent variant="glass">
                       {environmentOptions.map((option) => (
@@ -417,7 +417,7 @@ export function UploadXMLDialog({
                 ) : (
                   <div>
                     <p className="text-sm font-medium text-white/90">
-                      Click to upload or drag and drop
+                      Нажмите или перетащите файл
                     </p>
                     <p className="text-xs text-white/50 mt-1">
                       {acceptedFileTypes.join(', ').toUpperCase()} files ({acceptedFileTypes.join(', ')})
@@ -441,7 +441,7 @@ export function UploadXMLDialog({
                     <div className="flex items-center gap-3 p-4 border border-green-500/30 rounded-lg bg-green-500/10">
                       <CheckCircle className="h-6 w-6 text-green-500" />
                       <div>
-                        <p className="text-sm font-medium text-white/90">Success</p>
+                        <p className="text-sm font-medium text-white/90">Готово</p>
                         <p className="text-2xl font-bold text-green-500">
                           {Number(result.success) || 0}
                         </p>
@@ -450,7 +450,7 @@ export function UploadXMLDialog({
                     <div className="flex items-center gap-3 p-4 border border-yellow-500/30 rounded-lg bg-yellow-500/10">
                       <AlertCircle className="h-6 w-6 text-yellow-500" />
                       <div>
-                        <p className="text-sm font-medium text-white/90">Skipped</p>
+                        <p className="text-sm font-medium text-white/90">Пропущено</p>
                         <p className="text-2xl font-bold text-yellow-500">
                           {Number(result.skipped) || 0}
                         </p>
@@ -459,7 +459,7 @@ export function UploadXMLDialog({
                     <div className="flex items-center gap-3 p-4 border border-red-500/30 rounded-lg bg-red-500/10">
                       <XCircle className="h-6 w-6 text-red-500" />
                       <div>
-                        <p className="text-sm font-medium text-white/90">Failed</p>
+                        <p className="text-sm font-medium text-white/90">Провалено</p>
                         <p className="text-2xl font-bold text-red-500">
                           {Number(result.failed) || 0}
                         </p>
@@ -522,7 +522,7 @@ export function UploadXMLDialog({
                     <Alert variant="destructive">
                       <XCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Import completed with issues:
+                        Импорт завершён с замечаниями:
                         {Number(result.skipped) > 0 && ` ${Number(result.skipped) || 0} skipped`}
                         {Number(result.failed) > 0 && ` ${Number(result.failed) || 0} failed`}.
                       </AlertDescription>
@@ -534,7 +534,7 @@ export function UploadXMLDialog({
           </div>
         </div>
 
-        <div className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
+        <div data-ui="dialog-footer" className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
           <Button
             type="button"
             variant="glass"

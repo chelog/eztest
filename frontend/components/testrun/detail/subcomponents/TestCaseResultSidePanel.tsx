@@ -58,26 +58,27 @@ const STATUS_LABELS: Record<string, string> = {
 
 const QUICK_STATUS_VALUES = ['PASSED', 'FAILED', 'BLOCKED', 'RETEST', 'NOT_RUN'] as const;
 
+// Idle: neutral chip with a colored icon. Active: calm fill in the status color, no glow.
 const STATUS_BUTTON_STYLES: Record<string, { idle: string; active: string }> = {
   PASSED: {
-    idle: 'border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/15',
-    active: 'border-2 border-green-300 bg-green-500/25 text-green-100 ring-2 ring-green-300/40 shadow-[0_0_0_1px_rgba(74,222,128,0.55)]',
+    idle: 'border-transparent bg-white/[0.04] text-white/70 hover:bg-white/[0.07] [&_svg]:text-emerald-400',
+    active: 'border-transparent bg-emerald-500/20 text-emerald-200 [&_svg]:text-emerald-300',
   },
   FAILED: {
-    idle: 'border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/15',
-    active: 'border-2 border-red-300 bg-red-500/25 text-red-100 ring-2 ring-red-300/40 shadow-[0_0_0_1px_rgba(248,113,113,0.55)]',
+    idle: 'border-transparent bg-white/[0.04] text-white/70 hover:bg-white/[0.07] [&_svg]:text-red-400',
+    active: 'border-transparent bg-red-500/20 text-red-200 [&_svg]:text-red-300',
   },
   BLOCKED: {
-    idle: 'border-orange-500/30 bg-orange-500/10 text-orange-300 hover:bg-orange-500/15',
-    active: 'border-2 border-orange-300 bg-orange-500/25 text-orange-100 ring-2 ring-orange-300/40 shadow-[0_0_0_1px_rgba(251,146,60,0.55)]',
+    idle: 'border-transparent bg-white/[0.04] text-white/70 hover:bg-white/[0.07] [&_svg]:text-amber-400',
+    active: 'border-transparent bg-amber-500/20 text-amber-200 [&_svg]:text-amber-300',
   },
   RETEST: {
-    idle: 'border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/15',
-    active: 'border-2 border-purple-300 bg-purple-500/25 text-purple-100 ring-2 ring-purple-300/40 shadow-[0_0_0_1px_rgba(196,181,253,0.55)]',
+    idle: 'border-transparent bg-white/[0.04] text-white/70 hover:bg-white/[0.07] [&_svg]:text-violet-400',
+    active: 'border-transparent bg-violet-500/20 text-violet-200 [&_svg]:text-violet-300',
   },
   NOT_RUN: {
-    idle: 'border-slate-500/30 bg-slate-500/10 text-slate-300 hover:bg-slate-500/15',
-    active: 'border-2 border-slate-300 bg-slate-500/25 text-slate-100 ring-2 ring-slate-300/40 shadow-[0_0_0_1px_rgba(203,213,225,0.55)]',
+    idle: 'border-transparent bg-white/[0.04] text-white/70 hover:bg-white/[0.07] [&_svg]:text-white/40',
+    active: 'border-transparent bg-white/[0.12] text-white [&_svg]:text-white/70',
   },
 };
 
@@ -138,7 +139,7 @@ export function TestCaseResultSidePanel({
         onAttachmentUploaded?.({ ...data, entityType: 'testcase' });
       }
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+      setUploadError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
       setUploading(false);
       e.currentTarget.value = '';
@@ -146,16 +147,16 @@ export function TestCaseResultSidePanel({
   };
 
   return (
-    <aside className="fixed right-0 top-0 z-[70] h-screen w-full max-w-xl border-l border-white/10 bg-[#0f0f12] shadow-2xl">
+    <aside className="fixed right-0 top-0 z-[70] h-screen w-full max-w-lg border-l border-white/[0.06] bg-[#141415] shadow-[-20px_0_60px_-20px_rgba(0,0,0,0.8)]">
       <div className="flex h-full flex-col">
-        <div className="flex items-start justify-between border-b border-white/10 p-4">
+        <div className="flex items-start justify-between gap-3 border-b border-white/[0.06] px-5 py-4">
           <div className="min-w-0">
             {canOpenTestCase ? (
               <Link
                 href={`/projects/${projectId}/testcases/${testCase.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-mono text-blue-300 transition-colors hover:text-blue-200 hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-mono text-white/50 transition-colors hover:text-white"
                 title="Открыть тест-кейс в новой вкладке"
                 aria-label="Открыть тест-кейс в новой вкладке"
               >
@@ -165,13 +166,8 @@ export function TestCaseResultSidePanel({
             ) : (
               <p className="text-xs font-mono text-white/60">{testCase.tcId || '-'}</p>
             )}
-            {canOpenTestCase && (
-              <p className="mt-1 text-[11px] text-white/45">
-                Cmd/Ctrl+Click, чтобы открыть в новой вкладке
-              </p>
-            )}
             <h3
-              className="mt-1 text-base font-semibold text-white/90"
+              className="mt-1 text-lg font-semibold leading-snug text-white"
               title={testCase.title || testCase.name || 'Тест-кейс'}
             >
               {testCase.title || testCase.name || 'Тест-кейс'}
@@ -182,39 +178,43 @@ export function TestCaseResultSidePanel({
           </Button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4 custom-scrollbar">
           {testCase.description && cleanDescription(testCase.description) && (
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <h4 className="text-sm font-medium text-white/90">Описание</h4>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-white/70">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-white/40">Описание</h4>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-white/80">
                 {cleanDescription(testCase.description)}
               </p>
             </div>
           )}
 
           {testCase.preconditions && (
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <h4 className="text-sm font-medium text-white/90">Предусловия</h4>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-white/70">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-white/40">Предусловия</h4>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-white/80">
                 {testCase.preconditions}
               </p>
             </div>
           )}
 
           {testCase.steps && testCase.steps.length > 0 && (
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <h4 className="text-sm font-medium text-white/90">Шаги</h4>
-              <div className="mt-3 space-y-2">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-white/40">Шаги</h4>
+              <ol className="mt-2 space-y-1.5">
                 {testCase.steps.map((step) => (
-                  <div key={step.id} className="rounded-md border border-white/10 bg-black/10 p-2">
-                    <p className="text-xs text-white/60">Шаг {step.stepNumber}</p>
-                    <p className="mt-1 text-sm text-white/80 whitespace-pre-wrap">{step.action}</p>
-                    <p className="mt-1 text-xs text-white/60 whitespace-pre-wrap">
-                      Ожидаемый результат: {step.expectedResult}
-                    </p>
-                  </div>
+                  <li key={step.id} className="flex gap-3 rounded-[10px] bg-white/[0.03] px-3 py-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[11px] font-semibold text-white/70">
+                      {step.stepNumber}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-white/85 whitespace-pre-wrap">{step.action}</p>
+                      {step.expectedResult && (
+                        <p className="mt-1 text-xs text-white/50 whitespace-pre-wrap">→ {step.expectedResult}</p>
+                      )}
+                    </div>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </div>
           )}
 
@@ -271,7 +271,7 @@ export function TestCaseResultSidePanel({
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {QUICK_STATUS_VALUES.map((statusValue) => (
                 <Button
                   key={statusValue}
@@ -279,6 +279,7 @@ export function TestCaseResultSidePanel({
                   variant="outline"
                   size="sm"
                   disabled={saving}
+                  data-ui="status-choice"
                   className={
                     formData.status === statusValue
                       ? STATUS_BUTTON_STYLES[statusValue].active
@@ -343,11 +344,11 @@ export function TestCaseResultSidePanel({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-white/10 p-4">
-          <Button variant="glass" onClick={onClose}>
+        <div className="grid grid-cols-2 gap-2 border-t border-white/[0.06] px-5 py-4">
+          <Button variant="glass" onClick={onClose} className="w-full">
             Закрыть
           </Button>
-          <ButtonPrimary onClick={onSave} disabled={saving || !formData.status}>
+          <ButtonPrimary onClick={onSave} disabled={saving || !formData.status} className="w-full">
             {saving ? 'Сохранение...' : 'Сохранить'}
           </ButtonPrimary>
         </div>

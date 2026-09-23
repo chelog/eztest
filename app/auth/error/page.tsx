@@ -2,8 +2,8 @@
 import ErrorContent from './ErrorContent';
 
 export const metadata: Metadata = {
-  title: 'Authentication Error',
-  description: 'An authentication error occurred. Please try signing in again.',
+  title: 'Ошибка авторизации',
+  description: 'Ошибка авторизации. Попробуйте войти ещё раз.',
   robots: {
     index: false,
     follow: false,

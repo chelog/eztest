@@ -40,7 +40,7 @@ export function CreateApiKeyDialog({
   };
 
   const projectOptions = [
-    { value: '__all__', label: 'All Projects (No Restriction)' },
+    { value: '__all__', label: 'Все проекты (без ограничений)' },
     ...projects.map((project) => ({
       value: project.id,
       label: project.name,
@@ -50,8 +50,8 @@ export function CreateApiKeyDialog({
   const fields: BaseDialogField[] = [
     {
       name: 'name',
-      label: 'Key Name',
-      placeholder: 'e.g., CI/CD Pipeline Key, Local Dev Key',
+      label: 'Название ключа',
+      placeholder: 'например, Ключ CI/CD, Локальная разработка',
       type: 'text',
       required: true,
       minLength: 1,
@@ -59,8 +59,8 @@ export function CreateApiKeyDialog({
     },
     {
       name: 'projectId',
-      label: 'Project (Optional)',
-      placeholder: 'Select a project to restrict this key',
+      label: 'Проект (необязательно)',
+      placeholder: 'Выберите проект, чтобы ограничить ключ',
       type: 'select',
       required: false,
       defaultValue: '__all__',
@@ -68,7 +68,7 @@ export function CreateApiKeyDialog({
     },
     {
       name: 'expiresAt',
-      label: 'Expiration Date (Optional)',
+      label: 'Срок действия (необязательно)',
       type: 'date',
       required: false,
     },
@@ -101,10 +101,10 @@ export function CreateApiKeyDialog({
 
   return (
     <BaseDialog
-      title="Create API Key"
-      description="Create a new API key for SDK authentication. The full key will be shown only once - make sure to save it!"
+      title="Создать API-ключ"
+      description="Новый ключ для доступа к API и SDK. Полный ключ будет показан один раз — сохраните его."
       fields={fields}
-      submitLabel="Create API Key"
+      submitLabel="Создать API-ключ"
       triggerOpen={open}
       onOpenChange={onOpenChange}
       onSubmit={handleSubmit}
