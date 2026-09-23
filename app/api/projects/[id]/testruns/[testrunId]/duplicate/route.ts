@@ -4,12 +4,14 @@ import { hasPermission } from '@/lib/rbac/hasPermission';
 /**
  * POST /api/projects/[id]/testruns/[testrunId]/duplicate
  * Create a new PLANNED test run with the same test cases (results are not copied)
+ * Body (optional): { name?: string }
  * Required permission: testruns:create
  */
 export const POST = hasPermission(
   async (request, context) => {
     const { id, testrunId } = await context.params;
-    return testRunController.duplicateTestRun(testrunId, id, request.userInfo.id);
+    const body = await request.json().catch(() => ({}));
+    return testRunController.duplicateTestRun(body, testrunId, id, request.userInfo.id);
   },
   'testruns',
   'create'

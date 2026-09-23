@@ -3,6 +3,7 @@ import { emailService } from '@/backend/services/email/services';
 import { 
   createTestRunSchema, 
   updateTestRunSchema, 
+  duplicateTestRunSchema,
   addTestResultSchema,
   bulkUpdateTestResultsSchema,
   bulkDeleteTestResultsSchema,
@@ -114,11 +115,25 @@ export class TestRunController {
    * Duplicate a test run (cases only, without execution results)
    */
   async duplicateTestRun(
+    body: unknown,
     testRunId: string,
     projectId: string,
     userId: string
   ) {
-    const testRun = await testRunService.duplicateTestRun(testRunId, projectId, userId);
+    const validationResult = duplicateTestRunSchema.safeParse(body ?? {});
+    if (!validationResult.success) {
+      throw new ValidationException(
+        'Validation failed',
+        validationResult.error.issues
+      );
+    }
+
+    const testRun = await testRunService.duplicateTestRun(
+      testRunId,
+      projectId,
+      userId,
+      validationResult.data.name
+    );
 
     if (!testRun) {
       throw new NotFoundException(TestRunMessages.TestRunNotFound);

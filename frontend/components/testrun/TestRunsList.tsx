@@ -20,6 +20,7 @@ import { TestRunCard } from './subcomponents/TestRunCard';
 import { TestRunsEmptyState } from './subcomponents/TestRunsEmptyState';
 import { CreateTestRunDialog } from './subcomponents/CreateTestRunDialog';
 import { DeleteTestRunDialog } from './subcomponents/DeleteTestRunDialog';
+import { DuplicateTestRunDialog } from './subcomponents/DuplicateTestRunDialog';
 import { UploadTestNGXMLDialog } from './subcomponents/UploadTestNGXMLDialog';
 import { AutomationSetupWizard } from './subcomponents/AutomationSetupWizard';
 import { TestRun, Project, TestRunFilters } from './types';
@@ -52,6 +53,8 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
   const [uploadXMLDialogOpen, setUploadXMLDialogOpen] = useState(false);
   const [automationWizardOpen, setAutomationWizardOpen] = useState(false);
   const [selectedTestRun, setSelectedTestRun] = useState<TestRun | null>(null);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [testRunToDuplicate, setTestRunToDuplicate] = useState<TestRun | null>(null);
 
   const [filters, setFilters] = useState<TestRunFilters>({
     searchQuery: '',
@@ -199,37 +202,16 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     }
   };
 
-  const handleDuplicateTestRun = async (testRun: TestRun) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/testruns/${testRun.id}/duplicate`, {
-        method: 'POST',
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        setAlert({
-          type: 'success',
-          title: 'Успешно',
-          message: `Тест-ран "${data.data?.name || testRun.name}" создан`,
-        });
-        setTimeout(() => setAlert(null), 5000);
-        fetchTestRuns();
-      } else {
-        setAlert({
-          type: 'error',
-          title: 'Не удалось дублировать тест-ран',
-          message: response.status === 404 ? 'Тест-ран не найден' : 'Попробуйте ещё раз',
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
-      setAlert({
-        type: 'error',
-        title: 'Ошибка соединения',
-        message: errorMessage,
-      });
-      console.error('Error duplicating test run:', error);
-    }
+  const handleTestRunDuplicated = (newTestRun: TestRun) => {
+    setDuplicateDialogOpen(false);
+    setTestRunToDuplicate(null);
+    setAlert({
+      type: 'success',
+      title: 'Успешно',
+      message: `Тест-ран "${newTestRun.name}" создан`,
+    });
+    setTimeout(() => setAlert(null), 5000);
+    fetchTestRuns();
   };
 
   // Check permissions before early returns
@@ -403,7 +385,10 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
                 onViewDetails={() =>
                   router.push(`/projects/${projectId}/testruns/${testRun.id}`)
                 }
-                onDuplicate={() => handleDuplicateTestRun(testRun)}
+                onDuplicate={() => {
+                  setTestRunToDuplicate(testRun);
+                  setDuplicateDialogOpen(true);
+                }}
                 onDelete={() => {
                   setSelectedTestRun(testRun);
                   setDeleteDialogOpen(true);
@@ -443,6 +428,15 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
           triggerOpen={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={handleDeleteTestRun}
+        />
+
+        {/* Duplicate Dialog */}
+        <DuplicateTestRunDialog
+          projectId={projectId}
+          testRun={testRunToDuplicate}
+          triggerOpen={duplicateDialogOpen}
+          onOpenChange={setDuplicateDialogOpen}
+          onTestRunDuplicated={handleTestRunDuplicated}
         />
 
         {/* Export Dialog */}

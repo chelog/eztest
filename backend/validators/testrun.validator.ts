@@ -19,6 +19,18 @@ export const createTestRunSchema = z.object({
 });
 
 /**
+ * Duplicate Test Run Schema
+ */
+export const duplicateTestRunSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(3, 'Name must be at least 3 characters')
+    .max(255, 'Name must not exceed 255 characters')
+    .optional(),
+});
+
+/**
  * Update Test Run Schema
  */
 export const updateTestRunSchema = z.object({
