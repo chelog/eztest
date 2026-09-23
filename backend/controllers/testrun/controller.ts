@@ -8,7 +8,7 @@ import {
   bulkDeleteTestResultsSchema,
 } from '@/backend/validators/testrun.validator';
 import { CustomRequest } from '@/backend/utils/interceptor';
-import { ValidationException } from '@/backend/utils/exceptions';
+import { NotFoundException, ValidationException } from '@/backend/utils/exceptions';
 import { TestRunMessages } from '@/backend/constants/static_messages';
 
 export class TestRunController {
@@ -106,6 +106,23 @@ export class TestRunController {
       testCaseIds: validatedData.testCaseIds,
       createdById: userId,
     });
+
+    return { data: testRun, statusCode: 201 };
+  }
+
+  /**
+   * Duplicate a test run (cases only, without execution results)
+   */
+  async duplicateTestRun(
+    testRunId: string,
+    projectId: string,
+    userId: string
+  ) {
+    const testRun = await testRunService.duplicateTestRun(testRunId, projectId, userId);
+
+    if (!testRun) {
+      throw new NotFoundException(TestRunMessages.TestRunNotFound);
+    }
 
     return { data: testRun, statusCode: 201 };
   }

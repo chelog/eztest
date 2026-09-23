@@ -4,7 +4,7 @@ import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { ProgressBarWithLabel } from '@/frontend/reusable-components/data/ProgressBarWithLabel';
 import { CompactStatsGrid } from '@/frontend/reusable-components/data/CompactStatsGrid';
 import { CardFooter } from '@/frontend/reusable-components/layout/CardFooter';
-import { Calendar, Play, Trash2, User } from 'lucide-react';
+import { Calendar, Copy, Play, Trash2, User } from 'lucide-react';
 import { TestRun } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -12,16 +12,20 @@ import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
 interface TestRunCardProps {
   testRun: TestRun;
   canDelete?: boolean;
+  canDuplicate?: boolean;
   onCardClick: () => void;
   onViewDetails: () => void;
+  onDuplicate?: () => void;
   onDelete: () => void;
 }
 
 export function TestRunCard({
   testRun,
   canDelete = true,
+  canDuplicate = false,
   onCardClick,
   onViewDetails,
+  onDuplicate,
   onDelete,
 }: TestRunCardProps) {
   const { options: statusOptions } = useDropdownOptions('TestRun', 'status');
@@ -134,6 +138,13 @@ export function TestRunCard({
           icon: Play,
           onClick: onViewDetails,
           buttonName: `Карточка тест-рана - Открыть детали (${testRun.name})`,
+        },
+        {
+          label: 'Дублировать',
+          icon: Copy,
+          onClick: () => onDuplicate?.(),
+          show: canDuplicate && !!onDuplicate,
+          buttonName: `Карточка тест-рана - Дублировать (${testRun.name})`,
         },
         {
           label: 'Удалить',

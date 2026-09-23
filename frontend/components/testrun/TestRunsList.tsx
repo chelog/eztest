@@ -199,6 +199,39 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
     }
   };
 
+  const handleDuplicateTestRun = async (testRun: TestRun) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/testruns/${testRun.id}/duplicate`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setAlert({
+          type: 'success',
+          title: 'Успешно',
+          message: `Тест-ран "${data.data?.name || testRun.name}" создан`,
+        });
+        setTimeout(() => setAlert(null), 5000);
+        fetchTestRuns();
+      } else {
+        setAlert({
+          type: 'error',
+          title: 'Не удалось дублировать тест-ран',
+          message: data.error || data.message || 'Не удалось дублировать тест-ран',
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
+      setAlert({
+        type: 'error',
+        title: 'Ошибка соединения',
+        message: errorMessage,
+      });
+      console.error('Error duplicating test run:', error);
+    }
+  };
+
   // Check permissions before early returns
   const canCreateTestRun = hasPermissionCheck('testruns:create');
   const canDeleteTestRun = hasPermissionCheck('testruns:delete');
@@ -363,12 +396,14 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
                 key={testRun.id}
                 testRun={testRun}
                 canDelete={canDeleteTestRun}
+                canDuplicate={canCreateTestRun}
                 onCardClick={() =>
                   router.push(`/projects/${projectId}/testruns/${testRun.id}`)
                 }
                 onViewDetails={() =>
                   router.push(`/projects/${projectId}/testruns/${testRun.id}`)
                 }
+                onDuplicate={() => handleDuplicateTestRun(testRun)}
                 onDelete={() => {
                   setSelectedTestRun(testRun);
                   setDeleteDialogOpen(true);

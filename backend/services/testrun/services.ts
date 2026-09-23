@@ -640,6 +640,48 @@ export class TestRunService {
   }
 
   /**
+   * Duplicate a test run: copies its settings, suites and test cases into a new
+   * PLANNED run. Execution results/statuses are not copied.
+   */
+  async duplicateTestRun(testRunId: string, projectId: string, createdById: string) {
+    const source = await prisma.testRun.findFirst({
+      where: { id: testRunId, projectId },
+      include: {
+        results: { select: { testCaseId: true } },
+        suites: { select: { testSuiteId: true } },
+      },
+    });
+
+    if (!source) {
+      return null;
+    }
+
+    const testRun = await this.createTestRun({
+      projectId,
+      name: `${source.name} (копия)`.slice(0, 255),
+      description: source.description ?? undefined,
+      executionType: source.executionType === 'AUTOMATION' ? 'AUTOMATION' : 'MANUAL',
+      assignedToId: source.assignedToId ?? undefined,
+      environment: source.environment ?? undefined,
+      status: 'PLANNED',
+      testCaseIds: [...new Set(source.results.map((r) => r.testCaseId))],
+      createdById,
+    });
+
+    if (source.suites.length > 0) {
+      await prisma.testRunSuite.createMany({
+        data: source.suites.map((s) => ({
+          testRunId: testRun.id,
+          testSuiteId: s.testSuiteId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return testRun;
+  }
+
+  /**
    * Update a test run
    */
   async updateTestRun(testRunId: string, data: UpdateTestRunInput) {
