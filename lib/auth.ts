@@ -76,9 +76,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        // Fetch user's role and permissions from database
+      }
+      // Refresh role and permissions from the database on every token read,
+      // so role changes (e.g. promotion to ADMIN) apply without re-login.
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
+          where: { id: token.id as string },
           include: {
             role: {
               include: {

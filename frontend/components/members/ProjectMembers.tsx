@@ -31,8 +31,8 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
   const [memberToDelete, setMemberToDelete] = useState<{ id: string; name: string } | null>(null);
   const [alert, setAlert] = useState<FloatingAlertMessage | null>(null);
 
-  // Check if user is admin or project manager
-  const isAdminOrManager = session?.user?.roleName === 'ADMIN' || session?.user?.roleName === 'PROJECT_MANAGER';
+  // Same permission the members API requires (ADMIN and PROJECT_MANAGER have it by default)
+  const isAdminOrManager = session?.user?.permissions?.includes('projects:manage_members') ?? false;
 
   const navbarActions = useMemo(() => {
     const actions = [];
