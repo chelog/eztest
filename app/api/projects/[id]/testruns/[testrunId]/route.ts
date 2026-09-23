@@ -4,7 +4,34 @@ import { hasPermission } from '@/lib/rbac/hasPermission';
 export const GET = hasPermission(
   async (request, context) => {
     const { testrunId } = await context.params;
-    return testRunController.getTestRunById(testrunId, request.userInfo.id);
+    const { searchParams } = new URL(request.url);
+    const page = Number(searchParams.get('page') || '1');
+    const limit = Number(searchParams.get('limit') || '50');
+
+    const rawStatusFilter = searchParams.get('resultStatus');
+    const rawExecutedByFilter = searchParams.get('executedById');
+    const rawSearch = searchParams.get('search');
+    const rawSortBy = searchParams.get('sortBy');
+    const rawSortDir = searchParams.get('sortDir');
+
+    const sortDir: 'asc' | 'desc' | undefined =
+      rawSortDir === 'asc' || rawSortDir === 'desc' ? rawSortDir : undefined;
+
+    const filters: {
+      resultStatus?: string;
+      executedById?: string;
+      search?: string;
+      sortBy?: string;
+      sortDir?: 'asc' | 'desc';
+    } = {
+      resultStatus: rawStatusFilter && rawStatusFilter !== 'all' ? rawStatusFilter : undefined,
+      executedById: rawExecutedByFilter && rawExecutedByFilter !== 'all' ? rawExecutedByFilter : undefined,
+      search: rawSearch || undefined,
+      sortBy: rawSortBy || undefined,
+      sortDir,
+    };
+
+    return testRunController.getTestRunById(testrunId, request.userInfo.id, page, limit, filters);
   },
   'testruns',
   'read'

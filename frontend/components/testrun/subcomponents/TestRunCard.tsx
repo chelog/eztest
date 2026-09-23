@@ -4,7 +4,7 @@ import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { ProgressBarWithLabel } from '@/frontend/reusable-components/data/ProgressBarWithLabel';
 import { CompactStatsGrid } from '@/frontend/reusable-components/data/CompactStatsGrid';
 import { CardFooter } from '@/frontend/reusable-components/layout/CardFooter';
-import { Calendar, Play, Trash2, User } from 'lucide-react';
+import { Calendar, Copy, Play, Trash2, User } from 'lucide-react';
 import { TestRun } from '../types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -12,16 +12,20 @@ import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
 interface TestRunCardProps {
   testRun: TestRun;
   canDelete?: boolean;
+  canDuplicate?: boolean;
   onCardClick: () => void;
   onViewDetails: () => void;
+  onDuplicate?: () => void;
   onDelete: () => void;
 }
 
 export function TestRunCard({
   testRun,
   canDelete = true,
+  canDuplicate = false,
   onCardClick,
   onViewDetails,
+  onDuplicate,
   onDelete,
 }: TestRunCardProps) {
   const { options: statusOptions } = useDropdownOptions('TestRun', 'status');
@@ -94,8 +98,8 @@ export function TestRunCard({
 
   const executionTypeLabel =
     (testRun.executionType || 'MANUAL').toString().toUpperCase() === 'AUTOMATION'
-      ? 'AUTOMATION'
-      : 'MANUAL';
+      ? 'Авто'
+      : 'Ручной';
   
   const executionType = (testRun.executionType || 'MANUAL').toString().toUpperCase();
   const executionTypeBadgeClassName = executionType === 'AUTOMATION'
@@ -130,18 +134,25 @@ export function TestRunCard({
     <ActionMenu
       items={[
         {
-          label: 'View Details',
+          label: 'Открыть детали',
           icon: Play,
           onClick: onViewDetails,
-          buttonName: `Test Run Card - View Details (${testRun.name})`,
+          buttonName: `Карточка тест-рана - Открыть детали (${testRun.name})`,
         },
         {
-          label: 'Delete',
+          label: 'Дублировать',
+          icon: Copy,
+          onClick: () => onDuplicate?.(),
+          show: canDuplicate && !!onDuplicate,
+          buttonName: `Карточка тест-рана - Дублировать (${testRun.name})`,
+        },
+        {
+          label: 'Удалить',
           icon: Trash2,
           onClick: onDelete,
           variant: 'destructive',
           show: canDelete,
-          buttonName: `Test Run Card - Delete (${testRun.name})`,
+          buttonName: `Карточка тест-рана - Удалить (${testRun.name})`,
         },
       ]}
       align="end"
@@ -154,7 +165,7 @@ export function TestRunCard({
       {/* Progress */}
       {testRun._count.results > 0 && (
         <ProgressBarWithLabel
-          label="Pass Rate"
+          label="Процент успешных"
           value={passRate}
           fillClassName="bg-green-400/30 border border-green-400/30"
         />
@@ -165,24 +176,24 @@ export function TestRunCard({
         stats={[
           {
             value: testRun._count.results,
-            label: 'Total',
+            label: 'Всего',
             show: true,
           },
           {
             value: counts.passed,
-            label: 'Passed',
+            label: 'Успешно',
             valueClassName: 'text-green-500',
             show: counts.passed > 0,
           },
           {
             value: counts.failed,
-            label: 'Failed',
+            label: 'Провалено',
             valueClassName: 'text-red-500',
             show: counts.failed > 0,
           },
           {
             value: counts.blocked,
-            label: 'Blocked',
+            label: 'Заблокировано',
             valueClassName: 'text-orange-500',
             show: counts.blocked > 0,
           },

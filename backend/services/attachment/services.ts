@@ -289,6 +289,22 @@ export class AttachmentService {
       attachment.mimeType.startsWith('image/') ||
       attachment.mimeType === 'application/pdf';
 
+    // Handle local file storage (no S3)
+    if (attachment.path.startsWith('local:')) {
+      return {
+        url: `/api/attachments/${attachment.id}/file`,
+        isPreviewable,
+        path: attachment.path,
+        attachment: {
+          id: attachment.id,
+          originalName: attachment.originalName,
+          size: attachment.size,
+          mimeType: attachment.mimeType,
+          uploadedAt: attachment.uploadedAt,
+        },
+      };
+    }
+
     // Generate presigned URL for secure access (valid for 1 hour)
     const { GetObjectCommand } = await import('@aws-sdk/client-s3');
     const command = new GetObjectCommand({
@@ -347,7 +363,7 @@ export class AttachmentService {
   }
 
   /**
-   * Delete attachment with two-phase confirmation
+   * Delete attachment with two-phase confirmation (or directly for local files)
    */
   async prepareDelete(attachmentId: string) {
     // Fetch attachment from database
@@ -357,6 +373,27 @@ export class AttachmentService {
 
     if (!attachment) {
       throw new Error('Attachment not found');
+    }
+
+    // For local files, delete directly without S3 presigned URL flow
+    if (attachment.path.startsWith('local:')) {
+      const filename = attachment.path.slice(6);
+      const uploadDir = process.env.UPLOAD_DIR || './uploads';
+      const { join } = await import('path');
+      const { unlink } = await import('fs/promises');
+      const filePath = join(uploadDir, filename);
+      try {
+        await unlink(filePath);
+      } catch {
+        // File may not exist on disk; continue with DB deletion
+      }
+      await prisma.attachment.delete({ where: { id: attachmentId } });
+      return {
+        deleteUrl: null,
+        s3Key: null,
+        message: 'Local file deleted',
+        localDeleted: true,
+      };
     }
 
     // Generate presigned DELETE URL for browser to delete from S3

@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from '@/frontend/reusable-elements/dialogs/Dialog';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/frontend/reusable-elements/selects/Select';
 import { Upload, FileSpreadsheet, Download, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface ImportResult {
@@ -43,6 +50,7 @@ export interface FileImportDialogProps {
   templateEndpoint: string;
   itemName: string; // e.g., "test cases", "defects"
   onImportComplete: () => void;
+  modules?: Array<{ id: string; name: string }>;
 }
 
 export function FileImportDialog({
@@ -54,11 +62,13 @@ export function FileImportDialog({
   templateEndpoint,
   itemName,
   onImportComplete,
+  modules,
 }: FileImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens
@@ -68,6 +78,7 @@ export function FileImportDialog({
       setResult(null);
       setError(null);
       setUploading(false);
+      setSelectedModuleId('');
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -146,6 +157,9 @@ export function FileImportDialog({
     try {
       const formData = new FormData();
       formData.append('file', file);
+      if (selectedModuleId) {
+        formData.append('targetModuleId', selectedModuleId);
+      }
 
       const response = await fetch(importEndpoint, {
         method: 'POST',
@@ -243,7 +257,33 @@ export function FileImportDialog({
               <DialogDescription className="mt-2">{description}</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-5">{/* Download Template */}
+            <div className="space-y-5">
+          {/* Target Module Selector */}
+          {modules && modules.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-white/90">Target Module (optional)</p>
+              <Select
+                value={selectedModuleId || '_none'}
+                onValueChange={(val) => setSelectedModuleId(val === '_none' ? '' : val)}
+                disabled={uploading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Keep module from file" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Keep module from file</SelectItem>
+                  {modules.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-white/50">
+                If selected, all imported test cases will be placed in this module, overriding the Module / Feature column in the file.
+              </p>
+            </div>
+          )}
+
+          {/* Download Template */}
           <div className="flex items-center justify-between p-4 border border-white/20 rounded-lg bg-[#0f0f12]">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10">

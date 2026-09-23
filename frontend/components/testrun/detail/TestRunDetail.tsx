@@ -1,15 +1,17 @@
-﻿import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { useItemsPerPage } from '@/hooks/useItemsPerPage';
+import { useSession } from 'next-auth/react';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { FloatingAlert, FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { TestRunHeader } from './subcomponents/TestRunHeader';
 import { TestRunStatsCards } from './subcomponents/TestRunStatsCards';
+import { TestRunTeamStats } from './subcomponents/TestRunTeamStats';
 import { TestCasesListCard } from './subcomponents/TestCasesListCard';
-import { RecordResultDialog } from './subcomponents/RecordResultDialog';
+import { TestCaseResultSidePanel } from './subcomponents/TestCaseResultSidePanel';
 import { AddTestCasesDialog } from '@/frontend/components/common/dialogs/AddTestCasesDialog';
 import { AddTestSuitesDialog } from './subcomponents/AddTestSuitesDialog';
-import { CreateDefectDialog } from '@/frontend/components/defect/subcomponents/CreateDefectDialog';
 import { SendTestRunReportDialog } from './subcomponents/SendTestRunReportDialog';
 import {
   CheckCircle,
@@ -22,37 +24,47 @@ import { TestRun, TestCase, ResultFormData, TestRunStats, TestSuite } from './ty
 import { usePermissions } from '@/hooks/usePermissions';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { FileExportDialog } from '@/frontend/reusable-components/dialogs/FileExportDialog';
+import type { Attachment } from '@/lib/s3';
+import { deleteFile } from '@/lib/s3';
 
 interface TestRunDetailProps {
   testRunId: string;
 }
 
 export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
-  const { hasPermission: hasPermissionCheck, isLoading: permissionsLoading } = usePermissions();
+  const { hasPermission: hasPermissionCheck, isLoading: permissionsLoading, role } = usePermissions();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
 
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [addCasesDialogOpen, setAddCasesDialogOpen] = useState(false);
   const [addSuitesDialogOpen, setAddSuitesDialogOpen] = useState(false);
-  const [createDefectDialogOpen, setCreateDefectDialogOpen] = useState(false);
-  const [selectedTestCaseForDefect, setSelectedTestCaseForDefect] = useState<string | null>(null);
-  const [selectedTestCase, setSelectedTestCase] = useState<{
-    testCaseId: string;
-    testCaseName: string;
-  } | null>(null);
+  const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
+  const [selectedResultExecutedBy, setSelectedResultExecutedBy] = useState<{ id?: string; name: string } | null>(null);
+  const [projectMembers, setProjectMembers] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTestCaseAttachments, setSelectedTestCaseAttachments] = useState<Attachment[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [availableTestCases, setAvailableTestCases] = useState<TestCase[]>([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
   const [availableTestSuites, setAvailableTestSuites] = useState<TestSuite[]>([]);
   const [selectedSuiteIds, setSelectedSuiteIds] = useState<string[]>([]);
-  const [defectRefreshTrigger, setDefectRefreshTrigger] = useState(0);
   const [sendReportDialogOpen, setSendReportDialogOpen] = useState(false);
   const [floatingAlert, setFloatingAlert] = useState<FloatingAlertMessage | null>(null);
   const [addingTestCases, setAddingTestCases] = useState(false);
   const [addingTestSuites, setAddingTestSuites] = useState(false);
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
+  const [totalPagesCount, setTotalPagesCount] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [resultStatusFilter, setResultStatusFilter] = useState('all');
+  const [resultOwnerFilter, setResultOwnerFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [columnSortBy, setColumnSortBy] = useState<string | undefined>(undefined);
+  const [columnSortDir, setColumnSortDir] = useState<'asc' | 'desc'>('asc');
 
   const [resultForm, setResultForm, clearResultForm] = useFormPersistence<ResultFormData>(
     `testrun-result-${testRunId}`,
@@ -66,7 +78,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   );
 
   // Check permissions for navbar
-  const canUpdateTestRun = hasPermissionCheck('testruns:update');
+  const canUpdateTestRun = hasPermissionCheck('testruns:update') || role === 'ADMIN';
   const canCreateTestRun = hasPermissionCheck('testruns:create');
   hasPermissionCheck('testruns:read');
 
@@ -75,12 +87,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     return type === 'AUTOMATION' ? 'AUTOMATION' : 'MANUAL';
   }, [testRun?.executionType]);
 
-  // For automation runs, allow defect actions even after completion
-  const showAutomationDefectActions = useMemo(() => {
-    const type = (testRun?.executionType || 'MANUAL').toString().toUpperCase();
-    return type === 'AUTOMATION' && testRun?.status === 'COMPLETED';
-  }, [testRun?.executionType, testRun?.status]);
-
   const navbarActions = useMemo(() => {
     const actions = [];
     
@@ -88,11 +94,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     if (canUpdateTestRun) {
       actions.push({
         type: 'action' as const,
-        label: 'Export Report',
+        label: 'Экспорт отчета',
         icon: Upload,
         onClick: () => setExportDialogOpen(true),
         variant: 'secondary' as const,
-        buttonName: 'Test Run Detail - Export Report',
+        buttonName: 'Тест-ран - Экспорт отчета',
       });
     }
 
@@ -104,20 +110,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     return actions;
   }, [canUpdateTestRun]);
 
-  useEffect(() => {
-    fetchTestRun();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testRunId]);
-
-  useEffect(() => {
-    if (testRun) {
-      document.title = `${testRun.name} | EZTest`;
-    }
-  }, [testRun]);
-
-  const fetchTestRun = async () => {
+  const fetchTestRun = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       // Extract projectId from URL path or use from testRun data
       let projectId = testRun?.project?.id;
       if (!projectId && typeof window !== 'undefined') {
@@ -128,21 +123,112 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           projectId = pathSegments[projectIndex + 1];
         }
       }
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(itemsPerPage),
+      });
+
+      if (resultStatusFilter !== 'all') {
+        params.set('resultStatus', resultStatusFilter);
+      }
+
+      if (resultOwnerFilter !== 'all') {
+        params.set('executedById', resultOwnerFilter);
+      }
+
+      if (searchQuery) {
+        params.set('search', searchQuery);
+      }
+
+      if (columnSortBy) {
+        params.set('sortBy', columnSortBy);
+        params.set('sortDir', columnSortDir);
+      }
+
+      const query = params.toString();
       const url = projectId 
-        ? `/api/projects/${projectId}/testruns/${testRunId}`
+        ? `/api/projects/${projectId}/testruns/${testRunId}?${query}`
         : `/api/testruns/${testRunId}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data.data) {
         setTestRun(data.data);
+        if (data.pagination) {
+          setTotalPagesCount(data.pagination.totalPages);
+          setTotalItems(data.pagination.totalItems);
+        }
       } else {
-        alert(data.error || 'Failed to fetch test run');
+        alert(data.error || 'Не удалось загрузить тест-ран');
       }
     } catch (error) {
       console.error('Error fetching test run:', error);
-      alert('Failed to fetch test run');
+      alert('Не удалось загрузить тест-ран');
     } finally {
       setLoading(false);
+    }
+  }, [testRun?.project?.id, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, searchQuery, columnSortBy, columnSortDir, testRunId]);
+
+  useEffect(() => {
+    fetchTestRun();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testRunId, currentPage, itemsPerPage, resultStatusFilter, resultOwnerFilter, searchQuery, columnSortBy, columnSortDir]);
+
+  // Polling for real-time updates (30s interval, silent)
+  const fetchTestRunRef = useRef(fetchTestRun);
+  useEffect(() => {
+    fetchTestRunRef.current = fetchTestRun;
+  });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchTestRunRef.current(true);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+
+  useEffect(() => {
+    if (testRun) {
+      document.title = `${testRun.name} | EZTest`;
+    }
+  }, [testRun]);
+
+  useEffect(() => {
+    const projectId = testRun?.project?.id;
+    if (!projectId || projectMembers.length > 0) return;
+    fetch(`/api/projects/${projectId}/members`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.data) {
+          setProjectMembers(
+            data.data.map((m: { user: { id: string; name: string } }) => ({
+              id: m.user.id,
+              name: m.user.name,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [testRun?.project?.id, projectMembers.length]);
+
+  const handleNameUpdate = async (name: string) => {
+    const projectId = testRun?.project?.id;
+    if (!projectId) return;
+    const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const data = await response.json();
+    if (data.data) {
+      setTestRun(prev => prev ? { ...prev, name: data.data.name } : prev);
+      setFloatingAlert({ type: 'success', title: 'Успешно', message: 'Название тест-рана обновлено' });
+      setTimeout(() => setFloatingAlert(null), 4000);
+    } else {
+      setFloatingAlert({ type: 'error', title: 'Ошибка', message: data.error || 'Не удалось обновить название' });
     }
   };
 
@@ -166,11 +252,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       if (data.data) {
         fetchTestRun();
       } else {
-        alert(data.error || 'Failed to start test run');
+        alert(data.error || 'Не удалось запустить тест-ран');
       }
     } catch (error) {
       console.error('Error starting test run:', error);
-      alert('Failed to start test run');
+      alert('Не удалось запустить тест-ран');
     } finally {
       setActionLoading(false);
     }
@@ -204,11 +290,11 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           setSendReportDialogOpen(false);
         }
       } else {
-        alert(data.error || 'Failed to complete test run');
+        alert(data.error || 'Не удалось завершить тест-ран');
       }
     } catch (error) {
       console.error('Error completing test run:', error);
-      alert('Failed to complete test run');
+      alert('Не удалось завершить тест-ран');
     } finally {
       setActionLoading(false);
     }
@@ -243,8 +329,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const hasInvalidEmails = data.data.message?.includes('Invalid email') || data.data.message?.includes('No valid email');
       setFloatingAlert({
         type: 'error',
-        title: hasInvalidEmails ? 'Invalid Email Addresses' : 'Email Report Failed',
-        message: data.data.message || data.error || 'Failed to send report. Please check recipient email addresses.',
+        title: hasInvalidEmails ? 'Некорректные email-адреса' : 'Не удалось отправить отчет',
+        message: data.data.message || data.error || 'Не удалось отправить отчет. Проверьте email-адреса получателей.',
       });
       return;
     }
@@ -257,28 +343,26 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     if (hasInvalidEmails || hasFailedSends) {
       setFloatingAlert({
         type: 'error', // Use error type to highlight the warning about invalid emails
-        title: 'Report Sent - Some Issues',
+        title: 'Отчет отправлен с предупреждениями',
         message: data.data.message, // Message will include: "Report sent successfully to X recipient(s). Invalid email addresses skipped: ..."
       });
     } else {
       // All emails sent successfully, no issues
       setFloatingAlert({
         type: 'success',
-        title: 'Report Sent Successfully',
+        title: 'Отчет успешно отправлен',
         message: data.data.message,
       });
     }
   };
 
-  const handleOpenResultDialog = (testCase: TestCase) => {
-    const existingResult = testRun?.results.find(
+  const handleOpenResultDialog = (testCase: TestCase) => {    const existingResult = testRun?.results.find(
       (r) => r.testCaseId === testCase.id
     );
 
-    setSelectedTestCase({
-      testCaseId: testCase.id,
-      testCaseName: testCase.title || testCase.name || '',
-    });
+    setSelectedTestCase(testCase);
+    setSelectedResultExecutedBy(existingResult?.executedBy || null);
+    setSelectedTestCaseAttachments([]);
 
     setResultForm({
       status: existingResult?.status || '',
@@ -286,11 +370,105 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     });
 
     setResultDialogOpen(true);
+
+    // Fetch test case attachments
+    fetch(`/api/testcases/${testCase.id}/attachments`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.data) {
+          setSelectedTestCaseAttachments(
+            data.data.map((a: Attachment) => ({ ...a, entityType: 'testcase' as const }))
+          );
+        }
+      })
+      .catch(() => {});
   };
+
+  const saveResultForCase = useCallback(async (testCase: TestCase, status: string, comment: string) => {
+    let projectId = testRun?.project?.id;
+    if (!projectId && typeof window !== 'undefined') {
+      const pathSegments = window.location.pathname.split('/');
+      const projectIndex = pathSegments.indexOf('projects');
+      if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
+        projectId = pathSegments[projectIndex + 1];
+      }
+    }
+    const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseId: testCase.id, status, comment }),
+    });
+    const data = await response.json();
+    if (data.data) {
+      setTestRun((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          results: prev.results.map((result) =>
+            result.testCaseId !== testCase.id
+              ? result
+              : { ...result, status: data.data.status, comment: data.data.comment, executedAt: data.data.executedAt, executedBy: data.data.executedBy }
+          ),
+        };
+      });
+    }
+    return data;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testRun?.project?.id, testRunId]);
+
+  const handleQuickStatusChange = useCallback(async (testCase: TestCase, status: string) => {
+    await saveResultForCase(testCase, status, '');
+  }, [saveResultForCase]);
+
+  const handleAutoSave = useCallback(async (status: string) => {
+    if (!selectedTestCase) return;
+    await saveResultForCase(selectedTestCase, status, resultForm.comment || '');
+  }, [selectedTestCase, resultForm.comment, saveResultForCase]);
+
+  const handleSelfAssign = useCallback(async () => {
+    if (!selectedTestCase || !testRun?.project?.id || !currentUserId) return;
+    const projectId = testRun.project.id;
+    await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds: [selectedTestCase.id], executedById: currentUserId }),
+    });
+    const me = projectMembers.find((m) => m.id === currentUserId);
+    if (me) setSelectedResultExecutedBy({ id: me.id, name: me.name });
+    fetchTestRun(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTestCase, testRun?.project?.id, testRunId, currentUserId, projectMembers]);
+
+  const handleAssign = useCallback(async (userId: string) => {
+    if (!selectedTestCase || !testRun?.project?.id) return;
+    const projectId = testRun.project.id;
+    await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results/bulk`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds: [selectedTestCase.id], executedById: userId }),
+    });
+    const member = projectMembers.find((m) => m.id === userId);
+    if (member) setSelectedResultExecutedBy({ id: member.id, name: member.name });
+    fetchTestRun(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTestCase, testRun?.project?.id, testRunId, projectMembers]);
+
+  const handleAttachmentUploaded = useCallback((attachment: Attachment) => {
+    setSelectedTestCaseAttachments((prev) => [attachment, ...prev]);
+  }, []);
+
+  const handleAttachmentDeleted = useCallback(async (attachmentId: string) => {
+    try {
+      await deleteFile(attachmentId, 'testcase');
+      setSelectedTestCaseAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+    } catch (err) {
+      console.error('Failed to delete attachment:', err);
+    }
+  }, []);
 
   const handleSubmitResult = async () => {
     if (!selectedTestCase || !resultForm.status) {
-      alert('Please select a result status');
+      alert('Выберите статус результата');
       return;
     }
 
@@ -307,7 +485,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          testCaseId: selectedTestCase.testCaseId,
+          testCaseId: selectedTestCase.id,
           status: resultForm.status,
           comment: resultForm.comment,
         }),
@@ -316,10 +494,37 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const data = await response.json();
 
       if (data.data) {
+        setTestRun((prev) => {
+          if (!prev) {
+            return prev;
+          }
+
+          const updatedResults = prev.results.map((result) => {
+            if (result.testCaseId !== selectedTestCase.id) {
+              return result;
+            }
+
+            return {
+              ...result,
+              status: data.data.status,
+              comment: data.data.comment,
+              duration: data.data.duration,
+              errorMessage: data.data.errorMessage,
+              stackTrace: data.data.stackTrace,
+              executedAt: data.data.executedAt,
+              executedBy: data.data.executedBy,
+            };
+          });
+
+          return {
+            ...prev,
+            results: updatedResults,
+          };
+        });
+
         setResultDialogOpen(false);
         setSelectedTestCase(null);
         clearResultForm(); // Clear persisted form data after successful submission
-        fetchTestRun();
       } else {
         alert(data.error || 'Failed to save result');
       }
@@ -365,7 +570,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
   const handleAddTestCases = async () => {
     if (selectedCaseIds.length === 0) {
-      alert('Please select at least one test case');
+      alert('Выберите хотя бы один тест-кейс');
       return;
     }
 
@@ -383,7 +588,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       const promises = selectedCaseIds.map(async (testCaseId) => {
         const payload = {
           testCaseId,
-          status: 'SKIPPED',
+          status: 'NOT_RUN',
         };
         
         const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
@@ -514,7 +719,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
   const handleAddTestSuites = async () => {
     if (selectedSuiteIds.length === 0) {
-      alert('Please select at least one test suite');
+      alert('Выберите хотя бы один тест-сьют');
       return;
     }
 
@@ -536,7 +741,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       });
 
       if (testCaseIds.length === 0) {
-        alert('No new test cases to add from selected suites');
+        alert('В выбранных тест-сьютах нет новых тест-кейсов для добавления');
         return;
       }
 
@@ -555,7 +760,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             testCaseId,
-            status: 'SKIPPED',
+                status: 'NOT_RUN',
           }),
         });
 
@@ -590,20 +795,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const handleCreateDefect = (testCaseId: string) => {
-    setSelectedTestCaseForDefect(testCaseId);
-    setCreateDefectDialogOpen(true);
-  };
-
-  const handleDefectCreated = () => {
-    setCreateDefectDialogOpen(false);
-    setSelectedTestCaseForDefect(null);
-    // Trigger defect list refresh in RecordResultDialog
-    setDefectRefreshTrigger(prev => prev + 1);
-    // Optionally refresh test run data if needed
-    fetchTestRun();
-  };
-
   const getResultIcon = (status?: string) => {
     switch (status) {
       case 'PASSED':
@@ -613,6 +804,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       case 'BLOCKED':
         return <AlertCircle className="w-5 h-5 text-orange-500" />;
       case 'SKIPPED':
+      case 'NOT_RUN':
         return <Circle className="w-5 h-5 text-gray-500" />;
       case 'RETEST':
         return <AlertCircle className="w-5 h-5 text-purple-500" />;
@@ -621,49 +813,46 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
-  const calculateStats = (): TestRunStats => {
+  const stats = useMemo((): TestRunStats => {
     if (!testRun)
-      return { passed: 0, failed: 0, blocked: 0, skipped: 0, pending: 0, total: 0 };
+      return { passed: 0, failed: 0, blocked: 0, skipped: 0, retest: 0, pending: 0, total: 0 };
 
-    const stats: TestRunStats = {
-      passed: 0,
-      failed: 0,
-      blocked: 0,
-      skipped: 0,
-      pending: 0,
+    if (testRun.stats) {
+      return {
+        passed: testRun.stats.passed,
+        failed: testRun.stats.failed,
+        blocked: testRun.stats.blocked,
+        skipped: testRun.stats.skipped,
+        retest: testRun.stats.retest,
+        pending: testRun.stats.skipped,
+        total: testRun.stats.total,
+        perUserStats: testRun.stats.perUserStats,
+      };
+    }
+
+    const s: TestRunStats = {
+      passed: 0, failed: 0, blocked: 0, skipped: 0, retest: 0, pending: 0,
       total: testRun.results?.length || 0,
     };
 
-    // Check if results exist before iterating
     if (testRun.results && Array.isArray(testRun.results)) {
       testRun.results.forEach((result) => {
         switch (result.status) {
-          case 'PASSED':
-            stats.passed++;
-            break;
-          case 'FAILED':
-            stats.failed++;
-            break;
-          case 'BLOCKED':
-            stats.blocked++;
-            break;
+          case 'PASSED': s.passed++; break;
+          case 'FAILED': s.failed++; break;
+          case 'BLOCKED': s.blocked++; break;
           case 'SKIPPED':
-            stats.skipped++;
-            break;
+          case 'NOT_RUN': s.skipped++; break;
+          case 'RETEST': s.retest++; break;
         }
       });
     }
-
-    // Pending = tests that haven't been executed (skipped tests count as not executed)
-    stats.pending = stats.skipped;
-
-    return stats;
-  };
-
-  const stats = calculateStats();
+    s.pending = s.skipped;
+    return s;
+  }, [testRun]);
   // Progress = tests that have been executed (passed, failed, blocked, retest)
   // Skipped tests are NOT considered executed
-  const executed = stats.passed + stats.failed + stats.blocked;
+  const executed = stats.passed + stats.failed + stats.blocked + stats.retest;
   const progressPercentage =
     stats.total > 0 ? Math.round((executed / stats.total) * 100) : 0;
   // Pass rate = passed tests / executed tests (excluding skipped)
@@ -671,13 +860,13 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     executed > 0 ? Math.round((stats.passed / executed) * 100) : 0;
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test run..." />;
+    return <Loader fullScreen text="Загрузка тест-рана..." />;
   }
 
   if (!testRun) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <p className="text-gray-400">Test run not found</p>
+        <p className="text-gray-400">Тест-ран не найден</p>
       </div>
     );
   }
@@ -691,13 +880,13 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
+              { label: 'Проекты', href: '/projects' },
               {
-                label: testRun.project?.name || 'Project',
+                label: testRun.project?.name || 'Проект',
                 href: `/projects/${testRun.project?.id}`,
               },
               {
-                label: 'Test Runs',
+                label: 'Тест-раны',
                 href: `/projects/${testRun.project?.id}/testruns`,
               },
               { label: testRun.name, href: `/projects/${testRun.project?.id}/testruns/${testRun.id}` },
@@ -707,7 +896,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         actions={navbarActions}
       />
 
-      <div className="p-4 md:p-6 lg:p-8 pt-8 space-y-6">
+      <div className="space-y-6 p-4 pt-8 md:p-6 lg:p-8">
         <TestRunHeader
           testRun={testRun}
           executionTypeLabel={executionTypeLabel}
@@ -715,6 +904,7 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           canUpdate={canUpdateTestRun}
           onStartTestRun={handleStartTestRun}
           onCompleteTestRun={handleCompleteTestRun}
+          onNameUpdate={handleNameUpdate}
         />
 
         <TestRunStatsCards
@@ -724,12 +914,40 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           testRun={testRun}
         />
 
+        <TestRunTeamStats stats={stats} />
+
         <TestCasesListCard
+          testRunId={testRun.id}
           results={testRun.results}
           testRunStatus={testRun.status}
           canUpdate={canUpdateTestRun}
           canCreate={canCreateTestRun}
           projectId={testRun.project?.id || ''}
+          onRefresh={fetchTestRun}
+          currentPage={currentPage}
+          totalPages={totalPagesCount}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          statusFilter={resultStatusFilter}
+          ownerFilter={resultOwnerFilter}
+          searchQuery={searchQuery}
+          onStatusFilterChange={(value) => {
+            setResultStatusFilter(value);
+            setCurrentPage(1);
+          }}
+          onOwnerFilterChange={(value) => {
+            setResultOwnerFilter(value);
+            setCurrentPage(1);
+          }}
+          onSearchChange={(value) => {
+            setSearchQuery(value);
+            setCurrentPage(1);
+          }}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(items) => {
+            setItemsPerPage(items);
+            setCurrentPage(1);
+          }}
           onAddTestCases={() => {
             fetchAvailableTestCases();
             setAddCasesDialogOpen(true);
@@ -739,27 +957,16 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
             setAddSuitesDialogOpen(true);
           }}
           onExecuteTestCase={handleOpenResultDialog}
-          onCreateDefect={handleCreateDefect}
-          forceShowDefectActions={showAutomationDefectActions}
+          onQuickStatusChange={handleQuickStatusChange}
           getResultIcon={getResultIcon}
-        />
-
-        <RecordResultDialog
-          open={resultDialogOpen}
-          testCaseName={selectedTestCase?.testCaseName || ''}
-          testCaseId={selectedTestCase?.testCaseId || ''}
-          projectId={testRun.project?.id || ''}
-          testRunEnvironment={testRun.environment}
-          formData={resultForm}
-          onOpenChange={setResultDialogOpen}
-          onFormChange={(data) => {
-            const filteredData = Object.fromEntries(
-              Object.entries(data).filter(([, value]) => value !== undefined)
-            ) as Record<string, string>;
-            setResultForm({ ...resultForm, ...filteredData } as ResultFormData);
+          activeTestCaseId={selectedTestCase?.id}
+          sortBy={columnSortBy}
+          sortDir={columnSortDir}
+          onSortChange={(key, dir) => {
+            setColumnSortBy(key);
+            setColumnSortDir(dir);
+            setCurrentPage(1);
           }}
-          onSubmit={handleSubmitResult}
-          refreshTrigger={defectRefreshTrigger}
         />
 
         <AddTestCasesDialog
@@ -810,17 +1017,6 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           fetchingData={loadingSuites}
         />
 
-        {selectedTestCaseForDefect && testRun.project?.id && (
-          <CreateDefectDialog
-            projectId={testRun.project.id}
-            triggerOpen={createDefectDialogOpen}
-            onOpenChange={setCreateDefectDialogOpen}
-            onDefectCreated={handleDefectCreated}
-            testCaseId={selectedTestCaseForDefect}
-            testRunEnvironment={testRun.environment}
-          />
-        )}
-
         <SendTestRunReportDialog
           open={sendReportDialogOpen}
           onOpenChange={setSendReportDialogOpen}
@@ -832,17 +1028,48 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           <FileExportDialog
             open={exportDialogOpen}
             onOpenChange={setExportDialogOpen}
-            title="Export Test Run Report"
-            description="Choose a format to export the detailed test run report with test cases and defects."
+            title="Экспорт отчета тест-рана"
+            description="Выберите формат для экспорта подробного отчета тест-рана с тест-кейсами и дефектами."
             exportOptions={{
               projectId: testRun.project?.id || '',
               endpoint: `/api/projects/${testRun.project?.id}/testruns/${testRunId}/export`,
               filters: {},
             }}
-            itemName="test run report"
+            availableFormats={['csv', 'excel', 'pdf']}
+            itemName="отчет тест-рана"
           />
         )}
       </div>
+
+      <TestCaseResultSidePanel
+        open={resultDialogOpen}
+        testCase={selectedTestCase}
+        projectId={testRun?.project?.id}
+        formData={resultForm}
+        currentUserId={currentUserId}
+        executedBy={selectedResultExecutedBy}
+        members={projectMembers}
+        attachments={selectedTestCaseAttachments}
+        onClose={() => {
+          setResultDialogOpen(false);
+          setSelectedTestCase(null);
+          setSelectedResultExecutedBy(null);
+          setSelectedTestCaseAttachments([]);
+        }}
+        onFormChange={(data) => {
+          const filteredData = Object.fromEntries(
+            Object.entries(data).filter(([, value]) => value !== undefined)
+          ) as Record<string, string>;
+          setResultForm({ ...resultForm, ...filteredData } as ResultFormData);
+        }}
+        onSave={handleSubmitResult}
+        onAutoSave={handleAutoSave}
+        onSelfAssign={handleSelfAssign}
+        onAssign={handleAssign}
+        onAttachmentUploaded={handleAttachmentUploaded}
+        onAttachmentDeleted={handleAttachmentDeleted}
+        getStatusIcon={getResultIcon}
+      />
 
       <FloatingAlert
         alert={floatingAlert}
@@ -851,4 +1078,3 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     </div>
   );
 }
-

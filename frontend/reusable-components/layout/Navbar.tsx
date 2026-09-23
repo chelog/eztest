@@ -169,13 +169,9 @@ export function Navbar({
             {/* Right side: Actions */}
             {renderedActions ? (
               hasOnlySignOutButton ? (
-                <div className="absolute right-0 z-20">
-                  {renderedActions}
-                </div>
+                <div className="absolute right-0 z-20 flex items-center gap-2">{renderedActions}</div>
               ) : (
-                <div className="absolute right-0 z-20 flex items-center gap-1 sm:gap-2">
-                  {renderedActions}
-                </div>
+                <div className="absolute right-0 z-20 flex items-center gap-1 sm:gap-2">{renderedActions}</div>
               )
             ) : null}
           </div>
@@ -221,9 +217,7 @@ export function Navbar({
           {/* Right side: Nav + actions */}
           {(items && items.length > 0) || renderedActions ? (
             hasOnlySignOutButton ? (
-              <div className="ml-auto">
-                {renderedActions}
-              </div>
+              <div className="ml-auto flex items-center gap-2">{renderedActions}</div>
             ) : (
               <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl px-3 py-2 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)] ring-1 ring-white/5 ml-auto">
                 {items && items.length > 0 ? (

@@ -122,6 +122,7 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String
+  tcIdCounter Int @default(0)
 
   createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
   members     ProjectMember[]
@@ -312,7 +313,7 @@ model TestResult {
   testRunId   String
   testCaseId  String
   status      String   // Dynamic dropdown value: PASSED, FAILED, BLOCKED, SKIPPED, RETEST
-  executedById String
+  executedById String?
   duration    Int?     // in seconds
   comment     String?
   errorMessage String?
@@ -321,7 +322,7 @@ model TestResult {
 
   testRun     TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
   testCase    TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
-  executedBy  User     @relation(fields: [executedById], references: [id])
+  executedBy  User?    @relation(fields: [executedById], references: [id])
   attachments Attachment[]
 
   @@unique([testRunId, testCaseId])

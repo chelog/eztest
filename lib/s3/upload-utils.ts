@@ -293,8 +293,8 @@ export async function deleteFile(attachmentId: string, entityType?: string): Pro
     } else {
       baseEndpoint = `/api/attachments/${attachmentId}`;
     }
-    
-    // Step 1: Get presigned DELETE URL from backend
+
+    // Step 1: Get presigned DELETE URL from backend (or direct delete for local files)
     const prepareResponse = await fetch(`${baseEndpoint}?step=prepare`, {
       method: 'DELETE',
     });
@@ -303,7 +303,14 @@ export async function deleteFile(attachmentId: string, entityType?: string): Pro
       throw new Error('Failed to prepare delete');
     }
 
-    const { deleteUrl } = await prepareResponse.json();
+    const prepareData = await prepareResponse.json();
+
+    // Local files are deleted in the prepare step — no further action needed
+    if (prepareData.localDeleted) {
+      return;
+    }
+
+    const { deleteUrl } = prepareData;
 
     // Step 2: Delete directly from S3 using presigned URL
     const s3DeleteResponse = await fetch(deleteUrl, {

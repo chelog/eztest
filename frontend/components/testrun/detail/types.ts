@@ -1,12 +1,13 @@
 export interface TestResult {
   id: string;
-  status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED' | 'RETEST';
+  status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED' | 'RETEST' | 'NOT_RUN';
   testCaseId: string;
   testCase: TestCase;
   comment?: string;
   duration?: number;
   executedAt?: string;
   executedBy?: {
+    id?: string;
     name: string;
     email: string;
   };
@@ -20,6 +21,7 @@ export interface TestCase {
   name?: string;
   title?: string;
   description?: string;
+  preconditions?: string;
   priority: Priority | string;
   status: string;
   suiteId?: string | null;
@@ -27,6 +29,12 @@ export interface TestCase {
     id: string;
     name: string;
   } | null;
+  steps?: Array<{
+    id: string;
+    stepNumber: number;
+    action: string;
+    expectedResult: string;
+  }>;
 }
 
 export interface TestRun {
@@ -50,6 +58,23 @@ export interface TestRun {
   testCases?: TestCase[];
   _count?: {
     results: number;
+  };
+  stats?: {
+    total: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    skipped: number;
+    retest: number;
+    perUserStats?: Array<{
+      userId: string;
+      name: string;
+      total: number;
+      passed: number;
+      failed: number;
+      blocked: number;
+      retest: number;
+    }>;
   };
   createdAt: string;
   startedAt?: string;
@@ -77,6 +102,16 @@ export interface TestRunStats {
   failed: number;
   blocked: number;
   skipped: number;
+  retest: number;
   pending: number;
   total: number;
+  perUserStats?: Array<{
+    userId: string;
+    name: string;
+    total: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    retest: number;
+  }>;
 }

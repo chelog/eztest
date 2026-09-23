@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Read directly from process.env to get the latest value
-    const enableAttachments = process.env.ENABLE_ATTACHMENTS === 'true';
+    const enableAttachments = process.env.ENABLE_ATTACHMENTS !== 'false';
     
     return NextResponse.json({
       enableAttachments,

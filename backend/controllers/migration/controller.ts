@@ -38,12 +38,18 @@ export class MigrationController {
         }
       }
 
+      // Optional target module override (only applies to testcases)
+      const targetModuleId = type === 'testcases'
+        ? (formData.get('targetModuleId') as string | null) || undefined
+        : undefined;
+
       // Import data
       const result = await importService.importData(
         type,
         projectId,
         req.userInfo.id,
-        parseResult.data
+        parseResult.data,
+        targetModuleId
       );
 
       const typeNames: Record<ImportType, string> = {

@@ -16,11 +16,9 @@ import { TestCaseDetailsCard } from './subcomponents/TestCaseDetailsCard';
 import { TestStepsCard } from './subcomponents/TestStepsCard';
 import { TestCaseInfoCard } from './subcomponents/TestCaseInfoCard';
 import { TestCaseHistoryCard } from './subcomponents/TestCaseHistoryCard';
-import { LinkedDefectsCard } from './subcomponents/LinkedDefectsCard';
 import { DeleteTestCaseDialog } from './subcomponents/DeleteTestCaseDialog';
 import { attachmentStorage } from '@/lib/attachment-storage';
 import type { Attachment } from '@/lib/s3';
-import { uploadFileToS3 } from '@/lib/s3';
 
 interface TestCaseDetailProps {
   testCaseId: string;
@@ -308,14 +306,14 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
     }
   };
 
-  const uploadPendingAttachments = async (): Promise<Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }>> => {
+  const uploadPendingAttachments = async (): Promise<Array<{ id: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }>> => {
     const pendingAttachments = commonAttachments.filter((att) => att.id.startsWith('pending-'));
-    
+
     if (pendingAttachments.length === 0) {
       return []; // No pending attachments
     }
 
-    const uploadedAttachments: Array<{ id?: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
+    const uploadedAttachments: Array<{ id: string; s3Key: string; fileName: string; mimeType: string; fieldName?: string }> = [];
 
     // Upload all pending files
     for (const attachment of pendingAttachments) {
@@ -324,28 +322,23 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
       if (!file) continue;
 
       try {
-        const result = await uploadFileToS3({
-          file,
-          fieldName: attachment.fieldName || 'attachment',
-          entityType: 'testcase',
-          projectId: testCase?.project?.id,
-          onProgress: () => {}, // Silent upload
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('testCaseId', testCaseId);
+        fd.append('fieldName', attachment.fieldName || 'attachment');
+        const res = await fetch('/api/attachments/local-upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Upload failed');
+        }
+        const { data } = await res.json();
+        uploadedAttachments.push({
+          id: data.id,
+          s3Key: data.filename,
+          fileName: file.name,
+          mimeType: file.type,
+          fieldName: attachment.fieldName,
         });
-
-        if (!result.success) {
-          throw new Error(result.error || 'Upload failed');
-        }
-
-        // Store the uploaded attachment info for linking
-        if (result.attachment) {
-          uploadedAttachments.push({
-            id: result.attachment.id, // Use the database ID
-            s3Key: result.attachment.filename,
-            fileName: file.name,
-            mimeType: file.type,
-            fieldName: attachment.fieldName,
-          });
-        }
       } catch (error) {
         console.error('Failed to upload attachment:', error);
         throw error; // Throw error to stop save
@@ -544,20 +537,18 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
                   // @ts-expect-error - Access the File object
                   const file = att._pendingFile;
                   if (file) {
-                    const result = await uploadFileToS3({
-                      file,
-                      fieldName: att.fieldName || 'action',
-                      entityType: 'teststep',
-                      projectId: testCase?.project?.id,
-                      onProgress: () => {}, // Silent upload
-                    });
-                    if (result.success && result.attachment) {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    fd.append('fieldName', att.fieldName || 'action');
+                    const res = await fetch('/api/attachments/local-upload', { method: 'POST', body: fd });
+                    if (res.ok) {
+                      const { data } = await res.json();
                       return {
-                        id: result.attachment.id,
-                        s3Key: result.attachment.filename,
+                        id: data.id,
+                        s3Key: data.filename,
                         fileName: file.name,
                         mimeType: file.type,
-                        fieldName: att.fieldName || 'action'
+                        fieldName: att.fieldName || 'action',
                       };
                     }
                   }
@@ -619,25 +610,27 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
         
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: 'Test case updated successfully',
+          title: 'Успешно',
+          message: 'Тест-кейс успешно обновлен',
         });
         setTimeout(() => setAlert(null), 5000);
-        
+
         // Reload from database to get fresh data including any backend changes
         fetchTestCase();
+        // Invalidate router cache so list pages reflect updated status
+        router.refresh();
       } else {
         setAlert({
           type: 'error',
-          title: 'Failed to Update Test Case',
-          message: data.error || 'Failed to update test case',
+          title: 'Не удалось обновить тест-кейс',
+          message: data.error || 'Не удалось обновить тест-кейс',
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error updating test case:', error);
@@ -711,8 +704,8 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
     if (!newStep.action.trim() && !newStep.expectedResult.trim()) {
       setAlert({
         type: 'error',
-        title: 'Missing Required Fields',
-        message: 'Please fill in Action or Expected Result',
+        title: 'Отсутствуют обязательные поля',
+        message: 'Заполните поле «Действие» или «Ожидаемый результат»',
       });
       return;
     }
@@ -768,27 +761,27 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
       setDeleteDialogOpen(false);
       setAlert({
         type: 'success',
-        title: 'Success',
-        message: 'Test case deleted successfully',
+        title: 'Успешно',
+        message: 'Тест-кейс успешно удален',
       });
       setTimeout(() => {
         router.push(`/projects/${testCase?.project.id}/testcases`);
       }, 1500);
     } else {
       const data = await response.json();
-      throw new Error(data.error || 'Failed to delete test case');
+      throw new Error(data.error || 'Не удалось удалить тест-кейс');
     }
   };
 
   if (loading) {
-    return <Loader fullScreen text="Loading test case..." />;
+    return <Loader fullScreen text="Загрузка тест-кейса..." />;
   }
 
   if (!testCase) {
     return (
       <div className="min-h-screen p-4 md:p-6 lg:p-8">
         <div className="text-center py-12">
-          <p className="text-gray-400">Test case not found</p>
+          <p className="text-gray-400">Тест-кейс не найден</p>
         </div>
       </div>
     );
@@ -806,13 +799,13 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
+              { label: 'Проекты', href: '/projects' },
               {
                 label: testCase.project.name,
                 href: `/projects/${testCase.project.id}`,
               },
               {
-                label: 'Test Cases',
+                label: 'Тест-кейсы',
                 href: `/projects/${testCase.project.id}/testcases`,
               },
               { label: testCase.title, href: `/projects/${testCase.project.id}/testcases/${testCase.id}` },
@@ -850,20 +843,20 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
         <ActionButtonGroup
           buttons={[
             {
-              label: 'View All Test Cases',
+              label: 'Все тест-кейсы',
               icon: TestTube2,
               onClick: () => router.push(`/projects/${testCase.project.id}/testcases`),
               variant: 'secondary',
             },
             {
-              label: 'View Test Suite',
+              label: 'Открыть набор тестов',
               icon: Folder,
               onClick: () => router.push(`/projects/${testCase.project.id}/testsuites/${testCase.suite?.id}`),
               variant: 'secondary',
               show: !!testCase.suite,
             },
             {
-              label: 'View All Test Suites',
+              label: 'Все наборы тестов',
               icon: Folder,
               onClick: () => router.push(`/projects/${testCase.project.id}/testsuites`),
               variant: 'secondary',
@@ -917,7 +910,6 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
               onNewStepExpectedResultAttachmentsChange={setNewStepExpectedResultAttachments}
             />
 
-            <LinkedDefectsCard testCase={testCase} onRefresh={fetchTestCase} />
 
             <TestCaseHistoryCard projectId={testCase.project.id} testCaseId={testCaseId} />
           </div>

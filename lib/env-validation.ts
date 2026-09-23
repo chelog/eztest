@@ -70,7 +70,7 @@ For production, generate a secure secret:
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10),
     uploadDir: process.env.UPLOAD_DIR || './uploads',
     debug: process.env.DEBUG === 'true',
-    enableAttachments: process.env.ENABLE_ATTACHMENTS === 'true', // Default to false if not set
+    enableAttachments: process.env.ENABLE_ATTACHMENTS !== 'false', // Default to true unless explicitly disabled
     firebaseConfigured,
   };
 }
