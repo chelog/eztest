@@ -218,7 +218,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
         setAlert({
           type: 'error',
           title: 'Не удалось дублировать тест-ран',
-          message: data.error || data.message || 'Не удалось дублировать тест-ран',
+          message: response.status === 404 ? 'Тест-ран не найден' : 'Попробуйте ещё раз',
         });
       }
     } catch (error) {
