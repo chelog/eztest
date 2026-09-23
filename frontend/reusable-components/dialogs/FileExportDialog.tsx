@@ -130,24 +130,24 @@ export function FileExportDialog({
               {/* Module Filter */}
               {modules && modules.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-white/90">Module (optional)</p>
+                  <p className="text-sm font-medium text-white/90">Модуль (необязательно)</p>
                   <Select
                     value={selectedModuleId || '_all'}
                     onValueChange={(val) => setSelectedModuleId(val === '_all' ? '' : val)}
                     disabled={exporting}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="All modules" />
+                      <SelectValue placeholder="Все модули" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_all">All modules</SelectItem>
+                      <SelectItem value="_all">Все модули</SelectItem>
                       {modules.map((m) => (
                         <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-white/50">
-                    Export only test cases from this module, or leave blank to export all.
+                    Экспорт тест-кейсов только из этого модуля; оставьте пустым, чтобы выгрузить все.
                   </p>
                 </div>
               )}
@@ -204,7 +204,7 @@ export function FileExportDialog({
           </div>
         </div>
 
-        <div className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
+        <div data-ui="dialog-footer" className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
           <Button
             type="button"
             variant="glass"

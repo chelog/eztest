@@ -26,7 +26,7 @@ interface FilterDropdownProps {
 export function FilterDropdown({
   value,
   onValueChange,
-  placeholder = 'Filter',
+  placeholder = 'Фильтр',
   options,
   icon = <Filter className="w-4 h-4 mr-2" />,
   className = '',
@@ -37,7 +37,7 @@ export function FilterDropdown({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={cn('min-w-0 overflow-hidden', className)}>
+      <SelectTrigger data-ui="filter-dropdown" className={cn('min-w-0 overflow-hidden', className)}>
         {icon}
         <span className="flex-1 text-left truncate min-w-0 block">{displayValue}</span>
       </SelectTrigger>

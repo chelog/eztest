@@ -20,7 +20,7 @@ export interface StatCardProps extends React.ComponentProps<typeof Card> {
  * ```tsx
  * <StatCard 
  *   icon={<Icon />}
- *   label="Test Cases"
+ *   label="Тест-кейсы"
  *   value={42}
  *   borderColor="border-l-primary/30"
  * />
@@ -44,11 +44,11 @@ export function StatCard({
 
   return (
     <div
-      className={cn("rounded-3xl relative transition-all p-[1px]", className)}
+      className={cn("rounded-3xl relative transition-all p-[1px]", className)} data-ui="frame"
       style={{ background: gradientStyle }}
       {...props}
     >
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+      <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
         <Card 
           variant="glass" 
           className={cn(

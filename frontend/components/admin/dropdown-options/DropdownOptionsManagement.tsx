@@ -80,7 +80,7 @@ export default function DropdownOptionsManagement() {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Admin', href: '/admin' }, 
+              { label: 'Админ', href: '/admin' }, 
               { label: 'Опции выпадающих списков', href: '/admin/dropdown-options' }
             ]}
           />

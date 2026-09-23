@@ -1,0 +1,625 @@
+/*
+ * New UI theme — solid dark surfaces, red accent, condensed type.
+ *
+ * Every rule is scoped to [data-theme="new"] so the classic theme is untouched.
+ * Rules here are intentionally unlayered: unlayered CSS wins over Tailwind's
+ * @layer utilities, which lets this file remap hardcoded utility classes
+ * (bg-white/5, backdrop-blur, …) used across the app without editing each file.
+ *
+ * When the classic theme is removed, the [data-theme="new"] scope can stay
+ * as-is (the attribute is always "new") or be dropped in a later cleanup.
+ */
+
+[data-theme="new"] {
+  /* Surfaces */
+  --nt-bg: #0e0e0f;
+  --nt-surface-1: #151516;   /* page panels, sidebar, table rows */
+  --nt-surface-2: #1b1b1c;   /* cards, stat tiles */
+  --nt-surface-3: #232324;   /* inputs, selects, segmented controls */
+  --nt-surface-4: #2b2b2d;   /* hover */
+  --nt-border: #262628;
+  --nt-border-strong: #353537;
+
+  /* Text */
+  --nt-text: #f2f2f2;
+  --nt-text-2: #b4b4b8;
+  --nt-text-3: #7c7c82;
+
+  /* Accent + status palette */
+  --nt-red: #b8332f;
+  --nt-red-hover: #cc3b36;
+  --nt-red-deep: #5e2221;
+  --nt-red-deep-hover: #742928;
+
+  /* Accent (user-selectable, see [data-accent] below). Default: emerald */
+  --nt-accent: #159a6e;
+  --nt-accent-hover: #1bb07f;
+  --nt-accent-deep: #11382b;
+  --nt-accent-deep-hover: #164a39;
+  --nt-on-accent: #ffffff;
+  --nt-blue: #4a8fe7;
+  --nt-green: #34d399;
+  --nt-amber: #f5a524;
+  --nt-orange: #f0883e;
+  --nt-purple: #a970ff;
+  --nt-pink: #e0506e;
+
+  /* Shape */
+  --nt-radius-sm: 10px;
+  --nt-radius: 14px;
+  --nt-radius-lg: 20px;
+
+  /* Map onto the app-wide tokens */
+  --radius: 0.875rem;
+  --primary: var(--nt-accent);
+  --primary-foreground: var(--nt-on-accent);
+  --accent: var(--nt-amber);
+  --accent-foreground: #111111;
+  --background: var(--nt-bg);
+  --foreground: var(--nt-text);
+  --card: var(--nt-surface-2);
+  --card-foreground: var(--nt-text);
+  --popover: var(--nt-surface-2);
+  --popover-foreground: var(--nt-text);
+  --secondary: var(--nt-surface-3);
+  --secondary-foreground: var(--nt-text);
+  --muted: var(--nt-surface-3);
+  --muted-foreground: var(--nt-text-2);
+  --destructive: #d93b36;
+  --border: var(--nt-border);
+  --input: var(--nt-surface-3);
+  --ring: var(--nt-accent);
+  --chart-1: var(--nt-green);
+  --chart-2: var(--nt-red);
+  --chart-3: var(--nt-blue);
+  --chart-4: var(--nt-amber);
+  --chart-5: var(--nt-purple);
+  --app-bg: none;
+  --item-card-bg: var(--nt-surface-1);
+}
+
+/* Accent palettes (selected in the sidebar, stored in a cookie) */
+[data-theme="new"][data-accent="graphite"] {
+  --nt-accent: #e6e6e6;
+  --nt-accent-hover: #ffffff;
+  --nt-accent-deep: #2b2b2d;
+  --nt-accent-deep-hover: #363638;
+  --nt-on-accent: #111111;
+}
+[data-theme="new"][data-accent="red"] {
+  --nt-accent: #b8332f;
+  --nt-accent-hover: #cc3b36;
+  --nt-accent-deep: #5e2221;
+  --nt-accent-deep-hover: #742928;
+  --nt-on-accent: #ffffff;
+}
+[data-theme="new"][data-accent="blue"] {
+  --nt-accent: #3b7ddd;
+  --nt-accent-hover: #4a8fe7;
+  --nt-accent-deep: #1d3556;
+  --nt-accent-deep-hover: #25426b;
+  --nt-on-accent: #ffffff;
+}
+
+[data-theme="new"] body {
+  background: var(--nt-bg);
+  box-shadow: none;
+  font-family: var(--font-condensed), var(--font-inter), system-ui, sans-serif;
+  letter-spacing: 0.005em;
+}
+
+/* ───────────────────────── Global cleanup of the glass look ───────────────────────── */
+
+/* No frosted glass: solid surfaces only */
+[data-theme="new"] [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Gradient frames around cards → plain surface with a hairline */
+[data-theme="new"] [data-ui="frame"] {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: var(--nt-radius) !important;
+}
+[data-theme="new"] [data-ui="frame-inner"] {
+  background-color: var(--nt-surface-2) !important;
+  border-radius: var(--nt-radius) !important;
+  transition: background-color 150ms ease;
+}
+[data-theme="new"] [data-ui="frame"]:hover > [data-ui="frame-inner"] {
+  background-color: #202021 !important;
+}
+[data-theme="new"] [data-ui="frame"] [data-slot="card"],
+[data-theme="new"] [data-ui="frame"] .rounded-3xl {
+  border-radius: var(--nt-radius) !important;
+}
+
+/* Big pill radii → the theme's softer 14px radius (avatars/dots stay round) */
+[data-theme="new"] .rounded-3xl,
+[data-theme="new"] .rounded-2xl {
+  border-radius: var(--nt-radius);
+}
+
+/* Translucent white panels → solid surfaces */
+[data-theme="new"] [class~="bg-white/5"],
+[data-theme="new"] [class~="bg-white/[0.03]"],
+[data-theme="new"] [class~="bg-white/[0.04]"],
+[data-theme="new"] [class~="bg-white/[0.05]"] {
+  background-color: var(--nt-surface-1);
+}
+[data-theme="new"] [class~="bg-white/10"],
+[data-theme="new"] [class~="bg-white/[0.08]"] {
+  background-color: var(--nt-surface-3);
+}
+[data-theme="new"] [class~="hover:bg-white/5"]:hover,
+[data-theme="new"] [class~="hover:bg-white/10"]:hover,
+[data-theme="new"] [class~="hover:bg-white/[0.05]"]:hover,
+[data-theme="new"] [class~="hover:bg-white/[0.08]"]:hover {
+  background-color: var(--nt-surface-4);
+}
+[data-theme="new"] [class~="border-white/10"],
+[data-theme="new"] [class~="border-white/15"],
+[data-theme="new"] [class~="border-white/20"],
+[data-theme="new"] [class~="border-white/[0.08]"] {
+  border-color: var(--nt-border);
+}
+[data-theme="new"] [class*="shadow-black"],
+[data-theme="new"] [class*="shadow-[0_10px"] {
+  box-shadow: none !important;
+}
+
+/* Hardcoded near-black panels of the classic theme */
+[data-theme="new"] [class~="bg-[#0f0f12]"],
+[data-theme="new"] [class~="bg-[#0a0a0c]/95"],
+[data-theme="new"] [class~="bg-[#0f0f12]/70"],
+[data-theme="new"] [class~="bg-[#0f0f12]/80"] {
+  background-color: var(--nt-surface-2);
+}
+
+/* ───────────────────────── Typography ───────────────────────── */
+
+[data-theme="new"] h1 {
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+[data-theme="new"] h2,
+[data-theme="new"] h3 {
+  font-weight: 700;
+}
+[data-theme="new"] [data-slot="card-title"] {
+  font-weight: 700;
+}
+[data-theme="new"] [data-ui="section-title"] {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* ───────────────────────── Cards ───────────────────────── */
+
+[data-theme="new"] [data-slot="card"] {
+  background: var(--nt-surface-2);
+  border-color: transparent;
+  border-radius: var(--nt-radius);
+  box-shadow: none;
+}
+[data-theme="new"] [data-slot="card"]::before {
+  display: none;
+}
+[data-theme="new"] [data-ui="frame"] [data-slot="card"] {
+  background: transparent;
+}
+
+/* ───────────────────────── Inputs ───────────────────────── */
+
+[data-theme="new"] [data-slot="input"],
+[data-theme="new"] [data-slot="textarea"],
+[data-theme="new"] [data-slot="select-trigger"],
+[data-theme="new"] input[type="text"],
+[data-theme="new"] input[type="email"],
+[data-theme="new"] input[type="password"],
+[data-theme="new"] input[type="search"],
+[data-theme="new"] input[type="number"],
+[data-theme="new"] input[type="date"],
+[data-theme="new"] select,
+[data-theme="new"] textarea {
+  background-color: var(--nt-surface-3) !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  color: var(--nt-text) !important;
+  box-shadow: none !important;
+}
+[data-theme="new"] [data-slot="select-trigger"] svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  opacity: 0.55;
+}
+[data-theme="new"] [data-slot="input"]:focus-visible,
+[data-theme="new"] [data-slot="textarea"]:focus-visible,
+[data-theme="new"] [data-slot="select-trigger"]:focus-visible,
+[data-theme="new"] input:focus-visible,
+[data-theme="new"] textarea:focus-visible {
+  border-color: var(--nt-border-strong) !important;
+  outline: none;
+  --tw-ring-shadow: 0 0 0 0 transparent;
+}
+[data-theme="new"] input::placeholder,
+[data-theme="new"] textarea::placeholder {
+  color: var(--nt-text-3) !important;
+}
+
+/* ───────────────────────── Popovers / menus ───────────────────────── */
+
+[data-theme="new"] [data-slot="select-content"],
+[data-theme="new"] [data-slot="dropdown-menu-content"],
+[data-theme="new"] [data-slot="dropdown-menu-sub-content"],
+[data-theme="new"] [data-slot="tooltip-content"],
+[data-theme="new"] [data-radix-popper-content-wrapper] > [role="listbox"],
+[data-theme="new"] [data-radix-popper-content-wrapper] > [role="menu"] {
+  background: var(--nt-surface-2) !important;
+  border: 1px solid var(--nt-border-strong) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="new"] [data-slot="select-item"],
+[data-theme="new"] [data-slot="dropdown-menu-item"] {
+  border-radius: 8px;
+}
+[data-theme="new"] [data-slot="select-item"][data-highlighted],
+[data-theme="new"] [data-slot="dropdown-menu-item"][data-highlighted] {
+  background: var(--nt-surface-4) !important;
+  color: var(--nt-text) !important;
+}
+
+/* ───────────────────────── Badges ───────────────────────── */
+
+/* Calm status chips: no outline, faint tint of the text color, muted saturation */
+[data-theme="new"] [data-slot="badge"] {
+  border-color: transparent !important;
+  background: color-mix(in srgb, currentColor 11%, transparent) !important;
+  box-shadow: none !important;
+  border-radius: 7px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  filter: saturate(0.6) brightness(1.05);
+}
+
+/* ───────────────────────── Tabs (segmented control) ───────────────────────── */
+
+[data-theme="new"] [data-slot="tabs-list"] {
+  background: var(--nt-surface-2) !important;
+  border: none !important;
+  border-radius: var(--nt-radius) !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+}
+[data-theme="new"] [data-slot="tabs-trigger"] {
+  border-radius: 11px !important;
+  color: var(--nt-text-2) !important;
+  font-weight: 600;
+  border: none !important;
+  box-shadow: none !important;
+}
+[data-theme="new"] [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--nt-accent) !important;
+  color: var(--nt-on-accent) !important;
+}
+
+/* ───────────────────────── Tables ───────────────────────── */
+
+[data-theme="new"] [data-slot="table-container"] {
+  border-radius: var(--nt-radius);
+}
+[data-theme="new"] [data-slot="table-header"] [data-slot="table-row"] {
+  background: var(--nt-surface-1);
+}
+[data-theme="new"] [data-slot="table-head"] {
+  color: var(--nt-text-3);
+  font-weight: 600;
+}
+[data-theme="new"] [data-slot="table-body"] [data-slot="table-row"] {
+  border-color: var(--nt-bg);
+}
+[data-theme="new"] [data-slot="table-body"] [data-slot="table-row"]:hover {
+  background: var(--nt-surface-2);
+}
+
+/* ───────────────────────── Dialogs ───────────────────────── */
+
+[data-theme="new"] [data-slot="dialog-overlay"] {
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+[data-theme="new"] [data-slot="dialog-content"] {
+  background: var(--nt-surface-1) !important;
+  border: 1px solid var(--nt-border-strong) !important;
+  border-radius: var(--nt-radius-lg) !important;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.85) !important;
+  overflow-x: hidden;
+}
+[data-theme="new"] [data-slot="dialog-title"] {
+  color: var(--nt-text) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+[data-theme="new"] [data-slot="dialog-description"] {
+  color: var(--nt-text-2) !important;
+}
+[data-theme="new"] [data-slot="dialog-content"] > [data-slot="dialog-close"] {
+  top: 1.25rem !important;
+  right: 1.25rem !important;
+  opacity: 0.5;
+}
+[data-theme="new"] [data-slot="dialog-content"] > [data-slot="dialog-close"] svg {
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+}
+
+/* ───────────────────────── Misc ───────────────────────── */
+
+[data-theme="new"] [data-slot="switch"][data-state="checked"] {
+  background: var(--nt-accent) !important;
+}
+[data-theme="new"] [data-slot="separator"] {
+  background: var(--nt-border) !important;
+}
+[data-theme="new"] ::selection {
+  background: color-mix(in srgb, var(--nt-accent) 45%, transparent);
+  color: #fff;
+}
+[data-theme="new"] * {
+  scrollbar-color: #333 transparent;
+}
+[data-theme="new"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+[data-theme="new"] ::-webkit-scrollbar-thumb {
+  background: #2e2e30;
+  border-radius: 10px;
+  border: 3px solid var(--nt-bg);
+}
+[data-theme="new"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ───────────────────────── Page headers ───────────────────────── */
+
+[data-theme="new"] [data-ui="app-main"] h1 {
+  line-height: 1.15;
+}
+[data-theme="new"] [data-ui="nt-topbar"] a:hover {
+  color: #fff;
+}
+
+/*
+ * Radius overrides that must beat `!important` utilities (e.g. `.rounded-full`).
+ * For !important declarations an earlier cascade layer wins, and unlayered CSS loses
+ * to any layer — so these live in `base`, which precedes `utilities`.
+ */
+@layer base {
+  [data-theme="new"] [data-slot="input"],
+  [data-theme="new"] [data-slot="textarea"],
+  [data-theme="new"] [data-slot="select-trigger"],
+  [data-theme="new"] input[type="text"],
+  [data-theme="new"] input[type="email"],
+  [data-theme="new"] input[type="password"],
+  [data-theme="new"] input[type="search"],
+  [data-theme="new"] input[type="number"],
+  [data-theme="new"] input[type="date"],
+  [data-theme="new"] select,
+  [data-theme="new"] textarea {
+    border-radius: 12px !important;
+  }
+  [data-theme="new"] [data-slot="input"],
+  [data-theme="new"] [data-slot="select-trigger"] {
+    height: 2.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  /* Toolbar search + filters: compact, and filters keep a fixed width so picking a value does not shift the row */
+  [data-theme="new"] [data-ui="filter-dropdown"],
+  [data-theme="new"] [data-ui="search-input"] [data-slot="input"] {
+    height: 2.25rem !important;
+    font-size: 0.8125rem !important;
+    border-radius: 10px !important;
+  }
+  [data-theme="new"] [data-ui="filter-dropdown"] {
+    width: 11.5rem !important;
+    flex: 0 0 auto !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.625rem !important;
+  }
+  [data-theme="new"] [data-slot="tabs-trigger"] {
+    border-radius: 11px !important;
+  }
+  [data-theme="new"] [data-slot="badge"] {
+    border-radius: 7px !important;
+  }
+}
+
+/* Page title: confident but not shouting */
+[data-theme="new"] [data-ui="app-main"] h1 {
+  font-size: clamp(1.6rem, 1.9vw, 2rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Cards: no colored glow, no red title on hover */
+[data-theme="new"] [class*="hover:shadow-primary"]:hover,
+[data-theme="new"] [class*="hover:shadow-xl"]:hover {
+  box-shadow: none !important;
+}
+[data-theme="new"] .group:hover [class~="group-hover:text-primary"] {
+  color: inherit !important;
+}
+
+/* Round outlined icon buttons (view / edit / delete) → quiet square icon buttons */
+[data-theme="new"] [data-slot="button"][class*="rounded-full"][class*="border-"] {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--nt-text-3) !important;
+}
+[data-theme="new"] [data-slot="button"][class*="rounded-full"][class*="border-"]:hover {
+  background: var(--nt-surface-3) !important;
+  color: var(--nt-text) !important;
+}
+[data-theme="new"] [data-slot="button"][class*="rounded-full"][class*="border-red"]:hover {
+  color: #f87171 !important;
+}
+@layer base {
+  [data-theme="new"] [data-slot="button"][class*="rounded-full"] {
+    border-radius: 10px !important;
+  }
+}
+
+/* Gradient initials avatars → neutral */
+[data-theme="new"] [class*="from-blue-500"][class*="to-purple-500"] {
+  background: var(--nt-surface-3) !important;
+  color: var(--nt-text) !important;
+}
+
+
+/* Dialog spacing: plain dialogs get padding; BaseDialog (p-0) manages its own */
+[data-theme="new"] [data-slot="dialog-content"]:not([class~="p-0"]) {
+  padding: 1.5rem !important;
+}
+[data-theme="new"] [data-ui="dialog-footer"] {
+  background: transparent !important;
+  border-top: none !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+/* Dialog actions fill the footer evenly (Cancel | Primary) */
+[data-theme="new"] [data-ui="dialog-footer"],
+[data-theme="new"] [data-slot="dialog-footer"] {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0.625rem !important;
+}
+[data-theme="new"] [data-ui="dialog-footer"] > *,
+[data-theme="new"] [data-slot="dialog-footer"] > * {
+  flex: 1 1 0 !important;
+  min-width: 0;
+}
+[data-theme="new"] [data-ui="dialog-footer"] button,
+[data-theme="new"] [data-slot="dialog-footer"] button {
+  width: 100% !important;
+  height: 2.75rem !important;
+}
+[data-theme="new"] :is([data-ui="dialog-footer"], [data-slot="dialog-footer"]) [data-slot="button"]:not([class*="bg-[var(--nt-accent"]) {
+  background: var(--nt-surface-3);
+}
+[data-theme="new"] :is([data-ui="dialog-footer"], [data-slot="dialog-footer"]) [data-slot="button"]:not([class*="bg-[var(--nt-accent"]):hover {
+  background: var(--nt-surface-4);
+}
+
+/* ───────────────────────── Page layout ─────────────────────────
+ * Content spans the whole main area with the same 32px gutters as the top bar,
+ * instead of floating in a centered max-width column on wide screens. */
+[data-theme="new"] [data-ui="app-main"] .mx-auto:is(.max-w-7xl, .max-w-screen-xl, .max-w-screen-2xl) {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+[data-theme="new"] [data-ui="app-main"] .mx-auto:is(.max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl) {
+  margin-left: 0 !important;
+}
+[data-theme="new"] [data-ui="app-main"] > * > .mx-auto,
+[data-theme="new"] [data-ui="app-main"] > .mx-auto {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+/* First block under the top bar sits close to it */
+[data-theme="new"] [data-ui="nt-topbar"] + div,
+[data-theme="new"] [data-ui="nt-topbar"] + div > .mx-auto:first-child {
+  padding-top: 0.75rem !important;
+}
+[data-theme="new"] [data-ui="nt-topbar"] > div > div {
+  min-height: 56px !important;
+}
+
+/* Form dialogs: compact width instead of 750px */
+[data-theme="new"] [data-slot="dialog-content"][class*="max-w-[750px]"],
+[data-theme="new"] [data-slot="dialog-content"][class*="max-w-2xl"],
+[data-theme="new"] [data-slot="dialog-content"][class*="max-w-lg"] {
+  max-width: min(520px, calc(100vw - 2rem)) !important;
+}
+
+/* Auth screen inputs live inside their own styled field */
+[data-theme="new"] label > input[data-ui="nt-auth-input"],
+[data-theme="new"] label > input[data-ui="nt-auth-input"]:focus,
+[data-theme="new"] label > input[data-ui="nt-auth-input"]:focus-visible {
+  background: transparent !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+@layer base {
+  [data-theme="new"] label > input[data-ui="nt-auth-input"] {
+    border-radius: 0 !important;
+  }
+}
+
+/* Hints / inline alerts: quiet surfaces instead of colored boxes */
+[data-theme="new"] [data-ui="info-banner"] {
+  display: none !important;
+}
+[data-theme="new"] [data-slot="alert"] {
+  background: var(--nt-surface-2) !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+/* Plain dialogs (DialogHeader / body / DialogFooter): consistent vertical rhythm */
+[data-theme="new"] [data-slot="dialog-content"] > [data-slot="dialog-header"] {
+  margin-bottom: 1.25rem;
+  padding-right: 2rem; /* keep text clear of the close button */
+}
+[data-theme="new"] [data-slot="dialog-content"] > [data-slot="dialog-footer"] {
+  margin-top: 1.25rem;
+}
+[data-theme="new"] [data-slot="dialog-description"] {
+  line-height: 1.45;
+}
+/* Bordered boxes inside dialogs → soft inset surface */
+[data-theme="new"] [data-slot="dialog-content"] [class~="rounded-lg"][class~="border"][class~="border-white/10"] {
+  border-color: transparent !important;
+  background: var(--nt-bg);
+  border-radius: 12px;
+}
+
+/* Row hover: neutral surface instead of the amber accent tint */
+[data-theme="new"] [class*="hover:bg-accent"]:hover {
+  background-color: var(--nt-surface-2) !important;
+}
+
+/* Status choice chips in the test run side panel: keep their own tints (outline variant would override) */
+[data-theme="new"] [data-ui="status-choice"] {
+  justify-content: flex-start;
+  height: 2.25rem;
+}
+
+/* Active (opened) table row: neutral surface + thin accent bar instead of a heavy tinted fill */
+[data-theme="new"] [class~="bg-primary/20"][class~="ring-primary/40"] {
+  background: var(--nt-surface-3) !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  box-shadow: inset 3px 0 0 var(--nt-accent) !important;
+}
+
+/* ───────────────────────── Icons ─────────────────────────
+ * One lucide set everywhere; slightly thinner strokes read cleaner on the dark surfaces.
+ * Only icons left at the default width are touched — explicit strokeWidth props win. */
+[data-theme="new"] svg.lucide[stroke-width="2"] {
+  stroke-width: 1.75;
+}
+/* Tinted "icon chip" wrappers (a colored /10 square or circle around a single icon) → neutral chip */
+[data-theme="new"] :is(div, span)[class*="-500/10"][class*="rounded"]:has(> svg.lucide:only-child):not([class*="border"]) {
+  background-color: var(--nt-surface-3) !important;
+}

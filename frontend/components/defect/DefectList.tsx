@@ -399,7 +399,6 @@ export default function DefectList({ projectId }: DefectListProps) {
         title: 'Успешно',
         message: `${selectedDefects.size} дефект(ов) успешно удалено`,
       });
-      setTimeout(() => setAlert(null), 5000);
       
       setSelectedDefects(new Set());
       fetchDefects();
@@ -409,7 +408,6 @@ export default function DefectList({ projectId }: DefectListProps) {
         title: 'Ошибка',
         message: 'Не удалось удалить часть дефектов',
       });
-      setTimeout(() => setAlert(null), 5000);
     }
   };
 
@@ -425,10 +423,9 @@ export default function DefectList({ projectId }: DefectListProps) {
           title: 'Успешно',
           message: 'Дефект успешно удален',
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchDefects();
       } else {
-        throw new Error('Failed to delete');
+        throw new Error('Не удалось удалить');
       }
     } catch {
       setAlert({
@@ -436,7 +433,6 @@ export default function DefectList({ projectId }: DefectListProps) {
         title: 'Ошибка',
         message: 'Не удалось удалить дефект',
       });
-      setTimeout(() => setAlert(null), 5000);
     } finally {
       setDefectToDelete(null);
     }
@@ -449,7 +445,6 @@ export default function DefectList({ projectId }: DefectListProps) {
       title: 'Скоро',
       message: 'Массовое изменение статуса в разработке',
     });
-    setTimeout(() => setAlert(null), 3000);
   };
 
   const handleBulkAssign = () => {
@@ -459,7 +454,6 @@ export default function DefectList({ projectId }: DefectListProps) {
       title: 'Скоро',
       message: 'Массовое назначение в разработке',
     });
-    setTimeout(() => setAlert(null), 3000);
   };
 
 
@@ -636,7 +630,6 @@ export default function DefectList({ projectId }: DefectListProps) {
             title: 'Успешно',
             message: `Дефект ${defect.defectId} успешно создан`,
           });
-          setTimeout(() => setAlert(null), 5000);
           fetchDefects();
         }}
       />

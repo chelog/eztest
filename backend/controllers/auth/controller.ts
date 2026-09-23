@@ -18,7 +18,7 @@ export class AuthController {
     const validationResult = registerSchema.safeParse(body);
     if (!validationResult.success) {
       throw new ValidationException(
-        "Validation failed",
+        validationResult.error.issues[0]?.message ?? "Проверьте введённые данные",
         validationResult.error.issues,
       );
     }
@@ -47,7 +47,7 @@ export class AuthController {
     const validationResult = changePasswordSchema.safeParse(body);
     if (!validationResult.success) {
       throw new ValidationException(
-        "Validation failed",
+        validationResult.error.issues[0]?.message ?? "Проверьте введённые данные",
         validationResult.error.issues,
       );
     }
@@ -89,7 +89,7 @@ export class AuthController {
     const validationResult = forgotPasswordSchema.safeParse(body);
     if (!validationResult.success) {
       throw new ValidationException(
-        "Validation failed",
+        validationResult.error.issues[0]?.message ?? "Проверьте введённые данные",
         validationResult.error.issues,
       );
     }
@@ -141,7 +141,7 @@ export class AuthController {
     const validationResult = resetPasswordSchema.safeParse(body);
     if (!validationResult.success) {
       throw new ValidationException(
-        "Validation failed",
+        validationResult.error.issues[0]?.message ?? "Проверьте введённые данные",
         validationResult.error.issues,
       );
     }

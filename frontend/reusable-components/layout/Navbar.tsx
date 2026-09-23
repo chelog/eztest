@@ -6,6 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useNavbarActions, type ActionButtonConfig } from "@/hooks/useNavbarActions";
+import { useIsNewTheme } from "@/frontend/context/UiThemeContext";
 
 export type NavItem = { label: string; href: string };
 
@@ -39,6 +40,7 @@ export function Navbar({
 }: NavbarProps) {
   const pathname = usePathname();
   const { renderActionButtons } = useNavbarActions();
+  const isNewTheme = useIsNewTheme();
 
   // Convert config array to JSX if needed
   const renderedActions = React.useMemo(() => {
@@ -46,12 +48,13 @@ export function Navbar({
     
     // If actions is an array of configs, render them
     if (Array.isArray(actions)) {
-      return renderActionButtons(actions);
+      // New theme: sign out lives in the sidebar profile block
+      return renderActionButtons(isNewTheme && variant === 'app' ? actions.filter((a) => a.type !== 'signout') : actions);
     }
     
     // Otherwise, it's already JSX, return as-is
     return actions;
-  }, [actions, renderActionButtons]);
+  }, [actions, renderActionButtons, isNewTheme, variant]);
 
   // Check if we have only a sign-out button
   const hasOnlySignOutButton = hideNavbarContainer || (
@@ -173,6 +176,51 @@ export function Navbar({
               ) : (
                 <div className="absolute right-0 z-20 flex items-center gap-1 sm:gap-2">{renderedActions}</div>
               )
+            ) : null}
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // App variant, new theme: flat top bar — breadcrumbs left, actions right
+  if (isNewTheme && variant === 'app') {
+    return (
+      <header data-ui="nt-topbar" className={cn("sticky top-0 z-30 bg-[var(--nt-bg)]", className)} {...props}>
+        <div className={cn("w-full px-4 sm:px-6 lg:px-8", containerClassName)}>
+          <div className="flex items-center justify-between gap-3 w-full min-h-[64px] py-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {brandLabel && (
+                <Link href={brandHref} className="shrink-0 text-white">
+                  {brandLabel}
+                </Link>
+              )}
+              {breadcrumbs && <div className="min-w-0 text-[var(--nt-text-2)]">{breadcrumbs}</div>}
+            </div>
+            {(items && items.length > 0) || renderedActions ? (
+              <div className="ml-auto flex items-center gap-2">
+                {items && items.length > 0 ? (
+                  <nav className="hidden md:flex items-center gap-1 p-1 rounded-[var(--nt-radius)] bg-[var(--nt-surface-2)]">
+                    {items.map((it) => {
+                      const active = pathname === it.href;
+                      return (
+                        <Link
+                          key={it.href}
+                          href={it.href}
+                          className={cn(
+                            "px-4 h-9 inline-flex items-center text-sm font-semibold rounded-[11px] transition-colors",
+                            active ? "bg-[var(--nt-accent)] text-[var(--nt-on-accent)]" : "text-[var(--nt-text-2)] hover:text-white"
+                          )}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          {it.label}
+                        </Link>
+                      );
+                    })}
+                  </nav>
+                ) : null}
+                {renderedActions ? <div className="hidden sm:flex items-center gap-2">{renderedActions}</div> : null}
+              </div>
             ) : null}
           </div>
         </div>

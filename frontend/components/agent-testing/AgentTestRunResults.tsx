@@ -52,50 +52,50 @@ interface Props {
 const AQS_DIMENSIONS = [
   {
     key: "aqsCorrectness" as const,
-    label: "Correctness",
+    label: "Корректность",
     icon: Target,
     weight: "40%",
-    description: "Rubric pass rate",
+    description: "Доля пройденных критериев",
     color: "text-green-400",
     bg: "bg-green-500/10",
     border: "border-green-500/20",
   },
   {
     key: "aqsToolUse" as const,
-    label: "Tool Use",
+    label: "Вызовы инструментов",
     icon: Zap,
     weight: "20%",
-    description: "Correct tool-call behaviour",
+    description: "Корректные вызовы инструментов",
     color: "text-blue-400",
     bg: "bg-blue-500/10",
     border: "border-blue-500/20",
   },
   {
     key: "aqsLatency" as const,
-    label: "Latency",
+    label: "Задержка",
     icon: Gauge,
     weight: "15%",
-    description: "Response speed score",
+    description: "Оценка скорости ответа",
     color: "text-yellow-400",
     bg: "bg-yellow-500/10",
     border: "border-yellow-500/20",
   },
   {
     key: "aqsErrorRate" as const,
-    label: "Reliability",
+    label: "Надёжность",
     icon: Activity,
     weight: "15%",
-    description: "Inverted HTTP error rate",
+    description: "Обратная доля HTTP-ошибок",
     color: "text-orange-400",
     bg: "bg-orange-500/10",
     border: "border-orange-500/20",
   },
   {
     key: "aqsTraceCoverage" as const,
-    label: "Trace Coverage",
+    label: "Покрытие трассировкой",
     icon: Eye,
     weight: "10%",
-    description: "Langfuse trace availability",
+    description: "Наличие трассировки Langfuse",
     color: "text-purple-400",
     bg: "bg-purple-500/10",
     border: "border-purple-500/20",
@@ -179,7 +179,7 @@ function AqsGauge({ score }: { score: number }) {
         </div>
       </div>
       <span className={`text-sm font-semibold ${color}`}>{label}</span>
-      <span className="text-xs text-white/40">Agent Quality Score</span>
+      <span className="text-xs text-white/40">Оценка качества агента</span>
     </div>
   );
 }
@@ -224,7 +224,7 @@ function RegressionBadge({ delta }: { delta: number | null }) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-white/30">
         <Minus className="w-3 h-3" />
-        First run
+        Первый запуск
       </span>
     );
   }
@@ -246,7 +246,7 @@ function RegressionBadge({ delta }: { delta: number | null }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs text-white/40">
       <Minus className="w-3 h-3" />
-      No change vs last run
+      Без изменений с прошлого запуска
     </span>
   );
 }
@@ -335,7 +335,7 @@ function TraceDrawer({
           {/* Rubric Scores */}
           <section>
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
-              Rubric Evaluation
+              Оценка по критериям
             </h3>
             {scores.length === 0 ? (
               <p className="text-xs text-white/30 italic">
@@ -374,7 +374,7 @@ function TraceDrawer({
           {/* Input */}
           <section>
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-              Input
+              Ввод
             </h3>
             <pre className="text-xs text-white/70 bg-white/5 rounded-lg px-3 py-2.5 font-mono whitespace-pre-wrap">
               {result.testCase.input}
@@ -385,7 +385,7 @@ function TraceDrawer({
           {result.agentResponse && (
             <section>
               <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-                Agent Response
+                Ответ агента
               </h3>
               <pre className="text-xs text-white/70 bg-white/5 rounded-lg px-3 py-2.5 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
                 {result.agentResponse}
@@ -397,7 +397,7 @@ function TraceDrawer({
           {result.errorMessage && (
             <section>
               <h3 className="text-xs font-semibold text-red-400/60 uppercase tracking-wider mb-2">
-                Error
+                Ошибка
               </h3>
               <p className="text-xs text-red-300 bg-red-500/10 rounded-lg px-3 py-2.5">
                 {result.errorMessage}
@@ -435,13 +435,13 @@ function TraceDrawer({
                     </p>
                     <div className="space-y-1">
                       <div>
-                        <span className="text-xs text-white/30">Input: </span>
+                        <span className="text-xs text-white/30">Ввод: </span>
                         <span className="text-xs text-white/60 font-mono">
                           {JSON.stringify(t.input ?? {}).slice(0, 300)}
                         </span>
                       </div>
                       <div>
-                        <span className="text-xs text-white/30">Output: </span>
+                        <span className="text-xs text-white/30">Вывод: </span>
                         <span className="text-xs text-white/60 font-mono">
                           {JSON.stringify(t.output ?? {}).slice(0, 300)}
                         </span>
@@ -456,7 +456,7 @@ function TraceDrawer({
               </p>
             ) : (
               <p className="text-xs text-white/30 italic">
-                No trace available for this result.
+                Для этого результата нет трассировки.
               </p>
             )}
           </section>
@@ -464,7 +464,7 @@ function TraceDrawer({
           {/* Expected Behavior */}
           <section>
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-              Expected Behavior
+              Ожидаемое поведение
             </h3>
             <p className="text-xs text-white/60">
               {result.testCase.expectedBehavior}
@@ -474,7 +474,7 @@ function TraceDrawer({
           {/* Session ID */}
           <section>
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">
-              Session ID
+              ID сеанса
             </h3>
             <p className="text-xs text-white/30 font-mono">
               {result.sessionId}
@@ -514,14 +514,14 @@ export default function AgentTestRunResults({ runId }: Props) {
   const fetchRun = useCallback(async () => {
     try {
       const res = await fetch(`/api/agent-test-runs/${runId}`);
-      if (!res.ok) throw new Error("Failed to load run");
+      if (!res.ok) throw new Error("Не удалось загрузить запуск");
       const data = await res.json();
       setRun(data.data as AgentTestRunState);
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to load test run.",
+        title: "Ошибка",
+        message: "Не удалось загрузить тест-ран.",
       });
     } finally {
       setLoading(false);
@@ -642,7 +642,7 @@ export default function AgentTestRunResults({ runId }: Props) {
       const res = await fetch(
         `/api/agent-test-runs/${runId}/report?format=pdf`,
       );
-      if (!res.ok) throw new Error("PDF generation failed");
+      if (!res.ok) throw new Error("Не удалось сформировать PDF");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -653,8 +653,8 @@ export default function AgentTestRunResults({ runId }: Props) {
     } catch {
       setAlert({
         type: "error",
-        title: "PDF Error",
-        message: "PDF download failed. Try JSON or CSV instead.",
+        title: "Ошибка PDF",
+        message: "Не удалось скачать PDF. Попробуйте JSON или CSV.",
       });
     } finally {
       setDownloading(null);
@@ -667,14 +667,14 @@ export default function AgentTestRunResults({ runId }: Props) {
       await navigator.clipboard.writeText(window.location.href);
       setAlert({
         type: "success",
-        title: "Copied",
-        message: "Share link copied to clipboard.",
+        title: "Скопировано",
+        message: "Ссылка скопирована.",
       });
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Could not copy link.",
+        title: "Ошибка",
+        message: "Не удалось скопировать ссылку.",
       });
     } finally {
       setTimeout(() => setCopying(false), 1500);
@@ -687,18 +687,18 @@ export default function AgentTestRunResults({ runId }: Props) {
       const res = await fetch(`/api/agent-test-runs/${runId}/aqs`, {
         method: "POST",
       });
-      if (!res.ok) throw new Error("AQS recompute failed");
+      if (!res.ok) throw new Error("Не удалось пересчитать оценку");
       await fetchRun();
       setAlert({
         type: "success",
-        title: "AQS Updated",
-        message: "Agent Quality Score recomputed.",
+        title: "Оценка обновлена",
+        message: "Оценка качества агента пересчитана.",
       });
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to recompute AQS.",
+        title: "Ошибка",
+        message: "Не удалось пересчитать оценку качества.",
       });
     } finally {
       setRecomputingAqs(false);
@@ -708,7 +708,7 @@ export default function AgentTestRunResults({ runId }: Props) {
   // ── Render ──────────────────────────────────────────────────────────────
 
   if (status === "loading" || loading) {
-    return <Loader fullScreen text="Loading results..." />;
+    return <Loader fullScreen text="Загрузка результатов..." />;
   }
 
   if (!run) {
@@ -719,21 +719,21 @@ export default function AgentTestRunResults({ runId }: Props) {
           items={[]}
           breadcrumbs={
             <span className="flex items-center gap-1 text-sm text-white/50">
-              <span>Agent Testing</span>
+              <span>Тестирование агентов</span>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white/90 font-medium">Results</span>
+              <span className="text-white/90 font-medium">Результаты</span>
             </span>
           }
           actions={[{ type: "signout" as const, showConfirmation: true }]}
         />
         <div className="flex flex-col items-center justify-center h-96 gap-4">
           <AlertTriangle className="w-10 h-10 text-yellow-400" />
-          <p className="text-white/60">Test run not found.</p>
+          <p className="text-white/60">Тест-ран не найден.</p>
           <Link
             href="/agent-testing/setup"
             className="cursor-pointer text-sm text-blue-400 hover:underline"
           >
-            Back to Setup
+            К настройке
           </Link>
         </div>
       </div>
@@ -754,7 +754,7 @@ export default function AgentTestRunResults({ runId }: Props) {
               href="/agent-testing/setup"
               className="cursor-pointer hover:text-white/80 transition-colors"
             >
-              Agent Testing
+              Тестирование агентов
             </Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-white/90 font-medium">
@@ -800,7 +800,7 @@ export default function AgentTestRunResults({ runId }: Props) {
                 )}
                 {run.status === "completed" && (
                   <span className="text-xs px-2 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                    Completed
+                    Завершён
                   </span>
                 )}
               </div>
@@ -888,19 +888,19 @@ export default function AgentTestRunResults({ runId }: Props) {
                     <RotateCcw
                       className={`w-3 h-3 ${recomputingAqs ? "animate-spin" : ""}`}
                     />
-                    Recompute AQS
+                    Пересчитать оценку
                   </button>
                 </>
               ) : isRunning ? (
                 <div className="flex flex-col items-center gap-3 py-4">
                   <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
                   <p className="text-sm text-white/40">
-                    AQS computed after run completes
+                    Оценка считается после завершения запуска
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 py-4">
-                  <p className="text-sm text-white/40">AQS not yet computed</p>
+                  <p className="text-sm text-white/40">Оценка ещё не посчитана</p>
                   <button
                     onClick={handleRecomputeAqs}
                     disabled={recomputingAqs}
@@ -911,7 +911,7 @@ export default function AgentTestRunResults({ runId }: Props) {
                     ) : (
                       <Activity className="w-3 h-3" />
                     )}
-                    Compute AQS
+                    Посчитать оценку
                   </button>
                 </div>
               )}
@@ -919,7 +919,7 @@ export default function AgentTestRunResults({ runId }: Props) {
 
             {/* Dimension breakdown */}
             <DetailCard
-              title="Score Breakdown"
+              title="Детали оценки"
               contentClassName="space-y-4"
               className="lg:col-span-2"
             >
@@ -939,7 +939,7 @@ export default function AgentTestRunResults({ runId }: Props) {
               <p className="text-2xl font-bold text-white">
                 {allResults.length}
               </p>
-              <p className="text-xs text-white/40 mt-0.5">Total Tests</p>
+              <p className="text-xs text-white/40 mt-0.5">Всего тестов</p>
             </DetailCard>
             <DetailCard contentClassName="text-center">
               <p
@@ -947,21 +947,21 @@ export default function AgentTestRunResults({ runId }: Props) {
               >
                 {overallPassRate}%
               </p>
-              <p className="text-xs text-white/40 mt-0.5">Criteria Pass Rate</p>
+              <p className="text-xs text-white/40 mt-0.5">Доля пройденных критериев</p>
             </DetailCard>
             <DetailCard contentClassName="text-center">
               <p className="text-2xl font-bold text-green-400">{totalPass}</p>
-              <p className="text-xs text-white/40 mt-0.5">Criteria Passed</p>
+              <p className="text-xs text-white/40 mt-0.5">Критериев пройдено</p>
             </DetailCard>
             <DetailCard contentClassName="text-center">
               <p className="text-2xl font-bold text-red-400">{totalFail}</p>
-              <p className="text-xs text-white/40 mt-0.5">Criteria Failed</p>
+              <p className="text-xs text-white/40 mt-0.5">Критериев провалено</p>
             </DetailCard>
           </div>
 
           {/* ── Results table ── */}
           <DetailCard
-            title="Test Results"
+            title="Результаты тестов"
             contentClassName="space-y-3"
             headerAction={
               <div className="flex items-center gap-2">
@@ -971,7 +971,7 @@ export default function AgentTestRunResults({ runId }: Props) {
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="cursor-pointer text-xs bg-white/5 text-white/60 border border-white/10 rounded-lg px-2 py-1.5 focus:outline-none focus:border-white/30"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all">Все категории</option>
                   {categories.map((c) => (
                     <option key={c} value={c}>
                       {CATEGORY_LABELS[c] ?? c}
@@ -985,17 +985,17 @@ export default function AgentTestRunResults({ runId }: Props) {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="cursor-pointer text-xs bg-white/5 text-white/60 border border-white/10 rounded-lg px-2 py-1.5 focus:outline-none focus:border-white/30"
                 >
-                  <option value="all">All Results</option>
-                  <option value="pass">Passed</option>
-                  <option value="fail">Failed</option>
-                  <option value="error">Errors</option>
+                  <option value="all">Все результаты</option>
+                  <option value="pass">Пройдено</option>
+                  <option value="fail">Провалено</option>
+                  <option value="error">Ошибки</option>
                 </select>
               </div>
             }
           >
             {filteredResults.length === 0 ? (
               <div className="py-8 text-center text-white/30 text-sm">
-                No results match the current filters.
+                По фильтрам ничего не найдено.
               </div>
             ) : (
               <div className="space-y-1.5">

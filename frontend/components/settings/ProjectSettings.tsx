@@ -43,7 +43,7 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
 
   useEffect(() => {
     if (project) {
-      document.title = `Settings - ${project.name} | EZTest`;
+      document.title = `Настройки - ${project.name} | EZTest`;
     }
   }, [project]);
 
@@ -61,7 +61,7 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
         // Project not found or no access - redirect after showing message
         setAlert({
           type: 'error',
-          title: 'Project Not Found',
+          title: 'Проект не найден',
           message: 'The project you\'re looking for doesn\'t exist or has been deleted. Redirecting...',
         });
         setTimeout(() => {
@@ -70,15 +70,15 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
       } else {
         setAlert({
           type: 'error',
-          title: 'Failed to Load Project',
-          message: 'Could not load project details.',
+          title: 'Не удалось загрузить проект',
+          message: 'Не удалось загрузить данные проекта.',
         });
       }
     } catch {
       setAlert({
         type: 'error',
-        title: 'Error',
-        message: 'An error occurred while loading project.',
+        title: 'Ошибка',
+        message: 'Не удалось загрузить проект.',
       });
     } finally {
       setLoading(false);
@@ -107,21 +107,21 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
         setProject(data.data);
         setAlert({
           type: 'success',
-          title: 'Project Updated',
-          message: 'Project settings have been saved successfully.',
+          title: 'Проект обновлён',
+          message: 'Настройки проекта сохранены.',
         });
       } else {
         setAlert({
           type: 'error',
-          title: 'Failed to Update',
+          title: 'Не удалось обновить',
           message: data.error || 'Failed to update project.',
         });
       }
     } catch {
       setAlert({
         type: 'error',
-        title: 'Error',
-        message: 'An error occurred. Please try again.',
+        title: 'Ошибка',
+        message: 'Произошла ошибка. Попробуйте ещё раз.',
       });
     } finally {
       setSaving(false);
@@ -151,16 +151,16 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
         const data = await response.json();
         setAlert({
           type: 'error',
-          title: 'Failed to Delete',
-          message: data.error || 'Failed to delete project.',
+          title: 'Не удалось удалить',
+          message: 'Не удалось удалить проект.',
         });
         setDeleteDialogOpen(false);
       }
     } catch {
       setAlert({
         type: 'error',
-        title: 'Error',
-        message: 'An error occurred. Please try again.',
+        title: 'Ошибка',
+        message: 'Произошла ошибка. Попробуйте ещё раз.',
       });
       setDeleteDialogOpen(false);
     } finally {
@@ -169,16 +169,16 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
   };
 
   if (loading) {
-    return <Loader fullScreen text="Loading project settings..." />;
+    return <Loader fullScreen text="Загрузка настроек проекта..." />;
   }
 
   if (!project) {
     return (
       <NotFoundState
-        title="Project Not Found"
-        message="The project you're trying to configure doesn't exist or has been deleted."
+        title="Проект не найден"
+        message="Проект не найден или был удалён."
         icon={Settings}
-        redirectingMessage="Redirecting to projects page..."
+        redirectingMessage="Переход к списку проектов..."
         showRedirecting={true}
       />
     );
@@ -190,7 +190,8 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
       <SettingsHeader project={project} projectId={projectId} />
 
       <div className="px-8 pb-8">
-        <div className="max-w-4xl mx-auto space-y-6 pt-0">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+        <div className="lg:col-span-2">
         <GeneralSettingsCard
           project={project}
           formData={formData}
@@ -200,7 +201,9 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
           onCancel={handleCancel}
           canUpdate={canUpdateProject}
         />
+        </div>
 
+        <div className="space-y-5">
         <ProjectInfoCard project={project} />
 
         {canDeleteProject && (
@@ -210,6 +213,7 @@ export default function ProjectSettings({ projectId }: ProjectSettingsProps) {
             onDelete={() => setDeleteDialogOpen(true)}
           />
         )}
+        </div>
         </div>
       </div>
 

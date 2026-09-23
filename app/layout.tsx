@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Roboto_Condensed } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
+import "@/frontend/themes/new/new-theme.css";
+import { UI_ACCENT_COOKIE, UI_THEME_COOKIE, resolveUiAccent, resolveUiTheme } from "@/lib/ui-theme";
 import { ClientLayout } from "@/app/components/layout/ClientLayout";
 import { Providers } from "@/app/components/layout/Providers";
 import {
@@ -34,6 +37,17 @@ const geistMono = Geist_Mono({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+// Condensed UI font of the new theme. Not preloaded: classic-theme users never render it,
+// so the browser only downloads it when the new theme actually uses it.
+// 500 falls back to 400 and 800 to 700.
+const robotoCondensed = Roboto_Condensed({
+  variable: "--font-condensed",
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "600", "700"],
+  preload: false,
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -121,23 +135,27 @@ export const metadata: Metadata = {
   category: "Software",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const uiTheme = resolveUiTheme(cookieStore.get(UI_THEME_COOKIE)?.value);
+  const uiAccent = resolveUiAccent(cookieStore.get(UI_ACCENT_COOKIE)?.value);
+
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" data-theme={uiTheme} data-accent={uiAccent} suppressHydrationWarning>
       <head>
         {/* GEO: llms.txt discovery for AI/LLM crawlers */}
         <link rel="alternate" type="text/plain" title="LLM-readable site description" href="/llms.txt" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased bg-background min-h-screen text-foreground relative`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${robotoCondensed.variable} antialiased bg-background min-h-screen text-foreground relative`}
         suppressHydrationWarning
       >
         <div className="relative z-10">
-          <Providers>
+          <Providers uiTheme={uiTheme} uiAccent={uiAccent}>
             <ClientLayout>
               {children}
             </ClientLayout>

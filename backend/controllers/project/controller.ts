@@ -185,7 +185,7 @@ export class ProjectController {
         throw new ConflictException(ProjectMemberMessages.UserAlreadyMember);
       }
 
-      if (error instanceof Error && error.message === 'User not found') {
+      if (error instanceof Error && ['User not found', 'Пользователь не найден'].includes(error.message)) {
         throw new NotFoundException(ProjectMemberMessages.UserNotFound);
       }
 

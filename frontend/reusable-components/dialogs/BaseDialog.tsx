@@ -516,7 +516,7 @@ export const BaseDialog = <T = unknown,>({
           </div>
         </div>
 
-        <div className="flex-shrink-0 border-t border-border/60 bg-background/80 px-6 py-4 flex gap-3 justify-end">
+        <div data-ui="dialog-footer" className="flex-shrink-0 border-t border-border/60 bg-background/80 px-6 py-4 flex gap-3 justify-end">
           <Button
             type="button"
             variant="glass"

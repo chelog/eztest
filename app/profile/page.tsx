@@ -2,8 +2,8 @@ import UserProfileSettings from '../../frontend/components/profile/UserProfileSe
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Account Settings',
-  description: 'Manage your account settings and security preferences',
+  title: 'Настройки аккаунта',
+  description: 'Настройки аккаунта и безопасности',
 };
 
 const ProfilePage = () => {

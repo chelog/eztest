@@ -14,6 +14,15 @@ import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { GlassFooter } from '@/frontend/reusable-components/layout/GlassFooter';
 import { EZTestLogo } from '@/frontend/reusable-components/logo/EZTestLogo';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { NtAuthScreen, NtAuthField, NtAuthSubmit, NtAuthError } from '@/frontend/themes/new/NtAuthScreen';
+import { Lock, Mail, UserRound } from 'lucide-react';
+import {
+  ALLOWED_REGISTRATION_DOMAINS,
+  REGISTRATION_DOMAIN_ERROR,
+  isAllowedRegistrationEmail,
+  suggestRegistrationEmails,
+} from '@/lib/allowed-email-domains';
 
 const navItems: Array<{ label: string; href: string }> = [];
 
@@ -29,27 +38,28 @@ export default function RegisterPageComponent() {
   const { trackButton } = useAnalytics();
   const [stars, setStars] = useState<number | null>(null);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const isNewTheme = useIsNewTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
     {
       image: '/screenshots/TestCase_List_Page1.png',
-      title: 'Complete Control',
+      title: 'Полный контроль',
       description: 'Размещайте у себя и полностью контролируйте данные',
     },
     {
       image: '/screenshots/TestRun_List_Page.png',
-      title: 'Actionable Insights',
+      title: 'Практические выводы',
       description: 'Получайте подробные отчеты и аналитику по каждому тест-рану',
     },
     {
       image: '/screenshots/Defects_List_Page.png',
-      title: 'Streamlined Debugging',
+      title: 'Быстрая отладка',
       description: 'Отслеживайте и управляйте дефектами быстро и точно',
     },
     {
       image: '/screenshots/Project_List_Page.png',
-      title: 'Effortless Organization',
+      title: 'Порядок без усилий',
       description: 'Организуйте тестовые проекты в удобной структуре',
     },
   ];
@@ -106,6 +116,9 @@ export default function RegisterPageComponent() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return 'Введите корректный email';
+    }
+    if (!isAllowedRegistrationEmail(email)) {
+      return REGISTRATION_DOMAIN_ERROR;
     }
     return undefined;
   };
@@ -370,6 +383,67 @@ export default function RegisterPageComponent() {
     setIsLoading(false);
   };
 
+  if (showOtpVerification && isNewTheme) {
+    return (
+      <NtAuthScreen subtitle="Подтверждение email">
+        <OtpVerification
+          email={formData.email}
+          type="register"
+          onVerified={handleOtpVerified}
+          onCancel={handleOtpCancel}
+        />
+        <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
+      </NtAuthScreen>
+    );
+  }
+
+  if (isNewTheme) {
+    const field = (name: 'name' | 'email' | 'password' | 'confirmPassword') => ({
+      name,
+      value: formData[name],
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [name]: e.target.value }),
+      onBlur: () => handleFieldBlur(name),
+      error: fieldErrors[name],
+    });
+    return (
+      <NtAuthScreen
+        subtitle="Регистрация"
+        footer={
+          <>
+            Уже есть аккаунт?{' '}
+            <Link href="/auth/login" className="text-white hover:text-[var(--nt-accent)] transition-colors">
+              Войти
+            </Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <NtAuthError message={error} />
+          <NtAuthField icon={UserRound} placeholder="Имя" autoComplete="name" {...field('name')} />
+          <NtAuthField
+            icon={Mail}
+            type="email"
+            placeholder="Рабочая почта"
+            autoComplete="email"
+            {...field('email')}
+            suggestions={suggestRegistrationEmails(formData.email)}
+            onSuggestionPick={(email) => {
+              setFormData({ ...formData, email });
+              setFieldErrors((prev) => ({ ...prev, email: undefined }));
+            }}
+          />
+          <p className="px-1 -mt-1 text-xs text-[var(--nt-text-3)]">
+            Регистрация только для почт {ALLOWED_REGISTRATION_DOMAINS.map((d) => `@${d}`).join(' и ')}
+          </p>
+          <NtAuthField icon={Lock} type="password" placeholder="Пароль" autoComplete="new-password" {...field('password')} />
+          <NtAuthField icon={Lock} type="password" placeholder="Повторите пароль" autoComplete="new-password" {...field('confirmPassword')} />
+          <NtAuthSubmit disabled={isLoading}>{isLoading ? 'Создание...' : 'Создать аккаунт'}</NtAuthSubmit>
+        </form>
+        <FloatingAlert alert={alert} onClose={() => setAlert(null)} />
+      </NtAuthScreen>
+    );
+  }
+
   if (showOtpVerification) {
     return (
       <div className="min-h-screen bg-[#050608] flex flex-col relative overflow-x-hidden">
@@ -409,7 +483,7 @@ export default function RegisterPageComponent() {
                   background: 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)',
                 }}
               >
-                <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" style={{ backgroundColor: '#050608' }}>
+                <div className="flex items-center justify-center w-full h-full rounded-[59.79px]" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
                   <EZTestLogo width={24} height={24} patternId="pattern-register-logo" />
                 </div>
               </div>

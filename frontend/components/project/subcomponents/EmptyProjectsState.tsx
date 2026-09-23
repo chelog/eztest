@@ -18,7 +18,7 @@ export const EmptyProjectsState = ({ onCreateProject, canCreateProject = true }:
     >
       <CardContent className="flex flex-col items-center justify-center py-16">
         <Folder className="w-16 h-16 text-white/50 mb-4" />
-        <h3 className="text-xl font-semibold mb-2 text-white">No projects yet</h3>
+        <h3 className="text-xl font-semibold mb-2 text-white">Проектов пока нет</h3>
         <p className="text-white/60 mb-6 text-center max-w-sm">
           {canCreateProject
             ? 'Get started by creating your first project to organize test cases and track testing progress.'
@@ -30,7 +30,7 @@ export const EmptyProjectsState = ({ onCreateProject, canCreateProject = true }:
             buttonName="Project List - Create Your First Project (Empty State)"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create Your First Project
+            Создайте первый проект
           </ButtonPrimary>
         )}
       </CardContent>

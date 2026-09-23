@@ -78,7 +78,7 @@ export class UserController {
       return { message: AuthMessages.PasswordChangedSuccessfully };
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === 'User not found') {
+        if (['User not found', 'Пользователь не найден'].includes(error.message)) {
           throw new NotFoundException(error.message);
         }
         if (error.message === 'Current password is incorrect') {
@@ -100,7 +100,7 @@ export class UserController {
     const user = await userService.getUserDetailsById(userId);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Пользователь не найден');
     }
 
     return { data: user };

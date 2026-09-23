@@ -70,7 +70,7 @@ export function LinkDefectDialog({
         // The UI will handle empty state gracefully
         setError(null);
       } else {
-        setError('Invalid response format from server');
+        setError('Неожиданный ответ сервера');
         setAlert({
           type: 'error',
           title: 'Ошибка загрузки дефектов',

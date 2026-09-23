@@ -42,13 +42,13 @@ export function useAttachments(options: UseAttachmentsOptions = {}) {
 
         // Validate file size
         if (file.size > maxFileSize) {
-          setError(`File "${file.name}" exceeds maximum size of ${maxFileSize / (1024 * 1024)}MB`);
+          setError(`Файл «${file.name}» больше ${maxFileSize / (1024 * 1024)} МБ`);
           continue;
         }
 
         // Validate MIME type
         if (!allowedMimeTypes.includes(file.type)) {
-          setError(`File type "${file.type}" is not supported`);
+          setError(`Тип файла «${file.type}» не поддерживается`);
           continue;
         }
 
@@ -223,7 +223,7 @@ export function useAttachments(options: UseAttachmentsOptions = {}) {
 
       return true; // Upload successful
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки';
       attachmentStorage.updateAttachmentStatus(
         attachmentId,
         'error',

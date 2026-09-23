@@ -43,7 +43,7 @@ export function InfoBanner({
   const styles = variantStyles[variant];
 
   return (
-    <div className={cn(
+    <div data-ui="info-banner" className={cn(
       'rounded-lg border p-4',
       styles.container,
       className

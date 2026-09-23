@@ -1,5 +1,5 @@
 ﻿import { DetailPageHeader } from '@/frontend/reusable-components/layout/DetailPageHeader';
-import { Edit, Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
 interface TestSuiteHeaderProps {
   testSuite: {
@@ -44,14 +44,14 @@ export function TestSuiteHeader({
       badges={[]}
       actions={[
         { 
-          label: 'Edit', 
-          icon: Edit, 
+          label: 'Редактировать', 
+          icon: Pencil, 
           onClick: onEdit, 
           show: canUpdate,
           buttonName: 'Test Suite Detail - Edit',
         },
         { 
-          label: 'Delete', 
+          label: 'Удалить', 
           icon: Trash2, 
           onClick: onDelete, 
           variant: 'destructive', 

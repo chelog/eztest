@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BaseDialog, type BaseDialogField } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { Role, User, EditUserFormData } from '../types';
+import { getRoleLabel } from '@/lib/role-labels';
 
 interface EditUserDialogProps {
   open: boolean;
@@ -45,32 +46,8 @@ export function EditUserDialog({ open, user, roles, onOpenChange, onUpdate }: Ed
       defaultValue: user?.role.id || '',
       options: roles.map((role) => ({
         value: role.id,
-        label: role.name,
+        label: getRoleLabel(role.name),
       })),
-    },
-    {
-      name: 'phone',
-      label: 'Телефон',
-      placeholder: 'Необязательно',
-      type: 'text',
-      defaultValue: user?.phone || '',
-    },
-    {
-      name: 'location',
-      label: 'Локация',
-      placeholder: 'Необязательно',
-      type: 'text',
-      defaultValue: user?.location || '',
-    },
-    {
-      name: 'bio',
-      label: 'О себе',
-      placeholder: 'Необязательно',
-      type: 'textarea',
-      rows: 3,
-      cols: 2,
-      maxLength: 250,
-      defaultValue: user?.bio || '',
     },
   ];
 
@@ -89,15 +66,6 @@ export function EditUserDialog({ open, user, roles, onOpenChange, onUpdate }: Ed
     // For roleId, ensure we have a value and it's different from current role
     if (formData.roleId && formData.roleId !== user.role.id) {
       userData.roleId = formData.roleId;
-    }
-    if (formData.bio !== (user.bio || '')) {
-      userData.bio = formData.bio || '';
-    }
-    if (formData.phone !== (user.phone || '')) {
-      userData.phone = formData.phone || '';
-    }
-    if (formData.location !== (user.location || '')) {
-      userData.location = formData.location || '';
     }
     
     await onUpdate(userData as EditUserFormData);

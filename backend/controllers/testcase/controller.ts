@@ -157,7 +157,7 @@ export class TestCaseController {
       );
       return { data: testCase };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
         throw new NotFoundException(TestCaseMessages.TestCaseNotFound);
       }
       throw new InternalServerException(TestCaseMessages.FailedToFetchTestCase);
@@ -207,7 +207,7 @@ export class TestCaseController {
 
       return { data: testCase };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
         throw new NotFoundException(TestCaseMessages.TestCaseNotFound);
       }
       throw new InternalServerException(TestCaseMessages.FailedToUpdateTestCase);
@@ -230,7 +230,7 @@ export class TestCaseController {
       );
       return { message: TestCaseMessages.TestCaseDeletedSuccessfully };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
         throw new NotFoundException(TestCaseMessages.TestCaseNotFound);
       }
       throw new InternalServerException(TestCaseMessages.FailedToDeleteTestCase);
@@ -268,7 +268,7 @@ export class TestCaseController {
       // Return just the steps array as the frontend expects
       return { data: testCase.steps || [] };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
         throw new NotFoundException(TestCaseMessages.TestCaseNotFound);
       }
       throw new InternalServerException(TestCaseMessages.FailedToUpdateTestSteps);
@@ -320,7 +320,7 @@ export class TestCaseController {
 
     const validation = schema.safeParse(body);
     if (!validation.success) {
-      throw new ValidationException('Validation failed', validation.error.issues);
+      throw new ValidationException('Проверьте введённые данные', validation.error.issues);
     }
 
     const { moduleId } = validation.data;
@@ -337,13 +337,13 @@ export class TestCaseController {
       if (error instanceof ValidationException) {
         throw error;
       }
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      if (error instanceof Error && error.message === 'Module not found') {
-        throw new NotFoundException('Module not found');
+      if (error instanceof Error && ['Module not found', 'Модуль не найден'].includes(error.message)) {
+        throw new NotFoundException('Модуль не найден');
       }
-      throw new InternalServerException('Failed to add test case to module');
+      throw new InternalServerException('Не удалось добавить тест-кейс в модуль');
     }
   }
 
@@ -360,10 +360,10 @@ export class TestCaseController {
 
       return { data: updatedTestCase };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      throw new InternalServerException('Failed to remove test case from module');
+      throw new InternalServerException('Не удалось убрать тест-кейс из модуля');
     }
   }
 
@@ -376,10 +376,10 @@ export class TestCaseController {
       const defects = await testCaseService.getTestCaseDefects(testCaseId);
       return { data: defects };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      throw new InternalServerException('Failed to get test case defects');
+      throw new InternalServerException('Не удалось получить дефекты тест-кейса');
     }
   }
 
@@ -402,10 +402,10 @@ export class TestCaseController {
       if (error instanceof ValidationException) {
         throw error;
       }
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      throw new InternalServerException('Failed to link defects to test case');
+      throw new InternalServerException('Не удалось связать дефекты с тест-кейсом');
     }
   }
 
@@ -434,10 +434,10 @@ export class TestCaseController {
         const message = firstError?.message || 'Validation failed';
         throw new ValidationException(message);
       }
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      throw new InternalServerException('Failed to associate attachments with test case');
+      throw new InternalServerException('Не удалось прикрепить вложения к тест-кейсу');
     }
   }
 
@@ -453,10 +453,10 @@ export class TestCaseController {
       const attachments = await testCaseService.getTestCaseAttachments(testCaseId);
       return { data: attachments };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Test case not found') {
-        throw new NotFoundException('Test case not found');
+      if (error instanceof Error && ['Test case not found', 'Тест-кейс не найден'].includes(error.message)) {
+        throw new NotFoundException('Тест-кейс не найден');
       }
-      throw new InternalServerException('Failed to fetch attachments');
+      throw new InternalServerException('Не удалось загрузить вложения');
     }
   }
 
@@ -471,7 +471,7 @@ export class TestCaseController {
   ) {
     try {
       if (!attachmentId) {
-        throw new ValidationException('Attachment ID is required', []);
+        throw new ValidationException('Укажите ID вложения', []);
       }
       const result = await testCaseService.deleteAttachment(testCaseId, attachmentId);
       return { data: result };
@@ -479,10 +479,10 @@ export class TestCaseController {
       if (error instanceof ValidationException) {
         throw error;
       }
-      if (error instanceof Error && error.message === 'Attachment not found') {
-        throw new NotFoundException('Attachment not found');
+      if (error instanceof Error && ['Attachment not found', 'Вложение не найдено'].includes(error.message)) {
+        throw new NotFoundException('Вложение не найдено');
       }
-      throw new InternalServerException('Failed to delete attachment');
+      throw new InternalServerException('Не удалось удалить вложение');
     }
   }
 }

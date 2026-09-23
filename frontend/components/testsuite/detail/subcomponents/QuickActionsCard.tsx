@@ -1,6 +1,6 @@
 ﻿import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
-import { Plus, TestTube2, Folder } from 'lucide-react';
+import { Plus, Folder, FileCheck } from 'lucide-react';
 
 interface QuickActionsCardProps {
   onCreateTestCase: () => void;
@@ -20,7 +20,7 @@ export function QuickActionsCard({
   canCreateTestCase = false,
 }: QuickActionsCardProps) {
   return (
-    <DetailCard title="Quick Actions" contentClassName="space-y-2">
+    <DetailCard title="Быстрые действия" contentClassName="space-y-2">
       {canCreateTestCase && (
         <Button
           variant="glass"
@@ -28,7 +28,7 @@ export function QuickActionsCard({
           onClick={onCreateTestCase}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Create Test Case
+          Создать тест-кейс
         </Button>
       )}
       {canCreateTestCase && (
@@ -38,7 +38,7 @@ export function QuickActionsCard({
           onClick={onAddExistingTestCases}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Test Cases
+          Добавить тест-кейсы
         </Button>
       )}
       <Button
@@ -46,8 +46,8 @@ export function QuickActionsCard({
         className="w-full justify-start"
         onClick={onViewAllTestCases}
       >
-        <TestTube2 className="w-4 h-4 mr-2" />
-        View All Test Cases
+        <FileCheck className="w-4 h-4 mr-2" />
+        Все тест-кейсы
       </Button>
       <Button
         variant="glass"
@@ -55,7 +55,7 @@ export function QuickActionsCard({
         onClick={onViewAllSuites}
       >
         <Folder className="w-4 h-4 mr-2" />
-        View All Suites
+        Все сьюты
       </Button>
     </DetailCard>
   );

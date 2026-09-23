@@ -22,10 +22,10 @@ export function DeleteDefectDialog({
   if (!defect) return null;
 
   const config: BaseConfirmDialogConfig = {
-    title: 'Delete Defect',
-    description: `Are you sure you want to delete defect "${defect.defectId}: ${defect.title}"? This action cannot be undone.`,
-    submitLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    title: 'Удалить дефект',
+    description: `Удалить дефект «${defect.defectId}: ${defect.title}»? Действие нельзя отменить.`,
+    submitLabel: 'Удалить',
+    cancelLabel: 'Отмена',
     triggerOpen: open,
     onOpenChange,
     onSubmit: onConfirm,

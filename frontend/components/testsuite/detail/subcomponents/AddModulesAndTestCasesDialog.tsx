@@ -13,7 +13,7 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
-import { ChevronDown, ChevronRight, FolderOpen, TestTube2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, FileCheck } from 'lucide-react';
 import { PriorityBadge } from '@/frontend/reusable-components/badges/PriorityBadge';
 import { Module, TestCase } from '@/frontend/components/testcase/types';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
@@ -139,14 +139,14 @@ export function AddModulesAndTestCasesDialog({
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6">
           <div className="pt-6">
             <DialogHeader className="mb-6">
-              <DialogTitle>Add Modules & Test Cases to Suite</DialogTitle>
+              <DialogTitle>Добавить модули и тест-кейсы в сьют</DialogTitle>
               <DialogDescription className="mt-2">
-                Select entire modules or individual test cases to add to this test suite
+                Выберите модули целиком или отдельные тест-кейсы для этого сьюта
               </DialogDescription>
             </DialogHeader>
             {modules.length === 0 ? (
               <p className="text-white/60 text-center py-8">
-                No modules or test cases available to add
+                Нечего добавить: нет модулей и тест-кейсов
               </p>
             ) : (
               <div className="space-y-2">
@@ -197,7 +197,7 @@ export function AddModulesAndTestCasesDialog({
                             </p>
                             {isPartiallySelected && (
                               <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20">
-                                Partial
+                                Частично
                               </Badge>
                             )}
                           </div>
@@ -232,7 +232,7 @@ export function AddModulesAndTestCasesDialog({
                             />
 
                             {/* Test Case Icon */}
-                            <TestTube2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                            <FileCheck className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
 
                             {/* Test Case Details */}
                             <div className="flex-1 min-w-0">
@@ -302,14 +302,14 @@ export function AddModulesAndTestCasesDialog({
                 onClick={() => onOpenChange(false)}
                 className="cursor-pointer"
               >
-                Cancel
+                Отмена
               </Button>
               <ButtonPrimary
                 onClick={onSubmit}
                 disabled={totalSelectedCount === 0}
                 className="cursor-pointer"
               >
-                Add Selected
+                Добавить выбранные
               </ButtonPrimary>
             </div>
           </div>

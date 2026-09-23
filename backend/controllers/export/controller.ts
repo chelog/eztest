@@ -29,7 +29,7 @@ export class ExportController {
       }
 
       if (!['testcases', 'defects', 'testruns'].includes(type)) {
-        throw new ValidationException('Invalid export type. Use "testcases", "defects", or "testruns"');
+        throw new ValidationException('Неверный тип выгрузки: используйте testcases, defects или testruns');
       }
 
       const buffer = await exportService.exportData({
@@ -88,7 +88,7 @@ export class ExportController {
   async exportTestRunDetail(testRunId: string, format: 'csv' | 'excel' | 'pdf'): Promise<NextResponse> {
     try {
       if (format !== 'csv' && format !== 'excel' && format !== 'pdf') {
-        throw new ValidationException('Invalid export format. Use "csv", "excel", or "pdf".');
+        throw new ValidationException('Неверный формат выгрузки: используйте csv, excel или pdf.');
       }
 
       const buffer = await exportService.exportTestRunDetail(testRunId, format);

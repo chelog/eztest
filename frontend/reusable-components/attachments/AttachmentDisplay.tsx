@@ -233,7 +233,7 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
               ref={(el) => { thumbnailRefs.current[attachment.id] = el; }} 
               className="relative w-10 h-10 rounded-md overflow-hidden border border-white/15 bg-white/5 hover:border-primary/50 transition-all cursor-pointer shadow-sm"
               onClick={() => handleDownload(attachment)}
-              title={`Click to download ${attachment.originalName || attachment.filename}`}
+              title={`Скачать ${attachment.originalName || attachment.filename}`}
             >
               {isImage && imageUrls[attachment.id] ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -303,7 +303,7 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
                     <div className="text-white/60 flex items-center justify-center flex-col gap-2">
                       {getFileIcon(attachment.mimeType, "w-24 h-24")}
                       {isImage && !imageUrls[attachment.id] && (
-                        <p className="text-xs text-white/50">Loading preview...</p>
+                        <p className="text-xs text-white/50">Загрузка превью...</p>
                       )}
                     </div>
                   )}
@@ -313,7 +313,7 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
                       className="absolute inset-0 items-center justify-center flex-col gap-2 hidden"
                     >
                       {getFileIcon(attachment.mimeType, "w-24 h-24")}
-                      <p className="text-xs text-white/50">Failed to load image</p>
+                      <p className="text-xs text-white/50">Не удалось загрузить изображение</p>
                     </div>
                   )}
                 </div>
@@ -338,7 +338,7 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
                         e.stopPropagation();
                         handleDownload(attachment);
                       }}
-                      title="Download file"
+                      title="Скачать файл"
                     >
                       <Download className="w-4 h-4" />
                     </Button>
@@ -351,7 +351,7 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
                           e.stopPropagation();
                           handleDelete(attachment.id);
                         }}
-                        title="Delete file"
+                        title="Удалить файл"
                       >
                         <X className="w-4 h-4" />
                       </ButtonDestructive>
@@ -371,22 +371,22 @@ export function AttachmentDisplay({ attachments, showPreview = true, onDelete, s
         return createPortal(
           <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ zIndex: 10000 }}>
             <div className="bg-[#0f0f12] border border-white/20 rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-white/90 mb-2">Delete Attachment</h3>
+              <h3 className="text-lg font-semibold text-white/90 mb-2">Удалить вложение</h3>
               <p className="text-white/70 mb-4">
                 Are you sure you want to delete <span className="font-medium text-white/90">{attachment.originalName || attachment.filename}</span>?
               </p>
-              <p className="text-sm text-white/50 mb-6">This action cannot be undone.</p>
+              <p className="text-sm text-white/50 mb-6">Действие нельзя отменить.</p>
               <div className="flex items-center gap-3 justify-end">
                 <Button
                   variant="glass"
                   onClick={cancelDelete}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <ButtonDestructive
                   onClick={confirmDelete}
                 >
-                  Delete
+                  Удалить
                 </ButtonDestructive>
               </div>
             </div>

@@ -22,7 +22,7 @@ export function PageHeader({
   return (
     <div className={cn("flex flex-col gap-4", className)} {...props}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="text-sm text-white/60" aria-label="Breadcrumb">
+        <nav className="text-sm text-white/60" aria-label="Навигация">
           <ol className="flex flex-wrap items-center gap-1">
             {breadcrumbs.map((c, i) => (
               <li key={`${c.label}-${i}`} className="flex items-center gap-1">

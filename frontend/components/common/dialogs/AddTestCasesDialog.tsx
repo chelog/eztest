@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, FolderOpen, TestTube2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, FileCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -82,12 +82,12 @@ export function AddTestCasesDialog({
   const { options: statusOptionsData } = useDropdownOptions('TestCase', 'status');
 
   const priorityOptions: FilterOption[] = [
-    { value: 'all', label: 'All Priorities' },
+    { value: 'all', label: 'Все приоритеты' },
     ...priorityOptionsData.map((opt) => ({ value: opt.value, label: opt.label })),
   ];
 
   const statusOptions: FilterOption[] = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: 'Все статусы' },
     ...statusOptionsData.map((opt) => ({ value: opt.value, label: opt.label })),
   ];
 
@@ -216,7 +216,7 @@ export function AddTestCasesDialog({
         <div className={isRunContext ? 'max-h-[400px] overflow-y-auto custom-scrollbar' : 'max-h-[80vh] overflow-y-auto custom-scrollbar pr-4'}>
           {testCases.length === 0 ? (
             <p className={isRunContext ? 'text-white/60 text-center py-8' : 'text-gray-400 text-center py-8'}>
-              No available test cases to add
+              Нет тест-кейсов для добавления
             </p>
           ) : (
             <div className={context === 'run' ? 'space-y-3' : 'space-y-3'}>
@@ -225,20 +225,20 @@ export function AddTestCasesDialog({
                   <SearchInput
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    placeholder="Search by title, ID, description, or folder..."
+                    placeholder="Поиск по названию, ID, описанию или папке..."
                     className="md:col-span-2"
                   />
                   <FilterDropdown
                     value={priorityFilter}
                     onValueChange={setPriorityFilter}
-                    placeholder="Priority"
+                    placeholder="Приоритет"
                     options={priorityOptions}
                   />
                   <div className="md:col-start-3">
                     <FilterDropdown
                       value={statusFilter}
                       onValueChange={setStatusFilter}
-                      placeholder="Status"
+                      placeholder="Статус"
                       options={statusOptions}
                     />
                   </div>
@@ -253,7 +253,7 @@ export function AddTestCasesDialog({
                       checked={allVisibleSelected}
                       onCheckedChange={handleToggleVisible}
                     />
-                    Select all visible folders and test cases
+                    Выбрать все видимые папки и тест-кейсы
                   </label>
                   <Badge variant="outline" className="text-xs bg-white/5 text-white/70 border-white/10">
                     {visibleIds.length} visible
@@ -263,7 +263,7 @@ export function AddTestCasesDialog({
 
               {isRunContext && filteredTestCases.length === 0 ? (
                 <p className="text-white/60 text-center py-8">
-                  No test cases match your search or filters
+                  По запросу или фильтрам тест-кейсов нет
                 </p>
               ) : isRunContext ? (
                 groupedModules.map((moduleItem) => {
@@ -317,7 +317,7 @@ export function AddTestCasesDialog({
                             <p className="font-medium text-white truncate">{moduleItem.name}</p>
                             {isPartiallySelected && (
                               <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20">
-                                Partial
+                                Частично
                               </Badge>
                             )}
                           </div>
@@ -356,7 +356,7 @@ export function AddTestCasesDialog({
                                         {getStatusLabel(testCase.status)}
                                       </Badge>
                                     )}
-                                    <TestTube2 className="w-3.5 h-3.5 text-green-400" />
+                                    <FileCheck className="w-3.5 h-3.5 text-green-400" />
                                   </div>
                                 }
                                 variant="compact"
@@ -410,7 +410,7 @@ export function AddTestCasesDialog({
             className="cursor-pointer"
             disabled={loading}
           >
-            Cancel
+            Отмена
           </Button>
           <ButtonPrimary
             onClick={onSubmit}

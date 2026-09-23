@@ -8,7 +8,7 @@ import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-co
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { TestTube2, Folder } from 'lucide-react';
+import { Folder, FileCheck } from 'lucide-react';
 import { TestCase, TestCaseFormData, TestStep } from './types';
 import { Module } from '../types';
 import { TestCaseHeader } from './subcomponents/TestCaseHeader';
@@ -136,7 +136,7 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
         }
       }
       if (!projectId) {
-        throw new Error('Project ID not available');
+        throw new Error('ID проекта недоступен');
       }
       const url = `/api/projects/${projectId}/testcases/${testCaseId}`;
       const response = await fetch(url);
@@ -613,7 +613,6 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
           title: 'Успешно',
           message: 'Тест-кейс успешно обновлен',
         });
-        setTimeout(() => setAlert(null), 5000);
 
         // Reload from database to get fresh data including any backend changes
         fetchTestCase();
@@ -843,23 +842,11 @@ export default function TestCaseDetail({ testCaseId }: TestCaseDetailProps) {
         <ActionButtonGroup
           buttons={[
             {
-              label: 'Все тест-кейсы',
-              icon: TestTube2,
-              onClick: () => router.push(`/projects/${testCase.project.id}/testcases`),
-              variant: 'secondary',
-            },
-            {
               label: 'Открыть набор тестов',
               icon: Folder,
               onClick: () => router.push(`/projects/${testCase.project.id}/testsuites/${testCase.suite?.id}`),
               variant: 'secondary',
               show: !!testCase.suite,
-            },
-            {
-              label: 'Все наборы тестов',
-              icon: Folder,
-              onClick: () => router.push(`/projects/${testCase.project.id}/testsuites`),
-              variant: 'secondary',
             },
           ]}
           className="mb-6"

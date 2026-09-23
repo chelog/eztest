@@ -1,8 +1,11 @@
+'use client';
+
 import * as React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { cn } from '@/lib/utils';
 import { PAGE_SIZE_OPTIONS } from '@/lib/pagination-config';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
 
 export interface PaginationProps {
   currentPage: number;
@@ -27,6 +30,18 @@ export function Pagination({
   showItemsPerPage = true,
   className,
 }: PaginationProps) {
+  const isNewTheme = useIsNewTheme();
+
+  // Everything fits on the smallest page — pagination would be empty chrome
+  const smallestPageSize = Math.min(...itemsPerPageOptions);
+  if (totalItems <= smallestPageSize && currentPage === 1) {
+    return null;
+  }
+  // Page sizes beyond the first one that already shows everything add nothing
+  const firstCoveringIndex = itemsPerPageOptions.findIndex((option) => option >= totalItems);
+  const usefulPageSizes =
+    firstCoveringIndex === -1 ? itemsPerPageOptions : itemsPerPageOptions.slice(0, firstCoveringIndex + 1);
+
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -74,6 +89,76 @@ export function Pagination({
     }
   };
 
+  if (isNewTheme) {
+    const pageButton = (active = false) =>
+      cn(
+        'h-9 min-w-9 px-2.5 inline-flex items-center justify-center rounded-[10px] text-sm font-semibold tabular-nums transition-colors cursor-pointer',
+        'disabled:opacity-30 disabled:pointer-events-none',
+        active
+          ? 'bg-[var(--nt-accent)] text-[var(--nt-on-accent)]'
+          : 'bg-[var(--nt-surface-2)] text-[var(--nt-text-2)] hover:bg-[var(--nt-surface-4)] hover:text-white'
+      );
+
+    return (
+      <div data-ui="nt-pagination" className={cn('flex flex-col sm:flex-row items-center justify-between gap-4 py-2', className)}>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--nt-text-3)]">
+          <span>
+            <span className="text-white font-semibold tabular-nums">
+              {startItem}–{endItem}
+            </span>{' '}
+            из <span className="tabular-nums">{totalItems}</span>
+          </span>
+          {showItemsPerPage && onItemsPerPageChange && (
+            <div className="flex items-center gap-2">
+              <span>На странице</span>
+              <div className="flex items-center gap-1 p-1 rounded-[12px] bg-[var(--nt-surface-2)]">
+                {usefulPageSizes.filter((option) => option <= 100 || option === itemsPerPage).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onItemsPerPageChange(option)}
+                    className={cn(
+                      'h-7 px-2.5 rounded-[8px] text-[13px] font-semibold tabular-nums transition-colors cursor-pointer',
+                      option === itemsPerPage ? 'bg-[var(--nt-surface-4)] text-white' : 'text-[var(--nt-text-3)] hover:text-white'
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1.5">
+            <button type="button" className={pageButton()} onClick={() => handlePageChange(1)} disabled={currentPage === 1} title="Первая страница">
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+            <button type="button" className={pageButton()} onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} title="Назад">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {getPageNumbers().map((page, index) =>
+              page === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-1.5 text-[var(--nt-text-3)]">…</span>
+              ) : (
+                <button key={page} type="button" className={pageButton(currentPage === page)} onClick={() => handlePageChange(page as number)}>
+                  {page}
+                </button>
+              )
+            )}
+            <button type="button" className={pageButton()} onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} title="Вперёд">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button type="button" className={pageButton()} onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} title="Последняя страница">
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -94,7 +179,7 @@ export function Pagination({
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
               className="px-3 py-1.5 rounded border border-white/10 bg-[#0f0f12] text-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:bg-[#1f2937] transition-colors"
             >
-              {itemsPerPageOptions.map((option) => (
+              {usefulPageSizes.map((option) => (
                 <option key={option} value={option} className="bg-[#0f0f12] text-white">
                   {option}
                 </option>

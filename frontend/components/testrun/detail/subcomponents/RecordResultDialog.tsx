@@ -81,7 +81,7 @@ export function RecordResultDialog({
 
               {testCase.preconditions && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90">Preconditions</h3>
+                  <h3 className="text-sm font-semibold text-white/90">Предусловия</h3>
                   <p className="mt-1 text-sm text-white/75 whitespace-pre-wrap break-words">
                     {testCase.preconditions}
                   </p>
@@ -90,7 +90,7 @@ export function RecordResultDialog({
 
               {testCase.steps && testCase.steps.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90">Steps</h3>
+                  <h3 className="text-sm font-semibold text-white/90">Шаги</h3>
                   <div className="mt-2 space-y-3">
                     {testCase.steps.map((step) => (
                       <div key={step.id} className="rounded-lg border border-white/10 bg-black/10 p-3">

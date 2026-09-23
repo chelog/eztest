@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/frontend/reusable-elements/dialogs/Dialog';
-import { ChevronLeft, ChevronRight, CheckCircle2, Copy, FileCode, Code, Settings, BookOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Copy, FileCode, Code, Settings, BookOpen, XCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
 
 interface AutomationSetupWizardProps {
@@ -109,7 +109,7 @@ export function AutomationSetupWizard({
             <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
               <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-white/90">Project ID</p>
+                <p className="font-medium text-white/90">ID проекта</p>
                 <p className="text-sm text-white/60 mt-1">ID вашего проекта в EZTest: <code className="bg-white/10 px-1.5 py-0.5 rounded text-xs">{projectId}</code></p>
               </div>
             </div>
@@ -323,7 +323,7 @@ public class EZTestCreateTestRunUploaderMain {
 
           <div className="bg-white/5 border border-white/10 rounded-lg p-3">
             <p className="text-xs text-white/60">
-              <strong className="text-white/80">📚 Полная документация:</strong>{' '}
+              <strong className="text-white/80 inline-flex items-center gap-1.5"><BookOpen className="w-4 h-4" />Полная документация:</strong>{' '}
               <code className="bg-white/10 px-1.5 py-0.5 rounded">docs/integrations/testng-maven-integration.md</code>
             </p>
           </div>
@@ -478,7 +478,7 @@ EZTEST_ENVIRONMENT=QA_Staging`}
           </Alert>
 
           <div>
-            <h4 className="font-medium text-white/90 mb-2">✅ Правильный формат</h4>
+            <h4 className="font-medium text-white/90 mb-2 flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" />Правильный формат</h4>
             <CodeBlock
               code={`@Test
 public void TC_1() { 
@@ -495,7 +495,7 @@ public void TC_2() {
           </div>
 
           <div>
-            <h4 className="font-medium text-white/90 mb-2">❌ Неправильный формат</h4>
+            <h4 className="font-medium text-white/90 mb-2 flex items-center gap-1.5"><XCircle className="w-4 h-4 text-red-400" />Неправильный формат</h4>
             <CodeBlock
               code={`// ❌ This will NOT work
 @Test(testName = "TC-1")

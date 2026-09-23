@@ -68,7 +68,7 @@ export class DropdownOptionController {
     const option = await dropdownOptionService.getById(id);
 
     if (!option) {
-      throw new NotFoundException('Dropdown option not found');
+      throw new NotFoundException('Значение списка не найдено');
     }
 
     return {
@@ -86,7 +86,7 @@ export class DropdownOptionController {
 
     return {
       success: true,
-      message: 'Dropdown option created successfully',
+      message: 'Значение списка создано',
       data: option,
     };
   }
@@ -100,7 +100,7 @@ export class DropdownOptionController {
 
     return {
       success: true,
-      message: 'Dropdown option updated successfully',
+      message: 'Значение списка обновлено',
       data: option,
     };
   }
@@ -114,7 +114,7 @@ export class DropdownOptionController {
 
     return {
       success: true,
-      message: 'Dropdown option deleted successfully',
+      message: 'Значение списка удалено',
       data: option,
     };
   }
@@ -128,7 +128,7 @@ export class DropdownOptionController {
 
     return {
       success: true,
-      message: 'Dropdown options order updated successfully',
+      message: 'Порядок значений списка изменён',
     };
   }
 }

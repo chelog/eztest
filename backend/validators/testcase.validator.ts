@@ -23,7 +23,7 @@ export const testStepSchema = z
     (data) => data.action.length > 0 || data.expectedResult.length > 0,
     {
       path: ['action'],
-      message: 'Action or expected result is required',
+      message: 'Укажите действие или ожидаемый результат',
     }
   );
 

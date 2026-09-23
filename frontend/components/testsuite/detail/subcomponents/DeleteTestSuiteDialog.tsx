@@ -17,16 +17,16 @@ export function DeleteTestSuiteDialog({
 }: DeleteTestSuiteDialogProps) {
   const content = (
     <p className="text-sm text-gray-300">
-      Test cases in this suite will not be deleted, but will become unorganized.
+      Тест-кейсы сьюта не удалятся, но останутся без сьюта.
     </p>
   );
 
   const config: BaseConfirmDialogConfig = {
-    title: 'Delete Test Suite',
-    description: `Are you sure you want to delete "${testSuiteName}"? This action cannot be undone.`,
+    title: 'Удалить тест-сьют',
+    description: `Удалить «${testSuiteName}»? Действие нельзя отменить.`,
     content,
-    submitLabel: 'Delete',
-    cancelLabel: 'Cancel',
+    submitLabel: 'Удалить',
+    cancelLabel: 'Отмена',
     triggerOpen: open,
     onOpenChange,
     onSubmit: onConfirm,

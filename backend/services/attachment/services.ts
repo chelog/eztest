@@ -260,7 +260,7 @@ export class AttachmentService {
     );
 
     return {
-      message: 'Upload aborted successfully',
+      message: 'Загрузка отменена',
     };
   }
 
@@ -357,7 +357,7 @@ export class AttachmentService {
     });
 
     return {
-      message: 'Attachment updated successfully',
+      message: 'Вложение обновлено',
       attachment,
     };
   }
@@ -445,7 +445,7 @@ export class AttachmentService {
 
     return {
       success: true,
-      message: 'Attachment deleted successfully',
+      message: 'Вложение удалено',
     };
   }
 

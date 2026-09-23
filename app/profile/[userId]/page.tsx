@@ -7,7 +7,10 @@ import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimar
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/frontend/reusable-elements/cards/Card';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { TopBar } from '@/frontend/reusable-components/layout/TopBar';
-import { Mail, MapPin, Phone, Calendar, Briefcase, User } from 'lucide-react';
+import { Mail, Calendar, Briefcase } from 'lucide-react';
+import { ROLE_LABELS } from '@/lib/role-labels';
+import { getAvatarColor } from '@/lib/avatar-color';
+
 
 interface UserProfile {
   id: string;
@@ -38,13 +41,13 @@ export default function UserProfilePage() {
       try {
         const response = await fetch(`/api/users/${userId}`);
         if (!response.ok) {
-          throw new Error('User not found');
+          throw new Error('Пользователь не найден');
         }
         const data = await response.json();
         setUser(data.data);
         document.title = `${data.data.name} - Profile | EZTest`;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
+        setError(err instanceof Error ? err.message : 'Не удалось загрузить профиль');
       } finally {
         setLoading(false);
       }
@@ -56,10 +59,10 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050608]">
-        <TopBar breadcrumbs={[{ label: 'Profile' }]} />
+        <TopBar breadcrumbs={[{ label: 'Профиль' }]} />
         <div className="max-w-4xl mx-auto px-8 pt-8">
           <div className="flex items-center justify-center h-64">
-            <div className="text-lg text-muted-foreground">Loading profile...</div>
+            <div className="text-lg text-muted-foreground">Загрузка профиля...</div>
           </div>
         </div>
       </div>
@@ -69,13 +72,13 @@ export default function UserProfilePage() {
   if (error || !user) {
     return (
       <div className="min-h-screen bg-[#050608]">
-        <TopBar breadcrumbs={[{ label: 'Profile' }]} />
+        <TopBar breadcrumbs={[{ label: 'Профиль' }]} />
         <div className="max-w-4xl mx-auto px-8 pt-8">
           <Card variant="glass">
             <CardContent className="p-8 text-center">
-              <p className="text-lg text-white/70 mb-4">{error || 'User not found'}</p>
+              <p className="text-lg text-white/70 mb-4">{error || 'Пользователь не найден'}</p>
               <ButtonPrimary onClick={() => router.back()}>
-                Go Back
+                Назад
               </ButtonPrimary>
             </CardContent>
           </Card>
@@ -88,7 +91,7 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-[#050608]">
       <TopBar
         breadcrumbs={[
-          { label: 'Users' },
+          { label: 'Пользователи' },
           { label: user.name },
         ]}
       />
@@ -100,7 +103,10 @@ export default function UserProfilePage() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-5xl font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                <div
+                  className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold text-white"
+                  style={{ backgroundColor: getAvatarColor(user.email || user.name) }}
+                >
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               </div>
@@ -111,7 +117,7 @@ export default function UserProfilePage() {
                   <h1 className="text-4xl font-bold text-white mb-2">{user.name}</h1>
                   <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
                     <Briefcase className="w-3 h-3 mr-1" />
-                    {user.role.name}
+                    {ROLE_LABELS[user.role.name] ?? user.role.name}
                   </Badge>
                 </div>
 
@@ -124,23 +130,9 @@ export default function UserProfilePage() {
                       </a>
                     </div>
                   )}
-                  {user.phone && (
-                    <div className="flex items-center gap-2 justify-center md:justify-start">
-                      <Phone className="w-4 h-4 text-primary" />
-                      <a href={`tel:${user.phone}`} className="hover:text-white transition-colors">
-                        {user.phone}
-                      </a>
-                    </div>
-                  )}
-                  {user.location && (
-                    <div className="flex items-center gap-2 justify-center md:justify-start">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span>{user.location}</span>
-                    </div>
-                  )}
                   <div className="flex items-center gap-2 justify-center md:justify-start text-sm">
                     <Calendar className="w-4 h-4 text-primary" />
-                    <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                    <span>В системе с {new Date(user.createdAt).toLocaleDateString('ru-RU')}</span>
                   </div>
                 </div>
               </div>
@@ -148,67 +140,40 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Bio Section */}
-        {user.bio && (
-          <Card variant="glass" className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
-                About
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{user.bio}</p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Profile Information */}
         <Card variant="glass">
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
+            <CardTitle>Информация</CardTitle>
             <CardDescription className="text-white/70">
-              Basic account details
+              Основные данные аккаунта
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <div className="text-sm text-white/60 mb-1">Full Name</div>
+                <div className="text-sm text-white/60 mb-1">Имя</div>
                 <div className="text-lg font-medium text-white">{user.name}</div>
               </div>
               <div>
-                <div className="text-sm text-white/60 mb-1">Email Address</div>
+                <div className="text-sm text-white/60 mb-1">Email</div>
                 <div className="text-lg font-medium text-white">{user.email}</div>
               </div>
               <div>
-                <div className="text-sm text-white/60 mb-1">Role</div>
+                <div className="text-sm text-white/60 mb-1">Роль</div>
                 <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
-                  {user.role.name}
+                  {ROLE_LABELS[user.role.name] ?? user.role.name}
                 </Badge>
               </div>
               <div>
-                <div className="text-sm text-white/60 mb-1">Member Since</div>
+                <div className="text-sm text-white/60 mb-1">В системе с</div>
                 <div className="text-lg font-medium text-white">
-                  {new Date(user.createdAt).toLocaleDateString('en-US', {
+                  {new Date(user.createdAt).toLocaleDateString('ru-RU', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                   })}
                 </div>
               </div>
-              {user.phone && (
-                <div>
-                  <div className="text-sm text-white/60 mb-1">Phone</div>
-                  <div className="text-lg font-medium text-white">{user.phone}</div>
-                </div>
-              )}
-              {user.location && (
-                <div>
-                  <div className="text-sm text-white/60 mb-1">Location</div>
-                  <div className="text-lg font-medium text-white">{user.location}</div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -216,7 +181,7 @@ export default function UserProfilePage() {
         {/* Back Button */}
         <div className="mt-8 text-center">
           <Button onClick={() => router.back()} variant="glass">
-            Go Back
+            Назад
           </Button>
         </div>
       </div>

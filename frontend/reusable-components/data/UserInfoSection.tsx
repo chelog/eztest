@@ -21,7 +21,7 @@ export interface UserInfoSectionProps {
  * @example
  * ```tsx
  * <UserInfoSection
- *   label="Created By"
+ *   label="Автор"
  *   user={{
  *     name: 'John Doe',
  *     email: 'john@example.com',

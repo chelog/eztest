@@ -25,7 +25,7 @@ export default function Error({
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-2">
-          Failed to load page
+          Не удалось загрузить страницу
         </h1>
         <p className="text-white/60 text-sm mb-8">
           An unexpected error occurred. The page could not be displayed.
@@ -38,13 +38,13 @@ export default function Error({
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm font-medium transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
-            Try again
+            Повторить
           </button>
           <Link
             href="/projects"
             className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 text-sm font-medium transition-colors"
           >
-            Go to Projects
+            К проектам
           </Link>
         </div>
       </div>

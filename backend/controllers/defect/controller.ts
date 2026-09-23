@@ -149,7 +149,7 @@ export class DefectController {
     // Get the current defect to compare changes
     const currentDefect = await defectService.getDefectById(defectId);
     if (!currentDefect) {
-      throw new ValidationException('Defect not found');
+      throw new ValidationException('Дефект не найден');
     }
 
     // Track changes for email notification
@@ -358,7 +358,7 @@ export class DefectController {
     // Verify defect exists
     const defect = await defectService.getDefectById(defectId);
     if (!defect) {
-      throw new ValidationException('Defect not found');
+      throw new ValidationException('Дефект не найден');
     }
 
     const comments = await defectService.getDefectComments(defectId);
@@ -372,23 +372,23 @@ export class DefectController {
     // Verify defect exists
     const defect = await defectService.getDefectById(defectId);
     if (!defect) {
-      throw new ValidationException('Defect not found');
+      throw new ValidationException('Дефект не найден');
     }
 
     // Validate comment content - allow empty content (attachments can be added separately)
     if (!body || typeof body !== 'object' || !('content' in body)) {
-      throw new ValidationException('Comment content is required');
+      throw new ValidationException('Введите текст комментария');
     }
 
     const { content } = body as { content: string };
     // Allow empty content - comments can be file-only, text-only, or both
     if (content === undefined || content === null || typeof content !== 'string') {
-      throw new ValidationException('Comment content must be a string');
+      throw new ValidationException('Текст комментария должен быть строкой');
     }
 
     const userId = req.userInfo?.id;
     if (!userId) {
-      throw new ValidationException('User not authenticated');
+      throw new ValidationException('Требуется вход');
     }
 
     const appUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000';
@@ -421,7 +421,7 @@ export class DefectController {
       // Get user ID from request (set by hasPermission wrapper)
       const userId = req.userInfo?.id;
       if (!userId) {
-        throw new ValidationException('User not authenticated');
+        throw new ValidationException('Требуется вход');
       }
       
       const result = await defectService.associateAttachments(defectId, validatedData.attachments, userId);
@@ -435,13 +435,13 @@ export class DefectController {
         const errorMessages = error.issues?.map(e => `${e.path.join('.')}: ${e.message}`).join(', ') || 'Validation failed';
         throw new ValidationException(errorMessages);
       }
-      if (error instanceof Error && error.message === 'Defect not found') {
-        throw new ValidationException('Defect not found');
+      if (error instanceof Error && ['Defect not found', 'Дефект не найден'].includes(error.message)) {
+        throw new ValidationException('Дефект не найден');
       }
       if (error instanceof Error) {
         throw new ValidationException(`Failed to associate attachments: ${error.message}`);
       }
-      throw new ValidationException('Failed to associate attachments with defect');
+      throw new ValidationException('Не удалось прикрепить вложения к дефекту');
     }
   }
 
@@ -457,10 +457,10 @@ export class DefectController {
       const attachments = await defectService.getDefectAttachments(defectId);
       return { data: attachments };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Defect not found') {
-        throw new ValidationException('Defect not found');
+      if (error instanceof Error && ['Defect not found', 'Дефект не найден'].includes(error.message)) {
+        throw new ValidationException('Дефект не найден');
       }
-      throw new ValidationException('Failed to fetch attachments');
+      throw new ValidationException('Не удалось загрузить вложения');
     }
   }
 
@@ -475,7 +475,7 @@ export class DefectController {
   ) {
     try {
       if (!attachmentId) {
-        throw new ValidationException('Attachment ID is required');
+        throw new ValidationException('Укажите ID вложения');
       }
       const result = await defectService.deleteAttachment(defectId, attachmentId);
       return { data: result };
@@ -483,10 +483,10 @@ export class DefectController {
       if (error instanceof ValidationException) {
         throw error;
       }
-      if (error instanceof Error && error.message === 'Attachment not found') {
-        throw new ValidationException('Attachment not found');
+      if (error instanceof Error && ['Attachment not found', 'Вложение не найдено'].includes(error.message)) {
+        throw new ValidationException('Вложение не найдено');
       }
-      throw new ValidationException('Failed to delete attachment');
+      throw new ValidationException('Не удалось удалить вложение');
     }
   }
 
@@ -499,10 +499,10 @@ export class DefectController {
       const result = await defectService.getDefectAttachmentDownloadUrl(attachmentId);
       return { data: result };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Defect attachment not found') {
-        throw new ValidationException('Defect attachment not found');
+      if (error instanceof Error && ['Defect attachment not found', 'Вложение дефекта не найдено'].includes(error.message)) {
+        throw new ValidationException('Вложение дефекта не найдено');
       }
-      throw new ValidationException('Failed to generate download URL');
+      throw new ValidationException('Не удалось получить ссылку для скачивания');
     }
   }
 
@@ -515,10 +515,10 @@ export class DefectController {
       const result = await defectService.deleteDefectAttachment(attachmentId, step);
       return result;
     } catch (error) {
-      if (error instanceof Error && error.message === 'Defect attachment not found') {
-        throw new ValidationException('Defect attachment not found');
+      if (error instanceof Error && ['Defect attachment not found', 'Вложение дефекта не найдено'].includes(error.message)) {
+        throw new ValidationException('Вложение дефекта не найдено');
       }
-      throw new ValidationException('Failed to delete attachment');
+      throw new ValidationException('Не удалось удалить вложение');
     }
   }
 
@@ -528,7 +528,7 @@ export class DefectController {
   async getDefectWatchers(req: CustomRequest, defectId: string) {
     const watchers = await defectService.getDefectWatchers(defectId);
     if (watchers === null) {
-      throw new ValidationException('Defect not found');
+      throw new ValidationException('Дефект не найден');
     }
     return { data: watchers };
   }
@@ -566,13 +566,13 @@ export class DefectController {
 
       return { data: watcher };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Defect not found') {
-        throw new ValidationException('Defect not found');
+      if (error instanceof Error && ['Defect not found', 'Дефект не найден'].includes(error.message)) {
+        throw new ValidationException('Дефект не найден');
       }
-      if (error instanceof Error && error.message === 'User is not a project member') {
-        throw new ValidationException('User is not a project member');
+      if (error instanceof Error && ['User is not a project member', 'Пользователь не участник проекта'].includes(error.message)) {
+        throw new ValidationException('Пользователь не участник проекта');
       }
-      throw new ValidationException('Failed to add watcher');
+      throw new ValidationException('Не удалось добавить наблюдателя');
     }
   }
 
@@ -584,10 +584,10 @@ export class DefectController {
       await defectService.removeWatcher(defectId, userId);
       return { data: { success: true } };
     } catch (error) {
-      if (error instanceof Error && error.message === 'Watcher not found') {
-        throw new ValidationException('Watcher not found');
+      if (error instanceof Error && ['Watcher not found', 'Наблюдатель не найден'].includes(error.message)) {
+        throw new ValidationException('Наблюдатель не найден');
       }
-      throw new ValidationException('Failed to remove watcher');
+      throw new ValidationException('Не удалось убрать наблюдателя');
     }
   }
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getDefaultAdminEmail } from '@/lib/auth-utils';
+import { REGISTRATION_DOMAIN_ERROR, isAllowedRegistrationEmail } from '@/lib/allowed-email-domains';
 
 /**
  * Custom email validation that allows default admin email from environment
@@ -33,7 +34,7 @@ const emailValidation = z
       return true;
     },
     {
-      message: 'Invalid email format. Email addresses with .local, .invalid, .test, .example domains are not allowed (except default admin email).',
+      message: 'Некорректный email: адреса в доменах .local, .invalid, .test, .example не допускаются (кроме стандартного администратора).',
     }
   );
 
@@ -43,14 +44,15 @@ const emailValidation = z
 export const registerSchema = z.object({
   name: z
     .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(255, 'Name must not exceed 255 characters')
+    .min(2, 'Имя должно быть не короче 2 символов')
+    .max(255, 'Имя должно быть не длиннее 255 символов')
     .trim(),
-  email: emailValidation,
+  // Only corporate domains may self-register
+  email: emailValidation.refine(isAllowedRegistrationEmail, { message: REGISTRATION_DOMAIN_ERROR }),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(100, 'Password must not exceed 100 characters'),
+    .min(8, 'Пароль должен быть не короче 8 символов')
+    .max(100, 'Пароль должен быть не длиннее 100 символов'),
 });
 
 /**
@@ -59,11 +61,11 @@ export const registerSchema = z.object({
 export const changePasswordSchema = z.object({
   currentPassword: z
     .string()
-    .min(1, 'Current password is required'),
+    .min(1, 'Введите текущий пароль'),
   newPassword: z
     .string()
-    .min(8, 'New password must be at least 8 characters')
-    .max(100, 'New password must not exceed 100 characters'),
+    .min(8, 'Новый пароль должен быть не короче 8 символов')
+    .max(100, 'Новый пароль должен быть не длиннее 100 символов'),
 });
 
 /**
@@ -82,6 +84,6 @@ export const resetPasswordSchema = z.object({
     .min(1, 'Reset token is required'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(100, 'Password must not exceed 100 characters'),
+    .min(8, 'Пароль должен быть не короче 8 символов')
+    .max(100, 'Пароль должен быть не длиннее 100 символов'),
 });

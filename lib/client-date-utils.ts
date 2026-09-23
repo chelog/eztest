@@ -47,7 +47,7 @@ export function formatRelativeTime(date: string | Date): string {
   if (diffDays < 7) return `${diffDays}d ago`;
   
   // Fallback to standard format for older dates
-  return dateObj.toLocaleDateString('en-US', {
+  return dateObj.toLocaleDateString('ru-RU', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

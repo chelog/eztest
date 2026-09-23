@@ -2,6 +2,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { UI_THEME_COOKIE, resolveUiTheme } from '@/lib/ui-theme';
 import HomePage from '@/app/components/pages/HomePage';
 import {
   SITE_URL,
@@ -139,7 +141,7 @@ function HomeJsonLd() {
       name: ORG_NAME,
       url: ORG_URL,
     },
-    inLanguage: 'en-US',
+    inLanguage: 'ru-RU',
   };
 
   /* GEO: FAQPage — lets generative engines surface direct answers */
@@ -202,6 +204,11 @@ export default async function Home() {
   // If user is already logged in, redirect to projects
   if (session) {
     redirect('/projects');
+  }
+
+  // New theme has no marketing landing: the start screen is the sign-in form
+  if (resolveUiTheme((await cookies()).get(UI_THEME_COOKIE)?.value) === 'new') {
+    redirect('/auth/login');
   }
 
   return (

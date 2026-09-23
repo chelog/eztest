@@ -46,9 +46,9 @@ export function SelectTestCasesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add Test Cases</DialogTitle>
+          <DialogTitle>Добавить тест-кейсы</DialogTitle>
           <DialogDescription>
-            Select test cases to add to this suite
+            Выберите тест-кейсы для сьюта
           </DialogDescription>
         </DialogHeader>
 
@@ -56,7 +56,7 @@ export function SelectTestCasesDialog({
           <div className="space-y-3">
             {testCases.length === 0 ? (
               <p className="text-gray-400 text-center py-8">
-                No available test cases to add
+                Нет тест-кейсов для добавления
               </p>
             ) : (
               testCases.map((testCase) => (
@@ -93,7 +93,7 @@ export function SelectTestCasesDialog({
               onSelectionChange([]);
             }}
           >
-            Cancel
+            Отмена
           </Button>
           <ButtonPrimary
             onClick={onSubmit}

@@ -47,7 +47,7 @@ export function hasProjectMemberAccess(
     
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, message: 'Требуется вход' },
         { status: 401 }
       );
     }
@@ -94,7 +94,7 @@ export function hasProjectMemberAccess(
 
     if (!hasPermission) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: Insufficient permissions' },
+        { success: false, message: 'Нет доступа: недостаточно прав' },
         { status: 403 }
       );
     }
@@ -120,7 +120,7 @@ export function hasProjectMemberAccess(
     // For non-admin users, check if they're a member of this project
     if (!projectMembership) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: You are not a member of this project' },
+        { success: false, message: 'Нет доступа: вы не участник этого проекта' },
         { status: 403 }
       );
     }

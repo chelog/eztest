@@ -51,7 +51,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     return [
       {
         type: 'action' as const,
-        label: 'Add Member',
+        label: 'Добавить участника',
         icon: Plus,
         onClick: () => setAddDialogOpen(true),
         variant: 'primary' as const,
@@ -94,7 +94,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         setMembers(data.data || []);
       }
     } catch {
-      setError('Failed to load project members');
+      setError('Не удалось загрузить участников проекта');
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         setError(data.error || 'Failed to add member');
       }
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Произошла ошибка. Попробуйте ещё раз.');
     } finally {
       setAdding(false);
     }
@@ -154,7 +154,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         alert(data.error || 'Failed to remove member');
       }
     } catch {
-      alert('An error occurred. Please try again.');
+      alert('Произошла ошибка. Попробуйте ещё раз.');
     } finally {
       setDeleting(false);
     }
@@ -179,7 +179,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     };  
 
   if (loading) {
-    return <Loader fullScreen text="Loading members..." />;
+    return <Loader fullScreen text="Загрузка участников..." />;
   }
 
   return (
@@ -191,9 +191,9 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
+              { label: 'Проекты', href: '/projects' },
               { label: project?.name || 'Loading...', href: `/projects/${projectId}` },
-              { label: 'Members', href: `/projects/${projectId}/members` },
+              { label: 'Участники', href: `/projects/${projectId}/members` },
             ]}
           />
         }
@@ -206,9 +206,9 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Project Member</DialogTitle>
+              <DialogTitle>Добавить участника проекта</DialogTitle>
               <DialogDescription>
-                Add a team member to this project
+                Добавьте участника в проект
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddMember} className="space-y-5">
@@ -230,7 +230,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
               )}
               <DialogFooter>
                 <Button type="button" variant="glass" onClick={() => setAddDialogOpen(false)}>
-                  Cancel
+                  Отмена
                 </Button>
                 <ButtonPrimary type="submit" disabled={adding}>
                   {adding ? 'Adding...' : 'Add Member'}
@@ -245,20 +245,20 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         <CardHeader>
           <CardTitle className="text-white">Team Members ({members.length})</CardTitle>
           <CardDescription className="text-white/70">
-            People who have access to this project
+            Люди с доступом к проекту
           </CardDescription>
         </CardHeader>
         <CardContent>
           {members.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-16 h-16 text-white/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-white">No members yet</h3>
+              <h3 className="text-lg font-semibold mb-2 text-white">Участников пока нет</h3>
               <p className="text-white/60 mb-6">
-                Add team members to collaborate on this project
+                Добавьте участников для совместной работы
               </p>
               <ButtonPrimary onClick={() => setAddDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add First Member
+                Добавить первого участника
               </ButtonPrimary>
             </div>
           ) : (
@@ -311,18 +311,18 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Team Member</DialogTitle>
+            <DialogTitle>Удалить участника</DialogTitle>
             <DialogDescription>
               Are you sure you want to remove {memberToDelete?.name} from this project?
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-sm text-red-300">
-              <p className="font-semibold mb-2">This action will:</p>
+              <p className="font-semibold mb-2">Что произойдёт:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Remove this member&apos;s access to the project</li>
-                <li>Revoke their permissions immediately</li>
-                <li>This can be reversed by re-adding the member</li>
+                <li>Права будут отозваны сразу</li>
+                <li>Участника можно добавить снова</li>
               </ul>
             </div>
             <div className="flex gap-3 justify-end">
@@ -335,7 +335,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                 }}
                 disabled={deleting}
               >
-                Cancel
+                Отмена
               </Button>
               <ButtonDestructive
                 type="button"

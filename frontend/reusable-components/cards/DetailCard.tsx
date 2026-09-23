@@ -19,7 +19,7 @@ export interface DetailCardProps extends Omit<React.HTMLAttributes<HTMLDivElemen
  * 
  * @example
  * ```tsx
- * <DetailCard title="Details" description="View project details">
+ * <DetailCard title="Подробности" description="Открыть проект">
  *   <div>Card content here</div>
  * </DetailCard>
  * ```
@@ -39,10 +39,10 @@ export function DetailCard({
 
   return (
     <div
-      className="rounded-3xl relative transition-all p-[1px]"
+      className="rounded-3xl relative transition-all p-[1px]" data-ui="frame"
       style={{ background: gradientStyle }}
     >
-      <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+      <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
         <Card 
           variant={variant} 
           className={`!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible transition-all flex flex-col h-full ${className}`} 

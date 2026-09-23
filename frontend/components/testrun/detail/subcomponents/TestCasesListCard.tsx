@@ -294,7 +294,7 @@ export function TestCasesListCard({
     },
     {
       key: 'module',
-      label: 'Folder',
+      label: 'Папка',
       sortable: true,
       sortValue: (row: ResultRow) => row.testCase.module?.name || '',
       render: (_, row: ResultRow) => (

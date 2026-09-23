@@ -16,10 +16,10 @@ export interface ConfirmDialogProps {
 }
 
 export function ConfirmDialog({
-  title = "Confirm action",
+  title = "Подтвердите действие",
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = "Подтвердить",
+  cancelLabel = "Отмена",
   onConfirm,
   variant = "glass",
   children,

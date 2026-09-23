@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/frontend/reusable-elements/cards/Card';
 import { ReactNode } from 'react';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
 
 interface ItemCardProps {
   title: string;
   description?: string;
   descriptionClassName?: string;
   badges?: ReactNode;
+  /** Render badges on the title line instead of above it */
+  inlineBadges?: boolean;
   header?: ReactNode;
   content: ReactNode;
   footer?: ReactNode;
@@ -34,7 +37,11 @@ export const ItemCard = ({
   onClick,
   className = '',
   borderColor = 'primary',
+  inlineBadges: inlineBadgesProp = false,
 }: ItemCardProps) => {
+  // New theme: badges always sit on the title line
+  const isNewTheme = useIsNewTheme();
+  const inlineBadges = inlineBadgesProp || isNewTheme;
   const gradientStyle = borderColor === 'accent'
     ? 'conic-gradient(from 45deg, rgba(139, 92, 246, 0.2) 0deg, rgba(139, 92, 246, 0.8) 90deg, rgba(139, 92, 246, 0.2) 180deg, rgba(139, 92, 246, 0.8) 270deg, rgba(139, 92, 246, 0.2) 360deg)'
     : 'conic-gradient(from 45deg, rgba(255, 255, 255, 0.1) 0deg, rgba(255, 255, 255, 0.4) 90deg, rgba(255, 255, 255, 0.1) 180deg, rgba(255, 255, 255, 0.4) 270deg, rgba(255, 255, 255, 0.1) 360deg)';
@@ -43,7 +50,7 @@ export const ItemCard = ({
   const outerStyle = { background: gradientStyle };
 
   const inner = (
-    <div className="relative rounded-3xl h-full" style={{ backgroundColor: 'var(--item-card-bg)' }}>
+    <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: 'var(--item-card-bg)' }}>
       <Card
         variant="glass"
         className="!border-0 !rounded-3xl !bg-transparent before:!bg-none !overflow-visible hover:shadow-xl hover:shadow-primary/10 transition-all flex flex-col h-full"
@@ -51,12 +58,13 @@ export const ItemCard = ({
         <CardHeader className="pb-1 pt-2.5 px-3.5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              {badges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
+              {badges && !inlineBadges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
               <div className="overflow-hidden">
                 <CardTitle
                   className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-foreground"
                   style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                 >
+                  {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
                   {title}
                 </CardTitle>
                 <CardDescription className={descriptionClassName || "line-clamp-1 text-sm text-muted-foreground min-h-5"}>
@@ -79,8 +87,8 @@ export const ItemCard = ({
 
   if (href) {
     return (
-      <div className={outerClassName} style={outerStyle}>
-        <div className="relative rounded-3xl h-full" style={{ backgroundColor: '#050608' }}>
+      <div className={outerClassName} data-ui="frame" style={outerStyle}>
+        <div className="relative rounded-3xl h-full" data-ui="frame-inner" style={{ backgroundColor: '#050608' }}>
           {/* Link covers card body only — no interactive header slot inside <a> */}
           <Link href={href} className="block">
             <Card
@@ -90,12 +98,13 @@ export const ItemCard = ({
               <CardHeader className="pb-1 pt-2.5 px-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    {badges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
+                    {badges && !inlineBadges && <div className="flex items-center gap-2 mb-1">{badges}</div>}
                     <div className="overflow-hidden">
                       <CardTitle
                         className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-white"
                         style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                       >
+                        {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
                         {title}
                       </CardTitle>
                       <CardDescription className={descriptionClassName || 'line-clamp-1 text-sm text-white/60 min-h-5'}>
@@ -125,7 +134,7 @@ export const ItemCard = ({
   }
 
   return (
-    <div className={outerClassName} style={outerStyle} onClick={onClick}>
+    <div className={outerClassName} data-ui="frame" style={outerStyle} onClick={onClick}>
       {inner}
     </div>
   );

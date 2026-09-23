@@ -7,16 +7,7 @@ import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimar
 import { Input } from '@/frontend/reusable-elements/inputs/Input';
 import { InlineError } from '@/frontend/reusable-elements/alerts/InlineError';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
-import {
-  Plus,
-  Trash2,
-  Save,
-  X,
-  Edit2,
-  Check,
-  ChevronUp,
-  ChevronDown,
-} from 'lucide-react';
+import { Plus, Trash2, Save, X, Check, ChevronUp, ChevronDown, Pencil } from 'lucide-react';
 
 export interface DropdownOptionData {
   id?: string;
@@ -70,8 +61,8 @@ interface OptionFormData extends DropdownOptionData {
  * @example
  * ```tsx
  * <DropdownOptionsEditor
- *   title="Edit Priority Options"
- *   description="Manage priority dropdown values"
+ *   title="Изменить приоритеты"
+ *   description="Значения приоритетов"
  *   entity="TestCase"
  *   field="priority"
  *   options={priorityOptions}
@@ -401,7 +392,7 @@ export function DropdownOptionsEditor({
                           className="rounded-full border border-blue-400/30 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 disabled:opacity-40 disabled:cursor-not-allowed"
                           title="Редактировать"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" />
                         </Button>
                         {option.isActive ? (
                           <Button

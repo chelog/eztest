@@ -33,8 +33,8 @@ export function ConfirmDeleteDialog({
   isLoading = false,
   onOpenChange,
   onConfirm,
-  cancelLabel = 'Cancel',
-  confirmLabel = 'Delete',
+  cancelLabel = 'Отмена',
+  confirmLabel = 'Удалить',
   dialogName,
 }: ConfirmDeleteDialogProps) {
   const dialogTrackingName = dialogName || title;

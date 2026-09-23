@@ -186,7 +186,7 @@ export default function AgentTestSetup() {
     try {
       setLoading(true);
       const res = await fetch("/api/agent-test-configs");
-      if (!res.ok) throw new Error("Failed to load configurations");
+      if (!res.ok) throw new Error("Не удалось загрузить конфигурации");
       const data = await res.json();
       const loadedConfigs: AgentTestConfig[] = data?.data ?? [];
       setConfigs(loadedConfigs);
@@ -276,8 +276,8 @@ export default function AgentTestSetup() {
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to load agent test configurations.",
+        title: "Ошибка",
+        message: "Не удалось загрузить конфигурации агентов.",
       });
     } finally {
       setLoading(false);
@@ -330,15 +330,15 @@ export default function AgentTestSetup() {
       setShowForm(false);
       setAlert({
         type: "success",
-        title: "Saved",
+        title: "Сохранено",
         message: `"${data.data.name}" configuration saved successfully.`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Error",
+        title: "Ошибка",
         message:
-          err instanceof Error ? err.message : "Failed to save configuration.",
+          err instanceof Error ? err.message : "Не удалось сохранить конфигурацию.",
       });
     } finally {
       setSubmitting(false);
@@ -346,13 +346,13 @@ export default function AgentTestSetup() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete configuration "${name}"? This cannot be undone.`))
+    if (!confirm(`Удалить конфигурацию «${name}»? Действие нельзя отменить.`))
       return;
     try {
       const res = await fetch(`/api/agent-test-configs/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete configuration");
+      if (!res.ok) throw new Error("Не удалось удалить конфигурацию");
       setConfigs((prev) => prev.filter((c) => c.id !== id));
       setTestCases((prev) => {
         const next = { ...prev };
@@ -361,14 +361,14 @@ export default function AgentTestSetup() {
       });
       setAlert({
         type: "success",
-        title: "Deleted",
+        title: "Удалён",
         message: `"${name}" deleted successfully.`,
       });
     } catch {
       setAlert({
         type: "error",
-        title: "Error",
-        message: "Failed to delete configuration.",
+        title: "Ошибка",
+        message: "Не удалось удалить конфигурацию.",
       });
     }
   };
@@ -466,13 +466,13 @@ export default function AgentTestSetup() {
       setEditForm(emptyForm);
       setAlert({
         type: "success",
-        title: "Updated",
+        title: "Обновлён",
         message: `"${data.data.name}" updated successfully.`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Error",
+        title: "Ошибка",
         message:
           err instanceof Error
             ? err.message
@@ -497,15 +497,15 @@ export default function AgentTestSetup() {
       setTestCases((prev) => ({ ...prev, [config.id]: data.data }));
       setAlert({
         type: "success",
-        title: "Generated",
+        title: "Сгенерировано",
         message: `${data.data.length} test cases generated for "${config.name}".`,
       });
     } catch (err) {
       setAlert({
         type: "error",
-        title: "Generation Failed",
+        title: "Ошибка генерации",
         message:
-          err instanceof Error ? err.message : "Failed to generate test cases.",
+          err instanceof Error ? err.message : "Не удалось сгенерировать тест-кейсы.",
       });
     } finally {
       setGeneratingFor(null);
@@ -556,9 +556,9 @@ export default function AgentTestSetup() {
       setRunningFor(null);
       setAlert({
         type: "error",
-        title: "Run Failed",
+        title: "Запуск провален",
         message:
-          err instanceof Error ? err.message : "Failed to start test run.",
+          err instanceof Error ? err.message : "Не удалось запустить тест-ран.",
       });
     }
   };
@@ -566,7 +566,7 @@ export default function AgentTestSetup() {
   const navbarActions = [
     {
       type: "action" as const,
-      label: "+ New Configuration",
+      label: "+ Новая конфигурация",
       onClick: () => setShowForm(true),
       variant: "primary" as const,
       buttonName: "Agent Test Setup - New Configuration",
@@ -575,7 +575,7 @@ export default function AgentTestSetup() {
   ];
 
   if (status === "loading" || loading) {
-    return <Loader fullScreen text="Loading configurations..." />;
+    return <Loader fullScreen text="Загрузка конфигураций..." />;
   }
 
   return (
@@ -594,7 +594,7 @@ export default function AgentTestSetup() {
                   </div>
                   <div>
                     <p className="font-medium text-white">
-                      Re-generate Test Cases?
+                      Сгенерировать тест-кейсы заново?
                     </p>
                     <p className="text-sm text-white/50 mt-1">
                       This will permanently delete all {count} existing test
@@ -610,7 +610,7 @@ export default function AgentTestSetup() {
                     variant="ghost"
                     onClick={() => setRegenConfirmId(null)}
                   >
-                    Cancel
+                    Отмена
                   </ButtonPrimary>
                   <button
                     onClick={() => {
@@ -621,7 +621,7 @@ export default function AgentTestSetup() {
                     className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border border-yellow-500/20 transition-colors"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    Yes, Re-generate
+                    Да, сгенерировать заново
                   </button>
                 </div>
               </div>
@@ -634,9 +634,9 @@ export default function AgentTestSetup() {
         items={[]}
         breadcrumbs={
           <span className="flex items-center gap-1 text-sm text-white/50">
-            <span>Agent Testing</span>
+            <span>Тестирование агентов</span>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-white/90 font-medium">Setup</span>
+            <span className="text-white/90 font-medium">Настройка</span>
           </span>
         }
         actions={navbarActions}
@@ -651,7 +651,7 @@ export default function AgentTestSetup() {
                 <Bot className="w-6 h-6 text-blue-400" />
               </div>
               <h1 className="text-3xl font-bold text-white">
-                Agent Testing Setup
+                Настройка тестирования агентов
               </h1>
             </div>
             <p className="text-white/60 ml-14">
@@ -665,7 +665,7 @@ export default function AgentTestSetup() {
           {showForm && (
             <div className="mb-8">
               <DetailCard
-                title="New Configuration"
+                title="Новая конфигурация"
                 contentClassName="space-y-5"
               >
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -682,7 +682,7 @@ export default function AgentTestSetup() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, name: e.target.value }))
                       }
-                      placeholder="e.g. Customer Support Agent v2"
+                      placeholder="например, Агент поддержки v2"
                     />
                     {fieldErrors.name && (
                       <p className="text-xs text-red-400">{fieldErrors.name}</p>
@@ -897,7 +897,7 @@ export default function AgentTestSetup() {
                           systemPrompt: e.target.value,
                         }))
                       }
-                      placeholder="Paste your agent's full description here — system prompt, available tools, skills, API endpoints, supported models, constraints, etc."
+                      placeholder="Вставьте полное описание агента: системный промпт, инструменты, навыки, API, модели, ограничения и т. д."
                     />
                     {fieldErrors.systemPrompt && (
                       <p className="text-xs text-red-400">
@@ -918,7 +918,7 @@ export default function AgentTestSetup() {
                         setFieldErrors({});
                       }}
                     >
-                      Cancel
+                      Отмена
                     </ButtonPrimary>
                     <ButtonPrimary
                       type="submit"
@@ -928,7 +928,7 @@ export default function AgentTestSetup() {
                       {submitting ? (
                         <>
                           <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                          Saving...
+                          Сохранение...
                         </>
                       ) : (
                         "Save Configuration"
@@ -949,10 +949,10 @@ export default function AgentTestSetup() {
                 </div>
                 <div>
                   <p className="font-medium text-white/70">
-                    No configurations yet
+                    Конфигураций пока нет
                   </p>
                   <p className="text-sm text-white/40 mt-1">
-                    Add your first agent configuration to get started.
+                    Добавьте первую конфигурацию агента.
                   </p>
                 </div>
                 <ButtonPrimary
@@ -961,7 +961,7 @@ export default function AgentTestSetup() {
                   className="mt-2 gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  New Configuration
+                  Новая конфигурация
                 </ButtonPrimary>
               </div>
             </DetailCard>
@@ -1031,12 +1031,12 @@ export default function AgentTestSetup() {
                           }}
                           disabled={isGenerating}
                           className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Generate test cases from system prompt"
+                          title="Сгенерировать тест-кейсы по системному промпту"
                         >
                           {isGenerating ? (
                             <>
                               <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                              Generating...
+                              Генерация...
                             </>
                           ) : (
                             <>
@@ -1056,7 +1056,7 @@ export default function AgentTestSetup() {
                             )
                           }
                           className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-white/60 hover:bg-white/10 border border-white/10 transition-colors"
-                          title="View and manage test cases"
+                          title="Просмотр и управление тест-кейсами"
                         >
                           <FlaskConical className="w-3 h-3" />
                           {cases.length > 0
@@ -1085,7 +1085,7 @@ export default function AgentTestSetup() {
                         <button
                           onClick={() => handleDelete(config.id, config.name)}
                           className="cursor-pointer p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Delete configuration"
+                          title="Удалить конфигурацию"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1116,7 +1116,7 @@ export default function AgentTestSetup() {
                                   name: e.target.value,
                                 }))
                               }
-                              placeholder="e.g. Customer Support Agent v2"
+                              placeholder="например, Агент поддержки v2"
                             />
                             {editFieldErrors.name && (
                               <p className="text-xs text-red-400">
@@ -1192,7 +1192,7 @@ export default function AgentTestSetup() {
                                     langfuseSecretKey: e.target.value,
                                   }))
                                 }
-                                placeholder="Leave blank to keep existing"
+                                placeholder="Оставьте пустым, чтобы не менять"
                               />
                             </div>
                           </div>
@@ -1298,7 +1298,7 @@ export default function AgentTestSetup() {
                                   aiApiKey: e.target.value,
                                 }))
                               }
-                              placeholder="Leave blank to keep existing"
+                              placeholder="Оставьте пустым, чтобы не менять"
                             />
                           </div>
 
@@ -1335,7 +1335,7 @@ export default function AgentTestSetup() {
                               variant="ghost"
                               onClick={handleCancelEdit}
                             >
-                              Cancel
+                              Отмена
                             </ButtonPrimary>
                             <ButtonPrimary
                               type="submit"
@@ -1345,7 +1345,7 @@ export default function AgentTestSetup() {
                               {editSubmitting ? (
                                 <>
                                   <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                                  Saving...
+                                  Сохранение...
                                 </>
                               ) : (
                                 "Save Changes"
@@ -1392,7 +1392,7 @@ export default function AgentTestSetup() {
                               className="cursor-pointer flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-colors shrink-0"
                             >
                               <ExternalLink className="w-3 h-3" />
-                              View Results
+                              Результаты
                             </button>
                           )}
                         </div>
@@ -1486,7 +1486,7 @@ export default function AgentTestSetup() {
                                     {/* Request */}
                                     <div>
                                       <p className="text-xs font-medium text-blue-400/70 uppercase tracking-wider mb-1.5">
-                                        Request
+                                        Запрос
                                       </p>
                                       {result.requestPayload ? (
                                         (() => {
@@ -1518,7 +1518,7 @@ export default function AgentTestSetup() {
                                         })()
                                       ) : (
                                         <p className="text-xs text-white/30 italic">
-                                          Not yet sent
+                                          Ещё не отправлено
                                         </p>
                                       )}
                                     </div>
@@ -1526,7 +1526,7 @@ export default function AgentTestSetup() {
                                     {/* Response */}
                                     <div>
                                       <p className="text-xs font-medium text-green-400/70 uppercase tracking-wider mb-1.5">
-                                        Response
+                                        Ответ
                                         {result.httpStatus != null && (
                                           <span
                                             className={`ml-2 font-mono ${result.httpStatus >= 200 && result.httpStatus < 300 ? "text-green-400" : "text-red-400"}`}
@@ -1562,7 +1562,7 @@ export default function AgentTestSetup() {
                                         </p>
                                       ) : (
                                         <p className="text-xs text-white/30 italic">
-                                          Waiting for response...
+                                          Ожидание ответа...
                                         </p>
                                       )}
                                     </div>

@@ -46,7 +46,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
     if (canCreateTestSuite) {
       actions.push({
         type: 'action' as const,
-        label: 'Create Test Suite',
+        label: 'Создать тест-сьют',
         icon: Plus,
         onClick: () => setCreateDialogOpen(true),
         variant: 'primary' as const,
@@ -70,7 +70,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
 
   useEffect(() => {
     if (project) {
-      document.title = `Test Suites - ${project.name} | EZTest`;
+      document.title = `Тест-сьюты - ${project.name} | EZTest`;
     }
   }, [project]);
 
@@ -81,7 +81,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         const errorData = await response.json().catch(() => ({}));
         setAlert({
           type: 'error',
-          title: 'Failed to Load Project',
+          title: 'Не удалось загрузить проект',
           message: errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`,
         });
       } else {
@@ -91,10 +91,10 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error fetching project:', error);
@@ -109,7 +109,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         const errorData = await response.json().catch(() => ({}));
         setAlert({
           type: 'error',
-          title: 'Failed to Load Test Suites',
+          title: 'Не удалось загрузить тест-сьюты',
           message: errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`,
         });
         setTestSuites([]);
@@ -121,10 +121,10 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error fetching test suites:', error);
@@ -147,24 +147,23 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         setSelectedSuite(null);
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: `Test suite "${deletedSuiteName}" deleted successfully`,
+          title: 'Готово',
+          message: `Тест-сьют «${deletedSuiteName}» удалён`,
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchTestSuites();
       } else {
         const data = await response.json();
         setAlert({
           type: 'error',
-          title: 'Failed to Delete Test Suite',
+          title: 'Не удалось удалить тест-сьют',
           message: data.error || 'Failed to delete test suite',
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error deleting test suite:', error);
@@ -193,7 +192,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
   const rootSuites = testSuites.filter(s => !s.parentId);
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test suites..." />;
+    return <Loader fullScreen text="Загрузка тест-сьютов..." />;
   }
 
   const canDeleteTestSuite = hasPermissionCheck('testsuites:delete');
@@ -223,9 +222,9 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
           breadcrumbs={
             <Breadcrumbs 
               items={[
-                { label: 'Projects', href: '/projects' },
+                { label: 'Проекты', href: '/projects' },
                 { label: project.name, href: `/projects/${projectId}` },
-                { label: 'Test Suites', href: `/projects/${projectId}/testsuites` },
+                { label: 'Тест-сьюты', href: `/projects/${projectId}/testsuites` },
               ]}
             />
           }
@@ -237,8 +236,8 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         {/* Header */}
         <PageHeaderWithBadge
           badge={project?.key}
-          title="Test Suites"
-          description="Organize test cases into hierarchical suites"
+          title="Тест-сьюты"
+          description="Группируйте тест-кейсы в иерархию сьютов"
           className="mb-6"
         />
 
@@ -251,7 +250,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
 
         {/* Content */}
         {loading ? (
-          <Loader fullScreen={false} text="Loading test suites..." />
+          <Loader fullScreen={false} text="Загрузка тест-сьютов..." />
         ) : testSuites.length === 0 ? (
           <EmptyTestSuiteState onCreateClick={() => setCreateDialogOpen(true)} canCreate={canCreateTestSuite} />
         ) : (
@@ -299,10 +298,9 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
         onTestSuiteCreated={(suite) => {
           setAlert({
             type: 'success',
-            title: 'Success',
+            title: 'Готово',
             message: `Test suite "${suite.name}" created successfully`,
           });
-          setTimeout(() => setAlert(null), 5000);
           fetchTestSuites();
         }}
       />

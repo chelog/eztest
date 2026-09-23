@@ -107,44 +107,44 @@ export const HOME_FAQ: Array<{ question: string; answer: string }> = [
 /** Per-page SEO config (internal / authenticated pages) */
 export const CONFIG_SEO = {
   Projects: {
-    title: 'Projects',
-    description: 'Manage your test projects and track progress',
+    title: 'Проекты',
+    description: 'Тестовые проекты и прогресс по ним',
   },
   ProjectDetail: {
-    title: 'Project Overview',
-    description: 'View project details, test cases, and team members',
+    title: 'Обзор проекта',
+    description: 'Данные проекта, тест-кейсы и команда',
   },
   TestCases: {
-    title: 'Test Cases',
-    description: 'Manage and execute test cases for your project',
+    title: 'Тест-кейсы',
+    description: 'Тест-кейсы проекта',
   },
   TestCaseDetail: {
-    title: 'Test Case Details',
-    description: 'View and edit test case details and execution history',
+    title: 'Тест-кейс',
+    description: 'Тест-кейс и история его выполнения',
   },
   ProjectSettings: {
-    title: 'Project Settings',
-    description: 'Configure project settings and preferences',
+    title: 'Настройки проекта',
+    description: 'Настройки проекта',
   },
   ProjectMembers: {
-    title: 'Team Members',
-    description: 'Manage project team members and permissions',
+    title: 'Участники',
+    description: 'Участники проекта и их права',
   },
   Dashboard: {
-    title: 'Dashboard',
-    description: 'Overview of your testing activities and metrics',
+    title: 'Главная',
+    description: 'Обзор тестирования',
   },
   Settings: {
-    title: 'Settings',
-    description: 'Manage your account settings and preferences',
+    title: 'Настройки',
+    description: 'Настройки аккаунта',
   },
   Profile: {
-    title: 'Profile',
-    description: 'View and edit your user profile information',
+    title: 'Профиль',
+    description: 'Профиль пользователя',
   },
   Account: {
-    title: 'Account Settings',
-    description: 'Manage your account security and preferences',
+    title: 'Настройки аккаунта',
+    description: 'Безопасность и настройки аккаунта',
   },
 } as const;
 

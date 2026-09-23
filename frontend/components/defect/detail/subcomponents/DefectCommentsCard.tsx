@@ -85,7 +85,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
     setLoading(true);
     try {
       const response = await fetch(`/api/projects/${projectId}/defects/${defectId}/comments`);
-      if (!response.ok) throw new Error('Failed to fetch comments');
+      if (!response.ok) throw new Error('Не удалось загрузить комментарии');
       const data = await response.json();
       setComments(data.data || []);
     } catch {
@@ -144,7 +144,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
         body: JSON.stringify({ content: commentContent }),
       });
 
-      if (!response.ok) throw new Error('Failed to add comment');
+      if (!response.ok) throw new Error('Не удалось добавить комментарий');
       
       const data = await response.json();
       const newCommentData = data.data;
@@ -207,7 +207,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     
-    return commentDate.toLocaleDateString('en-US', {
+    return commentDate.toLocaleDateString('ru-RU', {
       month: 'short',
       day: 'numeric',
       year: commentDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
@@ -215,19 +215,19 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
   };
 
   return (
-    <DetailCard title="Comments" contentClassName="!p-0">
+    <DetailCard title="Комментарии" contentClassName="!p-0">
       <div className="flex flex-col h-[500px]">
         {/* Comments list */}
         <div className={`flex-1 p-6 space-y-4 ${comments.length > 0 ? 'overflow-y-auto custom-scrollbar' : 'overflow-y-hidden'}`}>
           {loading ? (
             <div className="flex items-center justify-center h-full text-gray-400">
-              Loading comments...
+              Загрузка комментариев...
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <div className="bg-[#1a1a1e]/50 rounded-xl p-8 text-center">
-                <p className="text-base font-medium text-gray-300">No comments yet</p>
-                <p className="text-sm mt-2 text-gray-500">Be the first to share your thoughts</p>
+                <p className="text-base font-medium text-gray-300">Комментариев пока нет</p>
+                <p className="text-sm mt-2 text-gray-500">Оставьте первый комментарий</p>
               </div>
             </div>
           ) : (
@@ -302,7 +302,7 @@ export const DefectCommentsCard: React.FC<DefectCommentsCardProps> = ({
               attachments={commentAttachments}
               onAttachmentsChange={setCommentAttachments}
               entityType="comment"
-              placeholder="Write a comment..."
+              placeholder="Напишите комментарий..."
               rows={2}
               disabled={submitting}
             />

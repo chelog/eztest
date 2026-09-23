@@ -5,7 +5,7 @@ import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
 import { StatsGrid } from '@/frontend/reusable-components/data/StatsGrid';
-import { Edit, Trash2, TestTube2, Layers, FolderTree } from 'lucide-react';
+import { Trash2, Layers, FolderTree, FileCheck, Pencil } from 'lucide-react';
 import { TestSuite } from '../types';
 
 interface TestSuiteCardProps {
@@ -36,7 +36,7 @@ export function TestSuiteCard({
       className="flex items-center gap-1 text-xs px-2 py-0.5 border-primary/40 bg-primary/10 text-primary"
     >
       <FolderTree className="h-3 w-3" />
-      {suite.parent ? suite.parent.name : 'Suite'}
+      {suite.parent ? suite.parent.name : 'Сьют'}
     </Badge>
   );
 
@@ -44,12 +44,12 @@ export function TestSuiteCard({
     <ActionMenu
       items={[
         {
-          label: 'View / Edit',
-          icon: Edit,
+          label: 'Открыть / изменить',
+          icon: Pencil,
           onClick: () => onView(suite.id),
         },
         {
-          label: 'Delete',
+          label: 'Удалить',
           icon: Trash2,
           onClick: () => onDelete(suite),
           variant: 'destructive',
@@ -66,15 +66,15 @@ export function TestSuiteCard({
     <StatsGrid
       stats={[
         {
-          icon: TestTube2,
+          icon: FileCheck,
           value: suite._count.testCases,
-          label: 'Test Cases',
+          label: 'Тест-кейсы',
           iconColor: 'text-primary',
         },
         {
           icon: Layers,
           value: childrenCount,
-          label: 'Sub-suites',
+          label: 'Вложенные сьюты',
           iconColor: 'text-purple-400',
         },
       ]}

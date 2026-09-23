@@ -63,7 +63,7 @@ export function TestSuiteTestCaseTable({
               {row.title && row.title.length > 40 && (
                 <HoverCardContent side="top" className="w-80">
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-white">Test Case Title</h4>
+                    <h4 className="text-sm font-semibold text-white">Название тест-кейса</h4>
                     <p className="text-sm text-white/80 break-words">{row.title}</p>
                   </div>
                 </HoverCardContent>
@@ -124,7 +124,7 @@ export function TestSuiteTestCaseTable({
             {row.createdBy?.name && row.createdBy.name.length > 20 && (
               <HoverCardContent side="top" className="w-60">
                 <div className="space-y-1">
-                  <h4 className="text-xs font-semibold text-white/60">Owner</h4>
+                  <h4 className="text-xs font-semibold text-white/60">Автор</h4>
                   <p className="text-sm text-white/90">{row.createdBy.name}</p>
                 </div>
               </HoverCardContent>
@@ -168,7 +168,7 @@ export function TestSuiteTestCaseTable({
       ? {
           items: [
             {
-              label: 'Delete',
+              label: 'Удалить',
               icon: Trash2,
               onClick: onDelete,
               variant: 'destructive',
@@ -190,7 +190,7 @@ export function TestSuiteTestCaseTable({
       groupConfig={groupConfig}
       actions={actions}
       gridTemplateColumns="70px 1fr 100px 90px 140px 70px 40px"
-      emptyMessage="No test cases available"
+      emptyMessage="Нет тест-кейсов"
     />
   );
 }

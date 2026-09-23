@@ -11,7 +11,7 @@ import { ChildSuitesCard } from './subcomponents/ChildSuitesCard';
 import { TestSuiteInfoCard } from './subcomponents/TestSuiteInfoCard';
 import { DeleteTestSuiteDialog } from './subcomponents/DeleteTestSuiteDialog';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { Plus, TestTube2, Folder } from 'lucide-react';
+import { Plus, Folder, FileCheck } from 'lucide-react';
 import { AddTestCasesDialog } from '@/frontend/components/common/dialogs/AddTestCasesDialog';
 import { AddModulesAndTestCasesDialog } from '@/frontend/reusable-components/dialogs/AddModulesAndTestCasesDialog';
 import { DeleteTestCaseDialog } from '@/frontend/components/testcase/subcomponents/DeleteTestCaseDialog';
@@ -95,7 +95,7 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         const errorData = await response.json().catch(() => ({}));
         setAlert({
           type: 'error',
-          title: 'Failed to Load Test Suite',
+          title: 'Не удалось загрузить тест-сьют',
           message: errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`,
         });
       } else {
@@ -109,10 +109,10 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error fetching test suite:', error);
@@ -135,23 +135,22 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         setIsEditing(false);
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: 'Test suite updated successfully',
+          title: 'Готово',
+          message: 'Тест-сьют обновлён',
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchTestSuite();
       } else {
         setAlert({
           type: 'error',
-          title: 'Failed to Update Test Suite',
+          title: 'Не удалось обновить тест-сьют',
           message: data.error || 'Failed to update test suite',
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error updating test suite:', error);
@@ -177,8 +176,8 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
       setDeleteDialogOpen(false);
       setAlert({
         type: 'success',
-        title: 'Success',
-        message: 'Test suite deleted successfully',
+        title: 'Готово',
+        message: 'Тест-сьют удалён',
       });
       setTimeout(() => router.push(`/projects/${testSuite?.project.id}/testsuites`), 1000);
     } else {
@@ -220,8 +219,8 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
     if (selectedTestCaseIds.length === 0) {
       setAlert({
         type: 'error',
-        title: 'Validation Error',
-        message: 'Please select at least one test case',
+        title: 'Проверьте данные',
+        message: 'Выберите хотя бы один тест-кейс',
       });
       return;
     }
@@ -240,7 +239,7 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
           const errorData = await response.json().catch(() => ({}));
           setAlert({
             type: 'error',
-            title: 'Failed to Add Test Case',
+            title: 'Не удалось добавить тест-кейс',
             message: errorData.error || 'Failed to add test case',
           });
           return;
@@ -251,16 +250,15 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
       setSelectedTestCaseIds([]);
       setAlert({
         type: 'success',
-        title: 'Success',
+        title: 'Готово',
         message: `${selectedTestCaseIds.length} test case(s) added successfully`,
       });
-      setTimeout(() => setAlert(null), 5000);
       fetchTestSuite();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error adding test cases:', error);
@@ -271,8 +269,8 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
     if (selectedModuleIds.length === 0 && selectedTestCaseIds.length === 0) {
       setAlert({
         type: 'error',
-        title: 'Validation Error',
-        message: 'Please select at least one module or test case',
+        title: 'Проверьте данные',
+        message: 'Выберите хотя бы один модуль или тест-кейс',
       });
       return;
     }
@@ -317,7 +315,7 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         const errorData = await response.json().catch(() => ({}));
         setAlert({
           type: 'error',
-          title: 'Failed to Add Test Cases',
+          title: 'Не удалось добавить тест-кейсы',
           message: errorData.error || 'Failed to add test cases to suite',
         });
         return;
@@ -331,16 +329,15 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
       setSelectedModuleIds([]);
       setAlert({
         type: 'success',
-        title: 'Success',
+        title: 'Готово',
         message: `${addedCount} test case(s) added successfully`,
       });
-      setTimeout(() => setAlert(null), 5000);
       fetchTestSuite();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error adding modules and test cases:', error);
@@ -371,24 +368,23 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         setTestCaseToDelete(null);
         setAlert({
           type: 'success',
-          title: 'Success',
-          message: 'Test case removed from suite successfully',
+          title: 'Готово',
+          message: 'Тест-кейс убран из сьюта',
         });
-        setTimeout(() => setAlert(null), 5000);
         await fetchTestSuite();
       } else {
         console.error('Remove test case error:', data);
         setAlert({
           type: 'error',
-          title: 'Failed to Remove Test Case',
+          title: 'Не удалось убрать тест-кейс',
           message: data.error || 'Failed to remove test case',
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
-        title: 'Connection Error',
+        title: 'Ошибка соединения',
         message: errorMessage,
       });
       console.error('Error removing test case:', error);
@@ -396,14 +392,14 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
   };
 
   if (loading || permissionsLoading) {
-    return <Loader fullScreen text="Loading test suite..." />;
+    return <Loader fullScreen text="Загрузка тест-сьюта..." />;
   }
 
   if (!testSuite) {
     return (
       <div className="min-h-screen p-4 md:p-6 lg:p-8">
         <div className="text-center py-12">
-          <p className="text-gray-400">Test suite not found</p>
+          <p className="text-gray-400">Тест-сьют не найден</p>
         </div>
       </div>
     );
@@ -421,13 +417,13 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         breadcrumbs={
           <Breadcrumbs 
             items={[
-              { label: 'Projects', href: '/projects' },
+              { label: 'Проекты', href: '/projects' },
               {
                 label: testSuite.project.name,
                 href: `/projects/${testSuite.project.id}`,
               },
               {
-                label: 'Test Suites',
+                label: 'Тест-сьюты',
                 href: `/projects/${testSuite.project.id}/testsuites`,
               },
               { label: testSuite.name, href: `/projects/${testSuite.project.id}/testsuites/${testSuite.id}` },
@@ -455,7 +451,7 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
         <ActionButtonGroup
           buttons={[
             {
-              label: 'Add Modules & Test Cases',
+              label: 'Добавить модули и тест-кейсы',
               icon: Plus,
               onClick: () => {
                 fetchAvailableModules();
@@ -463,18 +459,6 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
               },
               variant: 'secondary',
               show: canManageTestCases,
-            },
-            {
-              label: 'View All Test Cases',
-              icon: TestTube2,
-              onClick: () => router.push(`/projects/${testSuite.project.id}/testcases`),
-              variant: 'secondary',
-            },
-            {
-              label: 'View All Test Suites',
-              icon: Folder,
-              onClick: () => router.push(`/projects/${testSuite.project.id}/testsuites`),
-              variant: 'secondary',
             },
           ]}
           className="mb-6"
@@ -584,10 +568,10 @@ export default function TestSuiteDetail({ suiteId }: TestSuiteDetailProps) {
           onModuleSelectionChange={setSelectedModuleIds}
           onTestCaseSelectionChange={setSelectedTestCaseIds}
           onSubmit={handleAddModulesAndTestCases}
-          title="Add Modules & Test Cases to Suite"
-          description="Select entire modules or individual test cases to add to this test suite"
+          title="Добавить модули и тест-кейсы в сьют"
+          description="Выберите модули целиком или отдельные тест-кейсы для этого сьюта"
           submitButtonText="Add Selected"
-          emptyMessage="No modules or test cases available to add"
+          emptyMessage="Нечего добавить: нет модулей и тест-кейсов"
           loading={loadingAvailableModules}
         />
 

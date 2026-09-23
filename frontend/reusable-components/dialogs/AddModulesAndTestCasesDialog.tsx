@@ -13,7 +13,7 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
-import { ChevronDown, ChevronRight, FolderOpen, TestTube2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderOpen, FileCheck } from 'lucide-react';
 import { PriorityBadge } from '@/frontend/reusable-components/badges/PriorityBadge';
 import { Module, TestCase } from '@/frontend/components/testcase/types';
 
@@ -48,8 +48,8 @@ interface AddModulesAndTestCasesDialogProps {
  *   onModuleSelectionChange={setSelectedModuleIds}
  *   onTestCaseSelectionChange={setSelectedTestCaseIds}
  *   onSubmit={handleAddToSuite}
- *   title="Add Modules & Test Cases to Suite"
- *   description="Select entire modules or individual test cases to add to this test suite"
+ *   title="Добавить модули и тест-кейсы в сьют"
+ *   description="Выберите модули целиком или отдельные тест-кейсы для этого сьюта"
  * />
  */
 export function AddModulesAndTestCasesDialog({
@@ -61,10 +61,10 @@ export function AddModulesAndTestCasesDialog({
   onModuleSelectionChange,
   onTestCaseSelectionChange,
   onSubmit,
-  title = 'Add Modules & Test Cases',
-  description = 'Select modules and test cases to add',
+  title = 'Добавить модули и тест-кейсы',
+  description = 'Выберите модули и тест-кейсы',
   submitButtonText = 'Add Selected',
-  emptyMessage = 'No modules or test cases available',
+  emptyMessage = 'Нет модулей и тест-кейсов',
   loading = false,
 }: AddModulesAndTestCasesDialogProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
@@ -166,7 +166,7 @@ export function AddModulesAndTestCasesDialog({
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <div className="w-8 h-8 border-3 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-              <p className="text-white/60 text-sm">Loading available modules and test cases...</p>
+              <p className="text-white/60 text-sm">Загрузка модулей и тест-кейсов...</p>
             </div>
           ) : modules.length === 0 ? (
             <p className="text-white/60 text-center py-8">
@@ -220,7 +220,7 @@ export function AddModulesAndTestCasesDialog({
 
                         {/* Module Icon */}
                         {moduleItem.id === 'ungrouped' ? (
-                          <TestTube2 className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                          <FileCheck className="w-5 h-5 text-purple-400 flex-shrink-0" />
                         ) : (
                           <FolderOpen className="w-5 h-5 text-blue-400 flex-shrink-0" />
                         )}
@@ -233,7 +233,7 @@ export function AddModulesAndTestCasesDialog({
                             </p>
                             {isPartiallySelected && (
                               <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/20">
-                                Partial
+                                Частично
                               </Badge>
                             )}
                           </div>
@@ -268,7 +268,7 @@ export function AddModulesAndTestCasesDialog({
                             />
 
                             {/* Test Case Icon */}
-                            <TestTube2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                            <FileCheck className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
 
                             {/* Test Case Details */}
                             <div className="flex-1 min-w-0">
@@ -326,7 +326,7 @@ export function AddModulesAndTestCasesDialog({
                 onClick={() => onOpenChange(false)}
                 className="cursor-pointer"
               >
-                Cancel
+                Отмена
               </Button>
               <ButtonPrimary
                 onClick={onSubmit}

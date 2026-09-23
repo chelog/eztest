@@ -169,7 +169,7 @@ export function hasPermission(
     
     if (!authenticatedUser) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
+        { success: false, message: 'Требуется вход' },
         { status: 401 }
       );
     }
@@ -181,7 +181,7 @@ export function hasPermission(
     if (projectId && authenticatedUser.projectId) {
       if (authenticatedUser.projectId !== projectId) {
         return NextResponse.json(
-          { success: false, message: 'Forbidden: API key does not have access to this project' },
+          { success: false, message: 'Нет доступа: API-ключ не относится к этому проекту' },
           { status: 403 }
         );
       }
@@ -193,7 +193,7 @@ export function hasPermission(
 
     if (!hasAccess) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: Insufficient permissions' },
+        { success: false, message: 'Нет доступа: недостаточно прав' },
         { status: 403 }
       );
     }
@@ -215,7 +215,7 @@ export function hasPermission(
 
         if (!projectMembership) {
           return NextResponse.json(
-            { success: false, message: 'Forbidden: You are not a member of this project' },
+            { success: false, message: 'Нет доступа: вы не участник этого проекта' },
             { status: 403 }
           );
         }

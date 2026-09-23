@@ -33,8 +33,8 @@ export function EmptyStateCard({
     <Card variant="glass" className={className}>
       <CardContent className="flex flex-col items-center justify-center py-12">
         {Icon && (
-          <div className="rounded-full bg-white/5 p-6 mb-4">
-            <Icon className="w-12 h-12 text-white/50" />
+          <div className="w-14 h-14 rounded-[16px] bg-white/[0.05] flex items-center justify-center mb-4">
+            <Icon className="w-6 h-6 text-white/45" />
           </div>
         )}
         <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>

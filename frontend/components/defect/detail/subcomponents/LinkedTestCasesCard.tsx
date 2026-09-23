@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { TestTube2, AlertCircle } from 'lucide-react';
+import { AlertCircle, FileCheck } from 'lucide-react';
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { LinkTestCaseDialog } from './LinkTestCaseDialog';
@@ -52,7 +52,7 @@ export function LinkedTestCasesCard({ defect, onRefresh }: LinkedTestCasesCardPr
       >
       {testCases.length === 0 ? (
         <div className="text-center py-8">
-          <TestTube2 className="w-12 h-12 text-white/20 mx-auto mb-3" />
+          <FileCheck className="w-12 h-12 text-white/20 mx-auto mb-3" />
           <p className="text-white/60 text-sm">
             К этому дефекту пока не привязан ни один тест-кейс
           </p>

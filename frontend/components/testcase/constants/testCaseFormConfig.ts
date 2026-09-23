@@ -4,16 +4,16 @@ import type { FormFieldConfig } from '../subcomponents/TestCaseFormField';
 import { Module } from '../types';
 
 export const PRIORITY_OPTIONS = [
-  { label: 'Critical', value: 'CRITICAL' },
-  { label: 'High', value: 'HIGH' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'Low', value: 'LOW' },
+  { label: 'Критический', value: 'CRITICAL' },
+  { label: 'Высокий', value: 'HIGH' },
+  { label: 'Средний', value: 'MEDIUM' },
+  { label: 'Низкий', value: 'LOW' },
 ];
 
 export const STATUS_OPTIONS = [
-  { label: 'Active', value: 'ACTIVE' },
-  { label: 'Draft', value: 'DRAFT' },
-  { label: 'Deprecated', value: 'DEPRECATED' },
+  { label: 'Активен', value: 'ACTIVE' },
+  { label: 'Черновик', value: 'DRAFT' },
+  { label: 'Устарел', value: 'DEPRECATED' },
 ];
 
 export function getTestCaseFormFields(modules: Module[] = []): FormFieldConfig[] {
@@ -25,69 +25,69 @@ export function getTestCaseFormFields(modules: Module[] = []): FormFieldConfig[]
   return [
     {
       name: 'title',
-      label: 'Title',
+      label: 'Название',
       type: 'text',
-      placeholder: 'Enter test case title',
+      placeholder: 'Введите название тест-кейса',
       required: true,
       maxLength: 200,
     },
     {
       name: 'priority',
-      label: 'Priority',
+      label: 'Приоритет',
       type: 'select',
       options: PRIORITY_OPTIONS,
     },
     {
       name: 'moduleId',
-      label: 'Module',
+      label: 'Модуль',
       type: 'select',
-      placeholder: 'Select a module',
+      placeholder: 'Выберите модуль',
       options: [
-        { label: 'None (No Module)', value: 'none' },
+        { label: 'Без модуля', value: 'none' },
         ...moduleOptions,
       ],
     },
     {
       name: 'status',
-      label: 'Status',
+      label: 'Статус',
       type: 'select',
       options: STATUS_OPTIONS,
     },
     {
       name: 'estimatedTime',
-      label: 'Estimated Time (minutes)',
+      label: 'Оценка времени (мин)',
       type: 'number',
-      placeholder: 'Enter estimated time',
+      placeholder: 'Введите оценку времени',
     },
     {
       name: 'description',
-      label: 'Description',
+      label: 'Описание',
       type: 'textarea',
-      placeholder: 'Enter test case description',
+      placeholder: 'Введите описание тест-кейса',
       rows: 3,
       maxLength: 5000,
     },
     {
       name: 'preconditions',
-      label: 'Preconditions',
+      label: 'Предусловия',
       type: 'textarea',
-      placeholder: 'Enter preconditions',
+      placeholder: 'Введите предусловия',
       rows: 2,
       maxLength: 5000,
     },
     {
       name: 'postconditions',
-      label: 'Postconditions',
+      label: 'Постусловия',
       type: 'textarea',
-      placeholder: 'Enter postconditions',
+      placeholder: 'Введите постусловия',
       rows: 2,
       maxLength: 5000,
     },
     {
       name: 'expectedResult',
-      label: 'Expected Result',
+      label: 'Ожидаемый результат',
       type: 'textarea',
-      placeholder: 'Enter the expected result',
+      placeholder: 'Введите ожидаемый результат',
       rows: 3,
       maxLength: 5000,
     },

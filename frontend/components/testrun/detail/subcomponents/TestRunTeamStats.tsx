@@ -9,10 +9,10 @@ interface TestRunTeamStatsProps {
 }
 
 const STATUS_COLORS = {
-  passed: 'bg-green-500',
-  failed: 'bg-red-500',
-  blocked: 'bg-orange-500',
-  retest: 'bg-purple-500',
+  passed: 'bg-emerald-400/80',
+  failed: 'bg-red-400/80',
+  blocked: 'bg-amber-400/80',
+  retest: 'bg-violet-400/80',
 };
 
 export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
@@ -21,9 +21,9 @@ export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
   if (!stats.perUserStats || stats.perUserStats.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] mb-6">
+    <div className="rounded-[14px] bg-white/[0.035]">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors rounded-xl"
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.03] transition-colors rounded-[14px]"
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-2 text-sm font-semibold text-white/80">
@@ -39,7 +39,7 @@ export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
       </button>
 
       {open && (
-        <div className="px-4 pb-4 space-y-3">
+        <div className="px-4 pb-3.5 space-y-2.5">
           {stats.perUserStats.map((user) => {
             const total = user.passed + user.failed + user.blocked + user.retest;
             const passedPct = total > 0 ? (user.passed / total) * 100 : 0;
@@ -50,7 +50,7 @@ export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
             return (
               <div key={user.userId} className="flex items-center gap-3">
                 {/* Avatar */}
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-semibold text-white/70 uppercase">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/[0.08] flex items-center justify-center text-xs font-semibold text-white/70 uppercase">
                   {user.name.charAt(0)}
                 </div>
 
@@ -62,7 +62,7 @@ export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
                   </div>
 
                   {/* Stacked bar */}
-                  <div className="h-2 w-full rounded-full overflow-hidden bg-white/10 flex">
+                  <div className="h-1 w-full rounded-full overflow-hidden bg-white/[0.08] flex">
                     {user.passed > 0 && (
                       <div
                         className={`h-full ${STATUS_COLORS.passed} transition-all`}
@@ -97,16 +97,16 @@ export function TestRunTeamStats({ stats }: TestRunTeamStatsProps) {
                 {/* Counts */}
                 <div className="flex-shrink-0 flex items-center gap-2 text-xs">
                   {user.passed > 0 && (
-                    <span className="text-green-400">{user.passed}✓</span>
+                    <span className="text-emerald-400/90 tabular-nums">{user.passed}</span>
                   )}
                   {user.failed > 0 && (
-                    <span className="text-red-400">{user.failed}✗</span>
+                    <span className="text-red-400/90 tabular-nums">{user.failed}</span>
                   )}
                   {user.blocked > 0 && (
-                    <span className="text-orange-400">{user.blocked}⊘</span>
+                    <span className="text-amber-400/90 tabular-nums">{user.blocked}</span>
                   )}
                   {user.retest > 0 && (
-                    <span className="text-purple-400">{user.retest}↺</span>
+                    <span className="text-violet-400/90 tabular-nums">{user.retest}</span>
                   )}
                 </div>
               </div>

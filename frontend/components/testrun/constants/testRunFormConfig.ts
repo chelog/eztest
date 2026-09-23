@@ -1,17 +1,17 @@
 import { FormFieldConfig } from '../../testcase/subcomponents/TestCaseFormField';
 
 export const ENVIRONMENT_OPTIONS = [
-  { label: 'Production', value: 'Production' },
-  { label: 'Staging', value: 'Staging' },
+  { label: 'Продакшн', value: 'Production' },
+  { label: 'Стейджинг', value: 'Staging' },
   { label: 'QA', value: 'QA' },
-  { label: 'Development', value: 'Development' },
+  { label: 'Разработка', value: 'Development' },
 ];
 
 export const STATUS_OPTIONS = [
-  { label: 'Planned', value: 'PLANNED' },
-  { label: 'In Progress', value: 'IN_PROGRESS' },
-  { label: 'Completed', value: 'COMPLETED' },
-  { label: 'Cancelled', value: 'CANCELLED' },
+  { label: 'Запланирован', value: 'PLANNED' },
+  { label: 'В работе', value: 'IN_PROGRESS' },
+  { label: 'Завершён', value: 'COMPLETED' },
+  { label: 'Отменён', value: 'CANCELLED' },
 ];
 
 /**
@@ -21,27 +21,27 @@ export function getTestRunFormFields(): FormFieldConfig[] {
   return [
     {
       name: 'name',
-      label: 'Name',
+      label: 'Название',
       type: 'text',
       required: true,
-      placeholder: 'Enter test run name',
+      placeholder: 'Введите название тест-рана',
       maxLength: 50,
     },
     {
       name: 'description',
-      label: 'Description',
+      label: 'Описание',
       type: 'textarea',
       required: false,
-      placeholder: 'Enter test run description',
+      placeholder: 'Введите описание тест-рана',
       maxLength: 250,
     },
     {
       name: 'environment',
-      label: 'Environment',
+      label: 'Окружение',
       type: 'select',
       required: false,
       options: ENVIRONMENT_OPTIONS,
-      placeholder: 'Select environment',
+      placeholder: 'Выберите окружение',
     },
   ];
 }

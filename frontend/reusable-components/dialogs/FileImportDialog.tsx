@@ -94,7 +94,7 @@ export function FileImportDialog({
         setFile(selectedFile);
         setError(null);
       } else {
-        setError('Please select a CSV or Excel file (.csv, .xlsx, .xls)');
+        setError('Выберите файл CSV или Excel (.csv, .xlsx, .xls)');
         setFile(null);
       }
     }
@@ -105,7 +105,7 @@ export function FileImportDialog({
       const response = await fetch(templateEndpoint);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch template');
+        throw new Error('Не удалось загрузить шаблон');
       }
 
       const data = await response.json();
@@ -140,13 +140,13 @@ export function FileImportDialog({
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
-      setError('Failed to download template');
+      setError('Не удалось скачать шаблон');
     }
   };
 
   const handleImport = async () => {
     if (!file) {
-      setError('Please select a file');
+      setError('Выберите файл');
       return;
     }
 
@@ -177,7 +177,7 @@ export function FileImportDialog({
       
       if (!resultData || typeof resultData !== 'object') {
         console.error('Unexpected response structure:', data);
-        throw new Error('Invalid response format from server');
+        throw new Error('Неожиданный ответ сервера');
       }
       
       // Ensure all required fields exist with defaults
@@ -207,7 +207,7 @@ export function FileImportDialog({
         }, 2000);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Import failed');
+      setError(error instanceof Error ? error.message : 'Ошибка импорта');
     } finally {
       setUploading(false);
     }
@@ -242,7 +242,7 @@ export function FileImportDialog({
         setFile(droppedFile);
         setError(null);
       } else {
-        setError('Please select a CSV or Excel file (.csv, .xlsx, .xls)');
+        setError('Выберите файл CSV или Excel (.csv, .xlsx, .xls)');
       }
     }
   };
@@ -261,24 +261,24 @@ export function FileImportDialog({
           {/* Target Module Selector */}
           {modules && modules.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-white/90">Target Module (optional)</p>
+              <p className="text-sm font-medium text-white/90">Модуль (необязательно)</p>
               <Select
                 value={selectedModuleId || '_none'}
                 onValueChange={(val) => setSelectedModuleId(val === '_none' ? '' : val)}
                 disabled={uploading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Keep module from file" />
+                  <SelectValue placeholder="Взять модуль из файла" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_none">Keep module from file</SelectItem>
+                  <SelectItem value="_none">Взять модуль из файла</SelectItem>
                   {modules.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-white/50">
-                If selected, all imported test cases will be placed in this module, overriding the Module / Feature column in the file.
+                Если выбрать, все импортированные тест-кейсы попадут в этот модуль, независимо от колонки «Модуль» в файле.
               </p>
             </div>
           )}
@@ -290,9 +290,9 @@ export function FileImportDialog({
                 <FileSpreadsheet className="h-5 w-5 text-white/70" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white/90">Download Template</p>
+                <p className="text-sm font-medium text-white/90">Скачать шаблон</p>
                 <p className="text-xs text-white/50">
-                  Get a template file with the correct format
+                  Шаблон файла в нужном формате
                 </p>
               </div>
             </div>
@@ -305,7 +305,7 @@ export function FileImportDialog({
               buttonName={`${title} - Download Template`}
             >
               <Download className="h-4 w-4 mr-2" />
-              Download
+              Скачать
             </Button>
           </div>
 
@@ -335,10 +335,10 @@ export function FileImportDialog({
             ) : (
               <div>
                 <p className="text-sm font-medium text-white/90">
-                  Click to upload or drag and drop
+                  Нажмите или перетащите файл
                 </p>
                 <p className="text-xs text-white/50 mt-1">
-                  CSV or Excel files (.csv, .xlsx, .xls)
+                  Файлы CSV или Excel (.csv, .xlsx, .xls)
                 </p>
               </div>
             )}
@@ -360,7 +360,7 @@ export function FileImportDialog({
                 <div className="flex items-center gap-3 p-4 border border-green-500/30 rounded-lg bg-green-500/10">
                   <CheckCircle className="h-6 w-6 text-green-500" />
                   <div>
-                    <p className="text-sm font-medium text-white/90">Success</p>
+                    <p className="text-sm font-medium text-white/90">Готово</p>
                     <p className="text-2xl font-bold text-green-500">
                       {Number(result.success) || 0}
                     </p>
@@ -369,7 +369,7 @@ export function FileImportDialog({
                 <div className="flex items-center gap-3 p-4 border border-yellow-500/30 rounded-lg bg-yellow-500/10">
                   <AlertCircle className="h-6 w-6 text-yellow-500" />
                   <div>
-                    <p className="text-sm font-medium text-white/90">Skipped</p>
+                    <p className="text-sm font-medium text-white/90">Пропущено</p>
                     <p className="text-2xl font-bold text-yellow-500">
                       {Number(result.skipped) || 0}
                     </p>
@@ -378,7 +378,7 @@ export function FileImportDialog({
                 <div className="flex items-center gap-3 p-4 border border-red-500/30 rounded-lg bg-red-500/10">
                   <XCircle className="h-6 w-6 text-red-500" />
                   <div>
-                    <p className="text-sm font-medium text-white/90">Failed</p>
+                    <p className="text-sm font-medium text-white/90">Провалено</p>
                     <p className="text-2xl font-bold text-red-500">
                       {Number(result.failed) || 0}
                     </p>
@@ -441,7 +441,7 @@ export function FileImportDialog({
                 <Alert variant="destructive">
                   <XCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Import completed with issues:
+                    Импорт завершён с замечаниями:
                     {Number(result.skipped) > 0 && ` ${Number(result.skipped) || 0} skipped`}
                     {Number(result.failed) > 0 && ` ${Number(result.failed) || 0} failed`}.
                   </AlertDescription>
@@ -453,7 +453,7 @@ export function FileImportDialog({
           </div>
         </div>
 
-        <div className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
+        <div data-ui="dialog-footer" className="flex-shrink-0 border-t border-white/10 bg-[#0f0f12] px-6 py-4 flex gap-3 justify-end">
           <Button
             type="button"
             variant="glass"

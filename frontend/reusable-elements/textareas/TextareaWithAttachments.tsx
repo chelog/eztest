@@ -349,7 +349,7 @@ function TextareaWithAttachments({
           "text-xs mt-1 text-right",
           isOverLimit ? "text-red-500" : "text-white/60"
         )}>
-          {charCount}/{maxLength} characters
+          {charCount}/{maxLength}
         </div>
       )}
 
@@ -387,14 +387,14 @@ function TextareaWithAttachments({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <X className="w-5 h-5 text-red-500" />
-                    <h4 className="text-sm font-semibold text-red-500">Upload Failed</h4>
+                    <h4 className="text-sm font-semibold text-red-500">Ошибка загрузки</h4>
                   </div>
                   <div className="text-sm text-white/80 whitespace-pre-line">
                     {fileError}
                   </div>
                   {fileError.includes('CORS') && (
                     <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-200">
-                      <strong>Quick Fix:</strong> Add <code className="px-1 py-0.5 bg-black/30 rounded">{window.location.origin}</code> to your S3 bucket&apos;s CORS AllowedOrigins
+                      <strong>Как исправить:</strong> Добавить <code className="px-1 py-0.5 bg-black/30 rounded">{window.location.origin}</code> to your S3 bucket&apos;s CORS AllowedOrigins
                     </div>
                   )}
                 </div>
@@ -457,7 +457,7 @@ function TextareaWithAttachments({
                   {isImage && !imageUrls[attachment.id] && (
                     <div data-fallback className="absolute inset-0 items-center justify-center flex-col gap-2" style={{ display: 'none' }}>
                       {getFileIcon(attachment.mimeType, "w-24 h-24")}
-                      <p className="text-xs text-white/50">Failed to load image</p>
+                      <p className="text-xs text-white/50">Не удалось загрузить изображение</p>
                     </div>
                   )}
                 </div>
@@ -503,10 +503,10 @@ function TextareaWithAttachments({
 
       {/* Delete Attachment Confirmation Dialog */}
       <BaseConfirmDialog
-        title="Delete Attachment"
-        description="Are you sure you want to delete this attachment? This action cannot be undone."
-        submitLabel="Delete"
-        cancelLabel="Cancel"
+        title="Удалить вложение"
+        description="Удалить это вложение? Действие нельзя отменить."
+        submitLabel="Удалить"
+        cancelLabel="Отмена"
         triggerOpen={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         onSubmit={handleDeleteConfirm}

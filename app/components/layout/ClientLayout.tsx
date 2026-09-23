@@ -6,6 +6,9 @@ import { Sidebar } from '@/frontend/reusable-components/layout/Sidebar';
 import { mainSidebarItems, getProjectSidebarItems, getProjectsPageSidebarItems, getAdminSidebarItems } from '@/lib/sidebar-config';
 import { useEffect, useState, useMemo } from 'react';
 import { useSidebarCollapsed } from '@/lib/sidebar-context';
+import { UiThemePicker } from '@/frontend/reusable-components/layout/UiThemePicker';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
+import { ACTIVE_PROJECT_EVENT, getActiveProjectId, setActiveProjectId } from '@/lib/active-project';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -27,6 +30,7 @@ export function ClientLayout({ children }: ClientLayoutProps) {
     return null;
   });
   const { isCollapsed } = useSidebarCollapsed();
+  const isNewTheme = useIsNewTheme();
 
   // Clear session storage when user changes (different user logs in)
   useEffect(() => {
@@ -62,6 +66,17 @@ export function ClientLayout({ children }: ClientLayoutProps) {
     }
   }, [session?.user?.email]);
 
+  // Pinned project persists across browser sessions (per user); fall back to it when this tab has none
+  const userEmail = session?.user?.email;
+  useEffect(() => {
+    if (!userEmail) return;
+    const stored = getActiveProjectId(userEmail);
+    if (stored) setLastProjectId((current) => current ?? stored);
+    const onChange = (event: Event) => setLastProjectId((event as CustomEvent<string | null>).detail);
+    window.addEventListener(ACTIVE_PROJECT_EVENT, onChange);
+    return () => window.removeEventListener(ACTIVE_PROJECT_EVENT, onChange);
+  }, [userEmail]);
+
   // Pages that shouldn't have sidebar
   const isAuthPage = pathname?.startsWith('/auth');
   const isHomePage = pathname === '/';
@@ -84,13 +99,9 @@ export function ClientLayout({ children }: ClientLayoutProps) {
     // Determine which sidebar items to show based on current path
     if (pathname?.startsWith('/admin')) {
       // Admin pages - show admin menu
+      // The pinned project is kept, so it is back in the sidebar after leaving admin
       setSidebarItems(getAdminSidebarItems());
       setProjectId(null);
-      setLastProjectId(null);
-      // Clear project context when going to admin
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('lastProjectId');
-      }
     } else if (pathname?.startsWith('/projects/')) {
       // Project detail page - extract project ID and show project menu with admin items if applicable
       const projectIdMatch = pathname.match(/\/projects\/([^\/]+)/);
@@ -99,9 +110,10 @@ export function ClientLayout({ children }: ClientLayoutProps) {
         setProjectId(extractedProjectId);
         setLastProjectId(extractedProjectId);
         setSidebarItems(getProjectSidebarItems(extractedProjectId, isAdmin, canManageSettings));
-        // Store project ID in sessionStorage
+        // Opening a project pins it in the sidebar (persisted per user)
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('lastProjectId', extractedProjectId);
+          setActiveProjectId(userEmail, extractedProjectId);
         }
       } else {
         setSidebarItems(mainSidebarItems);
@@ -136,16 +148,30 @@ export function ClientLayout({ children }: ClientLayoutProps) {
       }
       setProjectId(null);
     }
-  }, [pathname, isAdmin, canManageSettings, lastProjectId]);
+  }, [pathname, isAdmin, canManageSettings, lastProjectId, userEmail]);
 
   if (!showSidebar) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        {isAuthPage && !isNewTheme && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-56 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 p-2">
+            <UiThemePicker />
+          </div>
+        )}
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen flex">
       <Sidebar items={sidebarItems} projectId={projectId || undefined} />
-      <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-60'}`}>
+      <div
+        data-ui="app-main"
+        className={`flex-1 min-w-0 transition-all duration-300 ${
+          isNewTheme ? (isCollapsed ? 'ml-[4.5rem]' : 'ml-[15rem]') : isCollapsed ? 'ml-20' : 'ml-60'
+        }`}
+      >
         {children}
       </div>
     </div>

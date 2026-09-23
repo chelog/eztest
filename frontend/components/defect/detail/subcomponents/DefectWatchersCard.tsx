@@ -107,7 +107,7 @@ export function DefectWatchersCard({
         `/api/projects/${projectId}/defects/${defectId}/watchers/${userId}`,
         { method: 'DELETE' }
       );
-      if (!res.ok) throw new Error('Failed to remove watcher');
+      if (!res.ok) throw new Error('Не удалось убрать наблюдателя');
       onRefresh();
     } catch (e) {
       console.error(e);
@@ -117,9 +117,9 @@ export function DefectWatchersCard({
   };
 
   return (
-    <DetailCard title="Watchers" contentClassName="space-y-3">
+    <DetailCard title="Наблюдатели" contentClassName="space-y-3">
       <p className="text-sm text-white/60">
-        Watchers receive email notifications for comments and status changes on this defect.
+        Наблюдатели получают письма о комментариях и смене статуса дефекта.
       </p>
 
       {watchers.length > 0 && (
@@ -165,13 +165,13 @@ export function DefectWatchersCard({
       )}
 
       {watchers.length === 0 && (
-        <p className="text-sm text-white/50 italic">No watchers yet.</p>
+        <p className="text-sm text-white/50 italic">Наблюдателей пока нет.</p>
       )}
 
       {canUpdate && addableMembers.length > 0 && (
         <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
           <label className="text-sm font-medium text-white/70">
-            Add watcher
+            Добавить наблюдателя
           </label>
           <Select
             key={watchers.length}
@@ -181,7 +181,7 @@ export function DefectWatchersCard({
             disabled={addingUserId !== null || loadingMembers}
           >
             <SelectTrigger className="bg-white/5 border-white/10 text-white">
-              <SelectValue placeholder="Select a project member..." />
+              <SelectValue placeholder="Выберите участника проекта..." />
             </SelectTrigger>
             <SelectContent>
               {addableMembers.map((m) => (
@@ -192,14 +192,14 @@ export function DefectWatchersCard({
             </SelectContent>
           </Select>
           {addingUserId && (
-            <p className="text-xs text-white/50">Adding watcher...</p>
+            <p className="text-xs text-white/50">Добавление наблюдателя...</p>
           )}
         </div>
       )}
 
       {canUpdate && addableMembers.length === 0 && watchers.length > 0 && (
         <p className="text-xs text-white/50 pt-1">
-          All project members are already watchers.
+          Все участники проекта уже наблюдают.
         </p>
       )}
     </DetailCard>

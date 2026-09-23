@@ -1,82 +1,48 @@
-import { formatDateTime } from '@/lib/date-utils';
-import { StatCard } from '@/frontend/reusable-components/cards/StatCard';
-import { ResponsiveGrid } from '@/frontend/reusable-components/layout/ResponsiveGrid';
-import { CheckCircle, XCircle, Circle, Calendar, Clock, User } from 'lucide-react';
 import { TestRunStats } from '../types';
 
 interface TestRunStatsCardsProps {
   stats: TestRunStats;
   progressPercentage: number;
   passRate: number;
-  testRun: {
-    assignedTo?: {
-      name: string;
-    };
-    createdAt: string;
-    startedAt?: string;
-  };
+  /** @deprecated assignee and dates moved to the header */
+  testRun?: unknown;
 }
 
-export function TestRunStatsCards({
-  stats,
-  progressPercentage,
-  passRate,
-  testRun,
-}: TestRunStatsCardsProps) {
+function Tile({ label, value, caption, color, children }: {
+  label: string;
+  value: React.ReactNode;
+  caption?: string;
+  color?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <ResponsiveGrid
-      columns={{ default: 1, md: 2, lg: 5 }}
-      gap="md"
-      className="mb-6"
-    >
-      <StatCard
-        label="Прогресс"
-        value={`${progressPercentage}%`}
-        helpText={`${stats.total - stats.pending} из ${stats.total} выполнено`}
-      />
+    <div className="rounded-[14px] bg-white/[0.035] px-4 py-3.5 min-w-0">
+      <div className="text-[13px] text-white/55 truncate">{label}</div>
+      <div className="mt-1.5 text-[26px] leading-none font-bold tabular-nums" style={{ color: color ?? '#fff' }}>
+        {value}
+      </div>
+      {children}
+      {caption && <div className="mt-2 text-xs text-white/40 truncate">{caption}</div>}
+    </div>
+  );
+}
 
-      <StatCard
-        icon={<CheckCircle className="w-5 h-5" />}
-        label="Успешно"
-        value={stats.passed}
-        helpText={`${passRate}% успешных`}
-        borderColor="border-l-green-500/30"
-      />
-
-      <StatCard
-        icon={<XCircle className="w-5 h-5" />}
-        label="Провалено"
-        value={stats.failed}
-        helpText={`${stats.blocked} заблокировано`}
-        borderColor="border-l-red-500/30"
-      />
-
-      <StatCard
-        icon={<Circle className="w-5 h-5" />}
-        label="Не запускался"
-        value={stats.pending}
-        helpText="Еще не выполнялись"
-        borderColor="border-l-gray-500/30"
-      />
-
-      <StatCard
-        icon={<User className="w-5 h-5" />}
-        label={testRun.assignedTo?.name || 'Не назначен'}
-        value={
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs text-white/60">
-              <Calendar className="w-3 h-3" />
-              Создан {formatDateTime(testRun.createdAt)}
-            </div>
-            {testRun.startedAt && (
-              <div className="flex items-center gap-2 text-xs text-white/60">
-                <Clock className="w-3 h-3" />
-                Запущен {formatDateTime(testRun.startedAt)}
-              </div>
-            )}
-          </div>
-        }
-      />
-    </ResponsiveGrid>
+export function TestRunStatsCards({ stats, progressPercentage, passRate }: TestRunStatsCardsProps) {
+  const executed = stats.total - stats.pending;
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+      <Tile label="Прогресс" value={`${progressPercentage}%`}>
+        <div className="mt-2.5 h-1 rounded-full bg-white/[0.08] overflow-hidden">
+          <div className="h-full rounded-full bg-white/60" style={{ width: `${progressPercentage}%` }} />
+        </div>
+        <div className="mt-1.5 text-xs text-white/40">
+          {executed} из {stats.total}
+        </div>
+      </Tile>
+      <Tile label="Пройдено" value={stats.passed} caption={`${passRate}% успешных`} color="#34d399" />
+      <Tile label="Провалено" value={stats.failed} color="#f0625b" />
+      <Tile label="Заблокировано" value={stats.blocked} color="#f5a524" />
+      <Tile label="Не запускались" value={stats.pending} color="rgba(255,255,255,0.55)" />
+    </div>
   );
 }

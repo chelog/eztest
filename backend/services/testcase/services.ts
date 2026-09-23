@@ -1245,7 +1245,7 @@ export class TestCaseService {
     const successCount = results.filter(r => r.status === 'fulfilled').length;
 
     return {
-      message: 'Defects linked successfully',
+      message: 'Дефекты связаны',
       count: successCount,
     };
   }

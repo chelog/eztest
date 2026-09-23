@@ -2,8 +2,8 @@ import AgentTestCasesPage from "@/frontend/components/agent-testing/AgentTestCas
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Test Cases | Agent Testing | EZTest",
-  description: "View, manage, and run test cases for an agent configuration.",
+  title: "Тест-кейсы | Тестирование агентов | EZTest",
+  description: "Просмотр, редактирование и запуск тест-кейсов конфигурации агента.",
 };
 
 export default async function TestCasesPage({

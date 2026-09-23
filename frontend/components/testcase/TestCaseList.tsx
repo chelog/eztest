@@ -185,7 +185,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       title: 'Успешно',
       message: `Тест-кейс "${newTestCase.title}" успешно создан`,
     });
-    setTimeout(() => setAlert(null), 5000);
     setCurrentPage(1); // Navigate to page 1 to see the newly created test case
     fetchTestCases();
   };
@@ -196,7 +195,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       title: 'Успешно',
       message: `Папка "${newModule.name}" успешно создана`,
     });
-    setTimeout(() => setAlert(null), 5000);
     setCreateModuleDialogOpen(false);
     setCurrentPage(1); // Navigate to page 1 to see the newly created module
     fetchTestCases(); // Refresh test cases and modules (modules are now fetched with pagination)
@@ -219,7 +217,6 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           title: 'Успешно',
           message: `Тест-кейс "${deletedTestCaseName}" успешно удален`,
         });
-        setTimeout(() => setAlert(null), 5000);
         fetchTestCases();
       } else {
         const data = await response.json();
@@ -230,7 +227,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Произошла неизвестная ошибка';
       setAlert({
         type: 'error',
         title: 'Ошибка соединения',

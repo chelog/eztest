@@ -59,7 +59,7 @@ export async function PATCH(
     );
 
     return Response.json({
-      message: 'Attachment updated successfully',
+      message: 'Вложение обновлено',
       attachment: result,
     });
   } catch (error) {

@@ -3,7 +3,7 @@ import PrivacyPolicyPage from '@/app/components/pages/PrivacyPolicyPage';
 import { SITE_URL, SITE_NAME } from '@/config/seo.config';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
+  title: 'Политика конфиденциальности',
   description: 'Privacy Policy for EZTest - Learn how we collect, use, and protect your data in our self-hosted test management platform.',
   alternates: {
     canonical: '/privacy',
@@ -32,7 +32,7 @@ function PrivacyJsonLd() {
     description:
       'Privacy Policy for EZTest - Learn how we collect, use, and protect your data in our self-hosted test management platform.',
     isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
-    inLanguage: 'en-US',
+    inLanguage: 'ru-RU',
   };
 
   return (

@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
       });
       clearFormData();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка';
       setError(errorMessage);
       if (!alert) {
         setAlert({

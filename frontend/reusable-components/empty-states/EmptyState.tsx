@@ -33,10 +33,10 @@ function EmptyState({
             "mx-auto mb-4",
             variant === "inline"
               ? "flex items-center justify-center"
-              : "rounded-full bg-white/5 p-6 w-fit"
+              : "w-14 h-14 rounded-[16px] bg-white/[0.05] flex items-center justify-center"
           )}
         >
-          <Icon className={cn("text-gray-400", variant === "inline" ? "w-8 h-8" : "w-12 h-12")} />
+          <Icon className="w-6 h-6 text-white/45" />
         </div>
       )}
       <h3

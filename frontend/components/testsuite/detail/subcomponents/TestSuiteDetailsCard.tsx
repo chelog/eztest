@@ -20,9 +20,9 @@ export function TestSuiteDetailsCard({
   const fields: FormFieldConfig[] = [
     {
       name: 'description',
-      label: 'Description',
+      label: 'Описание',
       type: 'textarea',
-      placeholder: 'Enter description',
+      placeholder: 'Введите описание',
       rows: 3,
       cols: 1,
     },
@@ -33,7 +33,7 @@ export function TestSuiteDetailsCard({
   };
 
   return (
-    <DetailCard title="Details" contentClassName="space-y-4">
+    <DetailCard title="Подробности" contentClassName="space-y-4">
       {isEditing ? (
         <FormBuilder
           fields={fields}
@@ -47,14 +47,14 @@ export function TestSuiteDetailsCard({
           {description ? (
             <div>
               <h4 className="text-sm font-medium text-white/60 mb-1">
-                Description
+                Описание
               </h4>
               <p className="text-white/90 whitespace-pre-wrap break-words">
                 {description}
               </p>
             </div>
           ) : (
-            <p className="text-white/60 text-sm">No description provided</p>
+            <p className="text-white/60 text-sm">Без описания</p>
           )}
         </>
       )}

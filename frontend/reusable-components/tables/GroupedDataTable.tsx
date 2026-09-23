@@ -70,8 +70,8 @@ export interface GroupedDataTableProps<T> {
  * ```tsx
  * const columns: ColumnDef<TestCase>[] = [
  *   { key: 'id', label: 'ID', width: '80px' },
- *   { key: 'title', label: 'Title', render: (row) => <span>{row.title}</span> },
- *   { key: 'priority', label: 'Priority', render: (row) => <PriorityBadge priority={row.priority} /> },
+ *   { key: 'title', label: 'Название', render: (row) => <span>{row.title}</span> },
+ *   { key: 'priority', label: 'Приоритет', render: (row) => <PriorityBadge priority={row.priority} /> },
  * ];
  *
  * <GroupedDataTable
@@ -85,7 +85,7 @@ export interface GroupedDataTableProps<T> {
  *   }}
  *   actions={{
  *     items: [
- *       { label: 'Delete', icon: Trash2, onClick: handleDelete, variant: 'destructive' }
+ *       { label: 'Удалить', icon: Trash2, onClick: handleDelete, variant: 'destructive' }
  *     ]
  *   }}
  * />
@@ -101,7 +101,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   actions,
   headerClassName = '',
   rowClassName = '',
-  emptyMessage = 'No data available',
+  emptyMessage = 'Нет данных',
   gridTemplateColumns,
   resizable = false,
 }: GroupedDataTableProps<T>) {
@@ -356,7 +356,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
         <button
           onClick={() => toggleGroup(groupId)}
           className="flex-shrink-0 cursor-pointer"
-          aria-label={isExpanded ? `Collapse ${groupName}` : `Expand ${groupName}`}
+          aria-label={isExpanded ? `Свернуть ${groupName}` : `Развернуть ${groupName}`}
         >
           <ChevronDown
             className={`w-4 h-4 text-white/60 transition-transform ${
@@ -372,7 +372,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
               return (
                 <Link
                   href={groupHref}
-                  className="text-sm font-semibold text-blue-400 hover:text-blue-300 truncate block"
+                  className="text-sm font-semibold text-white hover:text-white/70 truncate block transition-colors"
                   title={groupName}
                 >
                   {groupName}
@@ -384,7 +384,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
                 <button
                   type="button"
                   onClick={() => groupConfig.onGroupClick?.(groupId)}
-                  className="text-sm font-semibold text-blue-400 hover:text-blue-300 cursor-pointer truncate block w-full text-left"
+                  className="text-sm font-semibold text-white hover:text-white/70 cursor-pointer truncate block w-full text-left transition-colors"
                   title={groupName}
                 >
                   {groupName}
@@ -398,8 +398,8 @@ export function GroupedDataTable<T = Record<string, unknown>>({
             );
           })()}
         </span>
-        <span className="text-xs text-white/50 flex-shrink-0 whitespace-nowrap">
-          ({displayCount} item{displayCount !== 1 ? 's' : ''})
+        <span className="text-xs text-white/50 flex-shrink-0 whitespace-nowrap tabular-nums px-1.5 py-0.5 rounded-md bg-white/[0.06]">
+          {displayCount}
         </span>
       </div>
     );

@@ -1,9 +1,9 @@
 ﻿'use client';
 
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
-import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { Play, Square, Pencil, X, Check } from 'lucide-react';
+import { Play, Square, Pencil, X, Check, User, Calendar, Clock } from 'lucide-react';
+import { formatDateTime } from '@/lib/date-utils';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
 import { useState } from 'react';
@@ -25,6 +25,9 @@ interface TestRunHeaderProps {
   onStartTestRun: () => void;
   onCompleteTestRun: () => void;
   onNameUpdate?: (name: string) => Promise<void>;
+  assigneeName?: string;
+  createdAt?: string;
+  startedAt?: string;
 }
 
 export function TestRunHeader({
@@ -35,6 +38,9 @@ export function TestRunHeader({
   onStartTestRun,
   onCompleteTestRun,
   onNameUpdate,
+  assigneeName,
+  createdAt,
+  startedAt,
 }: TestRunHeaderProps) {
   const { options: statusOptions } = useDropdownOptions('TestRun', 'status');
   const { options: environmentOptions } = useDropdownOptions('TestRun', 'environment');
@@ -79,7 +85,7 @@ export function TestRunHeader({
     : null;
 
   // Determine execution type badge color based on label
-  const executionTypeBadgeClassName = executionTypeLabel === 'Automation'
+  const executionTypeBadgeClassName = executionTypeLabel === 'Авто'
     ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
     : 'bg-blue-500/10 text-blue-500 border-blue-500/20';
 
@@ -92,7 +98,7 @@ export function TestRunHeader({
         onKeyDown={handleKeyDown}
         autoFocus
         maxLength={255}
-        className="text-lg font-semibold"
+        className="text-xl font-bold"
         disabled={savingName}
       />
       <button
@@ -111,8 +117,8 @@ export function TestRunHeader({
       </button>
     </div>
   ) : (
-    <div className="flex items-center gap-2 group">
-      <span>{testRun.name}</span>
+    <div className="flex items-center gap-2 group min-w-0">
+      <h1 className="text-2xl font-bold text-white truncate">{testRun.name}</h1>
       {canUpdate && onNameUpdate && (
         <button
           onClick={handleEditClick}
@@ -125,69 +131,80 @@ export function TestRunHeader({
     </div>
   );
 
+  const meta = (label: string, content: React.ReactNode) => (
+    <div className="flex items-center gap-1.5">
+      <span className="text-white/45">{label}</span>
+      {content}
+    </div>
+  );
+
   return (
-    <DetailCard
-      title={titleContent}
-      description={testRun.description}
-      contentClassName="space-y-4"
-    >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-wrap gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-white/60">Статус:</span>
-            <Badge
-              variant="outline"
-              className={statusBadgeProps.className}
-              style={statusBadgeProps.style}
-            >
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+      <div className="min-w-0 space-y-2">
+        {titleContent}
+        {testRun.description && <p className="text-sm text-white/55 max-w-3xl">{testRun.description}</p>}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
+          {meta(
+            'Статус',
+            <Badge variant="outline" className={statusBadgeProps.className} style={statusBadgeProps.style}>
               {statusLabel}
             </Badge>
-          </div>
-          {executionTypeLabel && (
-            <div className="flex items-center gap-2">
-              <span className="text-white/60">Тип запуска:</span>
+          )}
+          {executionTypeLabel &&
+            meta(
+              'Запуск',
               <Badge variant="outline" className={executionTypeBadgeClassName}>
                 {executionTypeLabel}
               </Badge>
-            </div>
-          )}
-          {testRun.environment && environmentBadgeProps && (
-            <div className="flex items-center gap-2">
-              <span className="text-white/60">Окружение:</span>
-              <Badge
-                variant="outline"
-                className={environmentBadgeProps.className}
-                style={environmentBadgeProps.style}
-              >
+            )}
+          {testRun.environment &&
+            environmentBadgeProps &&
+            meta(
+              'Окружение',
+              <Badge variant="outline" className={environmentBadgeProps.className} style={environmentBadgeProps.style}>
                 {environmentLabel}
               </Badge>
-            </div>
+            )}
+          <span className="flex items-center gap-1.5 text-white/55">
+            <User className="w-3.5 h-3.5 text-white/35" />
+            {assigneeName || 'Не назначен'}
+          </span>
+          {createdAt && (
+            <span className="flex items-center gap-1.5 text-white/55">
+              <Calendar className="w-3.5 h-3.5 text-white/35" />
+              {formatDateTime(createdAt)}
+            </span>
+          )}
+          {startedAt && (
+            <span className="flex items-center gap-1.5 text-white/55" title="Запущен">
+              <Clock className="w-3.5 h-3.5 text-white/35" />
+              Запущен {formatDateTime(startedAt)}
+            </span>
           )}
         </div>
-
-        {canUpdate && (
-          <ActionButtonGroup
-            buttons={[
-              {
-                label: 'Запустить тест-ран',
-                icon: Play,
-                onClick: onStartTestRun,
-                variant: 'primary',
-                show: testRun.status === 'PLANNED',
-                loading: actionLoading && testRun.status === 'PLANNED',
-              },
-              {
-                label: 'Завершить тест-ран',
-                icon: Square,
-                onClick: onCompleteTestRun,
-                variant: 'primary',
-                show: testRun.status === 'IN_PROGRESS',
-                loading: actionLoading && testRun.status === 'IN_PROGRESS',
-              },
-            ]}
-          />
-        )}
       </div>
-    </DetailCard>
+      {canUpdate && (
+        <ActionButtonGroup
+          buttons={[
+            {
+              label: 'Запустить',
+              icon: Play,
+              onClick: onStartTestRun,
+              variant: 'primary',
+              show: testRun.status === 'PLANNED',
+              loading: actionLoading && testRun.status === 'PLANNED',
+            },
+            {
+              label: 'Завершить',
+              icon: Square,
+              onClick: onCompleteTestRun,
+              variant: 'primary',
+              show: testRun.status === 'IN_PROGRESS',
+              loading: actionLoading && testRun.status === 'IN_PROGRESS',
+            },
+          ]}
+        />
+      )}
+    </div>
   );
 }

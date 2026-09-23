@@ -2,7 +2,7 @@
 
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
-import { Plus, TestTube2 } from 'lucide-react';
+import { Plus, FileCheck } from 'lucide-react';
 import { TestCase } from '../../types';
 import { TestCaseTable } from '@/frontend/components/testcase/subcomponents/TestCaseTable';
 
@@ -49,7 +49,7 @@ export function ModuleTestCasesCard({
         />
       ) : (
         <div className="text-center py-8 px-4">
-          <TestTube2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-white/60 mb-4">
             В этом модуле пока нет тест-кейсов
           </p>

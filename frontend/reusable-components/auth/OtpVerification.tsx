@@ -5,6 +5,7 @@ import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimar
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/frontend/reusable-elements/cards/Card';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
+import { Mail } from 'lucide-react';
 
 interface OtpVerificationProps {
   email: string;
@@ -195,20 +196,8 @@ export function OtpVerification({ email, type, onVerified, onCancel }: OtpVerifi
         <Card variant="glass">
           <CardHeader>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500/20 to-primary/20 rounded-full mb-4">
-                <svg
-                  className="w-8 h-8 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/[0.06] rounded-full mb-4">
+                <Mail className="w-7 h-7 text-primary" />
               </div>
               <CardTitle className="text-2xl mb-2">Подтвердите email</CardTitle>
               <CardDescription>

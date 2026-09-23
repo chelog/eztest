@@ -169,7 +169,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
       }
     } catch (error) {
       console.error('Error creating test case:', error);
-      alert('Failed to create test case');
+      alert('Не удалось создать тест-кейс');
     }
   };
 
@@ -191,7 +191,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
       }
     } catch (error) {
       console.error('Error deleting test case:', error);
-      alert('Failed to delete test case');
+      alert('Не удалось удалить тест-кейс');
     }
   };
 
@@ -231,14 +231,14 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
           <DialogTrigger asChild>
             <ButtonPrimary>
               <Plus className="w-4 h-4 mr-2" />
-              New Test Case
+              Новый тест-кейс
             </ButtonPrimary>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <DialogHeader>
-              <DialogTitle>Create Test Case</DialogTitle>
+              <DialogTitle>Создать тест-кейс</DialogTitle>
               <DialogDescription>
-                Add a new test case to this project
+                Новый тест-кейс в этом проекте
               </DialogDescription>
             </DialogHeader>
             
@@ -251,26 +251,26 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="Enter test case title"
+                  placeholder="Введите название тест-кейса"
                 />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Описание</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Enter test case description"
+                  placeholder="Введите описание тест-кейса"
                   rows={3}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="priority">Priority</Label>
+                  <Label htmlFor="priority">Приоритет</Label>
                   <Select
                     value={formData.priority}
                     onValueChange={(value: string) =>
@@ -281,16 +281,16 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CRITICAL">Critical</SelectItem>
-                      <SelectItem value="HIGH">High</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="LOW">Low</SelectItem>
+                      <SelectItem value="CRITICAL">Критический</SelectItem>
+                      <SelectItem value="HIGH">Высокий</SelectItem>
+                      <SelectItem value="MEDIUM">Средний</SelectItem>
+                      <SelectItem value="LOW">Низкий</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">Статус</Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value: string) =>
@@ -301,16 +301,16 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ACTIVE">Active</SelectItem>
-                      <SelectItem value="DRAFT">Draft</SelectItem>
-                      <SelectItem value="DEPRECATED">Deprecated</SelectItem>
+                      <SelectItem value="ACTIVE">Активен</SelectItem>
+                      <SelectItem value="DRAFT">Черновик</SelectItem>
+                      <SelectItem value="DEPRECATED">Устарел</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="estimatedTime">Estimated Time (minutes)</Label>
+                <Label htmlFor="estimatedTime">Оценка времени (мин)</Label>
                 <Input
                   id="estimatedTime"
                   type="number"
@@ -318,32 +318,32 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                     setFormData({ ...formData, estimatedTime: e.target.value })
                   }
-                  placeholder="Enter estimated time"
+                  placeholder="Введите оценку времени"
                 />
               </div>
 
               <div>
-                <Label htmlFor="preconditions">Preconditions</Label>
+                <Label htmlFor="preconditions">Предусловия</Label>
                 <Textarea
                   id="preconditions"
                   value={formData.preconditions}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                     setFormData({ ...formData, preconditions: e.target.value })
                   }
-                  placeholder="Enter preconditions"
+                  placeholder="Введите предусловия"
                   rows={2}
                 />
               </div>
 
               <div>
-                <Label htmlFor="postconditions">Postconditions</Label>
+                <Label htmlFor="postconditions">Постусловия</Label>
                 <Textarea
                   id="postconditions"
                   value={formData.postconditions}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                     setFormData({ ...formData, postconditions: e.target.value })
                   }
-                  placeholder="Enter postconditions"
+                  placeholder="Введите постусловия"
                   rows={2}
                 />
               </div>
@@ -354,9 +354,9 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
                 variant="ghost"
                 onClick={() => setCreateDialogOpen(false)}
               >
-                Cancel
+                Отмена
               </Button>
-              <ButtonPrimary onClick={handleCreateTestCase}>Create</ButtonPrimary>
+              <ButtonPrimary onClick={handleCreateTestCase}>Создать</ButtonPrimary>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -370,7 +370,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
               <SearchInput
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Search test cases..."
+                placeholder="Поиск тест-кейсов..."
               />
             </div>
 
@@ -378,14 +378,14 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                 <SelectTrigger>
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Priority" />
+                  <SelectValue placeholder="Приоритет" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="CRITICAL">Critical</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="LOW">Low</SelectItem>
+                  <SelectItem value="all">Все приоритеты</SelectItem>
+                  <SelectItem value="CRITICAL">Критический</SelectItem>
+                  <SelectItem value="HIGH">Высокий</SelectItem>
+                  <SelectItem value="MEDIUM">Средний</SelectItem>
+                  <SelectItem value="LOW">Низкий</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -394,13 +394,13 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Статус" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="DEPRECATED">Deprecated</SelectItem>
+                  <SelectItem value="all">Все статусы</SelectItem>
+                  <SelectItem value="ACTIVE">Активен</SelectItem>
+                  <SelectItem value="DRAFT">Черновик</SelectItem>
+                  <SelectItem value="DEPRECATED">Устарел</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -410,13 +410,13 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
 
       {/* Test Cases List */}
       {loading ? (
-        <Loader fullScreen={false} text="Loading test cases..." />
+        <Loader fullScreen={false} text="Загрузка тест-кейсов..." />
       ) : filteredTestCases.length === 0 ? (
         <Card className="glass">
           <CardContent className="py-12 text-center">
             <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">
-              No test cases found
+              Тест-кейсы не найдены
             </h3>
             <p className="text-gray-400 mb-4">
               {testCases.length === 0
@@ -426,7 +426,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
             {testCases.length === 0 && (
               <ButtonPrimary onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Test Case
+                Создать тест-кейс
               </ButtonPrimary>
             )}
           </CardContent>
@@ -503,7 +503,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
               <ActionMenu
                 items={[
                   {
-                    label: 'Delete',
+                    label: 'Удалить',
                     icon: Trash2,
                     onClick: () => {
                       setSelectedTestCase(testCase);
@@ -525,7 +525,7 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Test Case</DialogTitle>
+            <DialogTitle>Удалить тест-кейс</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete &quot;{selectedTestCase?.title}&quot;?
               This action cannot be undone.
@@ -536,10 +536,10 @@ export default function ProjectTestCases({ projectId }: ProjectTestCasesProps) {
               variant="ghost"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              Отмена
             </Button>
             <Button variant="destructive" onClick={handleDeleteTestCase}>
-              Delete
+              Удалить
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -11,72 +11,72 @@ export async function seedDropdownOptions() {
 
   const dropdownOptions = [
     // Priority options (used in TestCase, Requirement, Defect)
-    { entity: 'TestCase', field: 'priority', value: 'CRITICAL', label: 'CRITICAL', order: 1 },
-    { entity: 'TestCase', field: 'priority', value: 'HIGH', label: 'HIGH', order: 2 },
-    { entity: 'TestCase', field: 'priority', value: 'MEDIUM', label: 'MEDIUM', order: 3 },
-    { entity: 'TestCase', field: 'priority', value: 'LOW', label: 'LOW', order: 4 },
+    { entity: 'TestCase', field: 'priority', value: 'CRITICAL', label: 'Критический', order: 1 },
+    { entity: 'TestCase', field: 'priority', value: 'HIGH', label: 'Высокий', order: 2 },
+    { entity: 'TestCase', field: 'priority', value: 'MEDIUM', label: 'Средний', order: 3 },
+    { entity: 'TestCase', field: 'priority', value: 'LOW', label: 'Низкий', order: 4 },
 
     // TestStatus options (used in TestCase)
-    { entity: 'TestCase', field: 'status', value: 'ACTIVE', label: 'ACTIVE', order: 1 },
-    { entity: 'TestCase', field: 'status', value: 'DEPRECATED', label: 'DEPRECATED', order: 2 },
-    { entity: 'TestCase', field: 'status', value: 'DRAFT', label: 'DRAFT', order: 3 },
+    { entity: 'TestCase', field: 'status', value: 'ACTIVE', label: 'Активный', order: 1 },
+    { entity: 'TestCase', field: 'status', value: 'DEPRECATED', label: 'Устаревший', order: 2 },
+    { entity: 'TestCase', field: 'status', value: 'DRAFT', label: 'Черновик', order: 3 },
 
     // TestRunStatus options (used in TestRun)
-    { entity: 'TestRun', field: 'status', value: 'PLANNED', label: 'PLANNED', order: 1 },
-    { entity: 'TestRun', field: 'status', value: 'IN_PROGRESS', label: 'IN PROGRESS', order: 2 },
-    { entity: 'TestRun', field: 'status', value: 'COMPLETED', label: 'COMPLETED', order: 3 },
-    { entity: 'TestRun', field: 'status', value: 'CANCELLED', label: 'CANCELLED', order: 4 },
+    { entity: 'TestRun', field: 'status', value: 'PLANNED', label: 'Запланирован', order: 1 },
+    { entity: 'TestRun', field: 'status', value: 'IN_PROGRESS', label: 'В работе', order: 2 },
+    { entity: 'TestRun', field: 'status', value: 'COMPLETED', label: 'Завершён', order: 3 },
+    { entity: 'TestRun', field: 'status', value: 'CANCELLED', label: 'Отменён', order: 4 },
 
     // TestResultStatus options (used in TestResult)
-    { entity: 'TestResult', field: 'status', value: 'PASSED', label: 'PASSED', order: 1 },
-    { entity: 'TestResult', field: 'status', value: 'FAILED', label: 'FAILED', order: 2 },
-    { entity: 'TestResult', field: 'status', value: 'BLOCKED', label: 'BLOCKED', order: 3 },
-    { entity: 'TestResult', field: 'status', value: 'SKIPPED', label: 'SKIPPED', order: 4 },
-    { entity: 'TestResult', field: 'status', value: 'RETEST', label: 'RETEST', order: 5 },
+    { entity: 'TestResult', field: 'status', value: 'PASSED', label: 'Пройден', order: 1 },
+    { entity: 'TestResult', field: 'status', value: 'FAILED', label: 'Провален', order: 2 },
+    { entity: 'TestResult', field: 'status', value: 'BLOCKED', label: 'Заблокирован', order: 3 },
+    { entity: 'TestResult', field: 'status', value: 'SKIPPED', label: 'Не запускался', order: 4 },
+    { entity: 'TestResult', field: 'status', value: 'RETEST', label: 'Ретест', order: 5 },
 
     // RequirementStatus options (used in Requirement)
-    { entity: 'Requirement', field: 'status', value: 'DRAFT', label: 'DRAFT', order: 1 },
-    { entity: 'Requirement', field: 'status', value: 'APPROVED', label: 'APPROVED', order: 2 },
-    { entity: 'Requirement', field: 'status', value: 'IMPLEMENTED', label: 'IMPLEMENTED', order: 3 },
-    { entity: 'Requirement', field: 'status', value: 'VERIFIED', label: 'VERIFIED', order: 4 },
-    { entity: 'Requirement', field: 'status', value: 'DEPRECATED', label: 'DEPRECATED', order: 5 },
+    { entity: 'Requirement', field: 'status', value: 'DRAFT', label: 'Черновик', order: 1 },
+    { entity: 'Requirement', field: 'status', value: 'APPROVED', label: 'Утверждено', order: 2 },
+    { entity: 'Requirement', field: 'status', value: 'IMPLEMENTED', label: 'Реализовано', order: 3 },
+    { entity: 'Requirement', field: 'status', value: 'VERIFIED', label: 'Проверено', order: 4 },
+    { entity: 'Requirement', field: 'status', value: 'DEPRECATED', label: 'Устарело', order: 5 },
 
     // Priority options for Requirement
-    { entity: 'Requirement', field: 'priority', value: 'CRITICAL', label: 'CRITICAL', order: 1 },
-    { entity: 'Requirement', field: 'priority', value: 'HIGH', label: 'HIGH', order: 2 },
-    { entity: 'Requirement', field: 'priority', value: 'MEDIUM', label: 'MEDIUM', order: 3 },
-    { entity: 'Requirement', field: 'priority', value: 'LOW', label: 'LOW', order: 4 },
+    { entity: 'Requirement', field: 'priority', value: 'CRITICAL', label: 'Критический', order: 1 },
+    { entity: 'Requirement', field: 'priority', value: 'HIGH', label: 'Высокий', order: 2 },
+    { entity: 'Requirement', field: 'priority', value: 'MEDIUM', label: 'Средний', order: 3 },
+    { entity: 'Requirement', field: 'priority', value: 'LOW', label: 'Низкий', order: 4 },
 
     // DefectSeverity options (used in Defect)
-    { entity: 'Defect', field: 'severity', value: 'CRITICAL', label: 'CRITICAL', order: 1 },
-    { entity: 'Defect', field: 'severity', value: 'HIGH', label: 'HIGH', order: 2 },
-    { entity: 'Defect', field: 'severity', value: 'MEDIUM', label: 'MEDIUM', order: 3 },
-    { entity: 'Defect', field: 'severity', value: 'LOW', label: 'LOW', order: 4 },
+    { entity: 'Defect', field: 'severity', value: 'CRITICAL', label: 'Критический', order: 1 },
+    { entity: 'Defect', field: 'severity', value: 'HIGH', label: 'Высокий', order: 2 },
+    { entity: 'Defect', field: 'severity', value: 'MEDIUM', label: 'Средний', order: 3 },
+    { entity: 'Defect', field: 'severity', value: 'LOW', label: 'Низкий', order: 4 },
 
     // DefectStatus options (used in Defect)
-    { entity: 'Defect', field: 'status', value: 'NEW', label: 'NEW', order: 1 },
-    { entity: 'Defect', field: 'status', value: 'IN_PROGRESS', label: 'IN PROGRESS', order: 2 },
-    { entity: 'Defect', field: 'status', value: 'FIXED', label: 'FIXED', order: 3 },
-    { entity: 'Defect', field: 'status', value: 'TESTED', label: 'TESTED', order: 4 },
-    { entity: 'Defect', field: 'status', value: 'CLOSED', label: 'CLOSED', order: 5 },
+    { entity: 'Defect', field: 'status', value: 'NEW', label: 'Новый', order: 1 },
+    { entity: 'Defect', field: 'status', value: 'IN_PROGRESS', label: 'В работе', order: 2 },
+    { entity: 'Defect', field: 'status', value: 'FIXED', label: 'Исправлен', order: 3 },
+    { entity: 'Defect', field: 'status', value: 'TESTED', label: 'Проверен', order: 4 },
+    { entity: 'Defect', field: 'status', value: 'CLOSED', label: 'Закрыт', order: 5 },
 
     // Priority options for Defect
-    { entity: 'Defect', field: 'priority', value: 'CRITICAL', label: 'CRITICAL', order: 1 },
-    { entity: 'Defect', field: 'priority', value: 'HIGH', label: 'HIGH', order: 2 },
-    { entity: 'Defect', field: 'priority', value: 'MEDIUM', label: 'MEDIUM', order: 3 },
-    { entity: 'Defect', field: 'priority', value: 'LOW', label: 'LOW', order: 4 },
+    { entity: 'Defect', field: 'priority', value: 'CRITICAL', label: 'Критический', order: 1 },
+    { entity: 'Defect', field: 'priority', value: 'HIGH', label: 'Высокий', order: 2 },
+    { entity: 'Defect', field: 'priority', value: 'MEDIUM', label: 'Средний', order: 3 },
+    { entity: 'Defect', field: 'priority', value: 'LOW', label: 'Низкий', order: 4 },
 
     // Environment options for TestRun
-    { entity: 'TestRun', field: 'environment', value: 'Production', label: 'PRODUCTION', order: 1 },
-    { entity: 'TestRun', field: 'environment', value: 'Staging', label: 'STAGING', order: 2 },
+    { entity: 'TestRun', field: 'environment', value: 'Production', label: 'Продакшн', order: 1 },
+    { entity: 'TestRun', field: 'environment', value: 'Staging', label: 'Стейджинг', order: 2 },
     { entity: 'TestRun', field: 'environment', value: 'QA', label: 'QA', order: 3 },
-    { entity: 'TestRun', field: 'environment', value: 'Development', label: 'DEVELOPMENT', order: 4 },
+    { entity: 'TestRun', field: 'environment', value: 'Development', label: 'Разработка', order: 4 },
 
     // Environment options for Defect
-    { entity: 'Defect', field: 'environment', value: 'Production', label: 'PRODUCTION', order: 1 },
-    { entity: 'Defect', field: 'environment', value: 'Staging', label: 'STAGING', order: 2 },
+    { entity: 'Defect', field: 'environment', value: 'Production', label: 'Продакшн', order: 1 },
+    { entity: 'Defect', field: 'environment', value: 'Staging', label: 'Стейджинг', order: 2 },
     { entity: 'Defect', field: 'environment', value: 'QA', label: 'QA', order: 3 },
-    { entity: 'Defect', field: 'environment', value: 'Development', label: 'DEVELOPMENT', order: 4 },
+    { entity: 'Defect', field: 'environment', value: 'Development', label: 'Разработка', order: 4 },
   ];
 
   console.log('  📝 Upserting dropdown options...');

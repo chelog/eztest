@@ -45,12 +45,12 @@ export function TestCasesCard({
         <div className="text-center py-8">
           <Plus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-white/60 mb-4">
-            No test cases in this suite yet
+            В сьюте пока нет тест-кейсов
           </p>
           {canAdd && (
             <ButtonPrimary onClick={onAddTestCase} className="cursor-pointer">
               <Plus className="w-4 h-4 mr-2" />
-              Add Test Cases
+              Добавить тест-кейсы
             </ButtonPrimary>
           )}
         </div>

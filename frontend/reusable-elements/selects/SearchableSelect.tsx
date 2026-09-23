@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { Input } from "../inputs/Input";
 import { Label } from "../labels/Label";
 import { cn } from '@/lib/utils';
@@ -32,7 +32,7 @@ export function SearchableSelect({
   label,
   id,
   searchPlaceholder = 'Type to search...',
-  emptyMessage = 'No results found',
+  emptyMessage = 'Ничего не найдено',
   maxResults = 10,
   className,
   disabled = false,
@@ -168,7 +168,7 @@ export function SearchableSelect({
       {/* Selected indicator */}
       {selectedOption && (
         <div className="text-xs text-green-400 flex items-center gap-1">
-          <span>✓</span>
+          <Check className="w-4 h-4" />
           <span>Selected: {selectedOption.label}</span>
         </div>
       )}
