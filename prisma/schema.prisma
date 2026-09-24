@@ -158,6 +158,7 @@ model ProjectMember {
 model Module {
   id          String   @id @default(cuid())
   projectId   String
+  parentId    String?  // Parent folder; null = top level
   name        String
   description String?
   order       Int      @default(0)
@@ -165,11 +166,14 @@ model Module {
   updatedAt   DateTime @updatedAt
 
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      Module?  @relation("ModuleTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Module[] @relation("ModuleTree")
   testCases   TestCase[]
 
   @@unique([id, projectId]) // Required for composite FK from TestCase
-  @@unique([projectId, name])
+  // Names are unique among siblings (same parent); checked in the module service
   @@index([projectId])
+  @@index([parentId])
 }
 
 model TestSuite {

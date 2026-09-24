@@ -11,6 +11,8 @@ export const createModuleSchema = z.object({
     .trim(),
   description: z.string().max(1000, 'Description must not exceed 1000 characters').optional(),
   order: z.number().int().min(0, 'Order must be a non-negative integer').optional(),
+  /** Parent folder id; null or omitted = top level */
+  parentId: z.string().min(1).nullable().optional(),
 });
 
 /**
@@ -25,6 +27,8 @@ export const updateModuleSchema = z.object({
     .optional(),
   description: z.string().max(1000, 'Description must not exceed 1000 characters').optional(),
   order: z.number().int().min(0, 'Order must be a non-negative integer').optional(),
+  /** Parent folder id; null or omitted = top level */
+  parentId: z.string().min(1).nullable().optional(),
 });
 
 /**

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/frontend/reusable-elements/selects/Select';
 import { Upload, FileSpreadsheet, Download, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { moduleSelectOptions } from '@/lib/module-tree';
 
 interface ImportResult {
   success: number;
@@ -272,8 +273,8 @@ export function FileImportDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none">Взять модуль из файла</SelectItem>
-                  {modules.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  {moduleSelectOptions(modules).map((m) => (
+                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

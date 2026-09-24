@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { CheckIcon } from "lucide-react"
+import { CheckIcon, MinusIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -11,10 +11,10 @@ type CheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root> & {
 }
 
 function Checkbox({ className, variant = "default", ...props }: CheckboxProps) {
-  const base = "peer size-5 shrink-0 rounded transition-all outline-none cursor-pointer"
+  const base = "peer group/checkbox size-5 shrink-0 rounded transition-all outline-none cursor-pointer"
   const defaultStyles = cn(
     "border border-white/15 bg-white/5",
-    "data-[state=checked]:bg-accent/40 data-[state=checked]:text-white data-[state=checked]:border-accent/40",
+    "data-[state=checked]:bg-accent/40 data-[state=checked]:text-white data-[state=checked]:border-accent/40 data-[state=indeterminate]:bg-accent/25 data-[state=indeterminate]:text-white data-[state=indeterminate]:border-accent/40",
     "hover:border-white/25 hover:bg-white/8 focus-visible:border-white/35 focus-visible:ring-accent/25"
   )
   const glassStyles = cn(
@@ -38,7 +38,9 @@ function Checkbox({ className, variant = "default", ...props }: CheckboxProps) {
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current transition-none"
       >
-        <CheckIcon className="size-3.5" />
+        {/* Partial selection shows a dash instead of the check */}
+        <CheckIcon className="size-3.5 group-data-[state=indeterminate]/checkbox:hidden" />
+        <MinusIcon className="size-3.5 hidden group-data-[state=indeterminate]/checkbox:block" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

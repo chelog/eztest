@@ -2,6 +2,7 @@
 
 import type { FormFieldConfig } from '../subcomponents/TestCaseFormField';
 import { Module } from '../types';
+import { moduleSelectOptions } from '@/lib/module-tree';
 
 export const PRIORITY_OPTIONS = [
   { label: 'Критический', value: 'CRITICAL' },
@@ -17,10 +18,8 @@ export const STATUS_OPTIONS = [
 ];
 
 export function getTestCaseFormFields(modules: Module[] = []): FormFieldConfig[] {
-  const moduleOptions = modules.map((module) => ({
-    label: module.name,
-    value: module.id,
-  }));
+  // Nested folders are shown with their full path
+  const moduleOptions = moduleSelectOptions(modules);
 
   return [
     {

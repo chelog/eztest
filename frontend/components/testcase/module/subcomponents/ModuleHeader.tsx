@@ -40,7 +40,7 @@ export function ModuleHeader({
     <>
       <div className="flex items-center gap-2 mb-2">
         <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-          MODULE
+          ПАПКА
         </Badge>
         <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
           {testCaseCount} {testCaseCount !== 1 ? 'тест-кейсов' : 'тест-кейс'}

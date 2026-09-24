@@ -12,6 +12,8 @@ export interface Module {
   id: string;
   name: string;
   description?: string;
+  /** Parent folder; null/undefined = top level */
+  parentId?: string | null;
   order?: number;
   projectId: string;
   _count?: {

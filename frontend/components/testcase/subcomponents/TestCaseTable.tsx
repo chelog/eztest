@@ -6,13 +6,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/frontend/reusable-elements/hover-cards/HoverCard';
-import { Trash2 } from 'lucide-react';
+import { FolderInput, Trash2 } from 'lucide-react';
 import { PriorityBadge } from '@/frontend/reusable-components/badges/PriorityBadge';
 import { GroupedDataTable, ColumnDef, GroupConfig, ActionConfig } from '@/frontend/reusable-components/tables/GroupedDataTable';
 import { TestCase, Module } from '../types';
 import { useRouter } from 'next/navigation';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
+import { groupChildren } from '@/lib/module-tree';
 
 interface TestCaseTableProps {
   testCases: TestCase[];
@@ -23,6 +24,19 @@ interface TestCaseTableProps {
   canDelete?: boolean;
   projectId?: string;
   enableModuleLink?: boolean;
+  /** Show folders nested in folders (modules must include the subfolders) */
+  nested?: boolean;
+  /** Row menu "Переместить в папку…" */
+  onMoveRequest?: (testCase: TestCase) => void;
+  /** Drag & drop of a test case onto a folder (null = out of folders) */
+  onMoveTestCase?: (testCase: TestCase, targetModuleId: string | null) => void;
+  /** Drag & drop of a folder onto a folder (null = top level) */
+  onMoveFolder?: (moduleId: string, targetParentId: string | null) => void;
+  /** Controls on a folder row (e.g. its menu) */
+  renderFolderActions?: (moduleId: string) => React.ReactNode;
+  /** Checkboxes for bulk actions (ids of selected test cases) */
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
 }
 
 /**
@@ -58,6 +72,13 @@ export function TestCaseTable({
   canDelete = true,
   projectId,
   enableModuleLink = false,
+  nested = false,
+  onMoveRequest,
+  onMoveTestCase,
+  onMoveFolder,
+  renderFolderActions,
+  selectedIds,
+  onSelectionChange,
 }: TestCaseTableProps) {
   const router = useRouter();
   const { options: priorityOptions } = useDropdownOptions('TestCase', 'priority');
@@ -179,6 +200,23 @@ export function TestCaseTable({
     },
   ];
 
+  // Folder totals include subfolders when nested
+  const totalCountOf = (() => {
+    if (!nested) return (moduleId: string) => modules.find((m) => m.id === moduleId)?._count?.testCases;
+    const children = groupChildren(modules);
+    const cache = new Map<string, number>();
+    const total = (moduleId: string, seen = new Set<string>()): number => {
+      if (cache.has(moduleId)) return cache.get(moduleId)!;
+      if (seen.has(moduleId)) return 0;
+      seen.add(moduleId);
+      const own = modules.find((m) => m.id === moduleId)?._count?.testCases ?? 0;
+      const sum = own + (children.get(moduleId) ?? []).reduce((acc, child) => acc + total(child.id, seen), 0);
+      cache.set(moduleId, sum);
+      return sum;
+    };
+    return (moduleId: string) => (modules.some((m) => m.id === moduleId) ? total(moduleId) : undefined);
+  })();
+
   // Group configuration
   const groupConfig: GroupConfig<TestCase> | undefined = groupedByModule
     ? {
@@ -188,10 +226,7 @@ export function TestCaseTable({
           const moduleItem = modules.find((m) => m.id === groupId);
           return moduleItem?.name || 'Без модуля';
         },
-        getGroupCount: (groupId) => {
-          const moduleItem = modules.find((m) => m.id === groupId);
-          return moduleItem?._count?.testCases;
-        },
+        getGroupCount: (groupId) => totalCountOf(groupId),
         onGroupClick: enableModuleLink && projectId
           ? (groupId) => {
               if (groupId !== 'no-module') {
@@ -205,28 +240,51 @@ export function TestCaseTable({
         emptyGroups: modules.map((moduleItem) => ({
           id: moduleItem.id,
           name: moduleItem.name,
-          count: moduleItem._count?.testCases,
+          count: totalCountOf(moduleItem.id),
         })),
+        ...(nested
+          ? {
+              getParentGroupId: (groupId: string) => modules.find((m) => m.id === groupId)?.parentId ?? null,
+              isVirtualGroup: (groupId: string) => groupId === 'no-module',
+              renderGroupActions: renderFolderActions
+                ? (groupId: string) => (groupId === 'no-module' ? null : renderFolderActions(groupId))
+                : undefined,
+              onRowDrop: onMoveTestCase
+                ? (row: TestCase, targetGroupId: string | null) =>
+                    onMoveTestCase(row, targetGroupId === 'no-module' ? null : targetGroupId)
+                : undefined,
+              onGroupDrop: onMoveFolder,
+            }
+          : {}),
       }
     : undefined;
 
   // Action configuration
+  const actionItems: ActionConfig<TestCase>['items'] = [
+    ...(onMoveRequest
+      ? [
+          {
+            label: 'Переместить в папку',
+            icon: FolderInput,
+            onClick: onMoveRequest,
+            buttonName: (row: TestCase) => `Test Case Table - Move (${row.tcId || row.title})`,
+          },
+        ]
+      : []),
+    ...(onDelete && canDelete
+      ? [
+          {
+            label: 'Удалить',
+            icon: Trash2,
+            onClick: onDelete,
+            variant: 'destructive' as const,
+            buttonName: (row: TestCase) => `Test Case Table - Delete (${row.tcId || row.title})`,
+          },
+        ]
+      : []),
+  ];
   const actions: ActionConfig<TestCase> | undefined =
-    onDelete && canDelete
-      ? {
-          items: [
-            {
-              label: 'Удалить',
-              icon: Trash2,
-              onClick: onDelete,
-              variant: 'destructive',
-              buttonName: (row) => `Test Case Table - Delete (${row.tcId || row.title})`,
-            },
-          ],
-          align: 'end',
-          iconSize: 'w-3 h-3',
-        }
-      : undefined;
+    actionItems.length > 0 ? { items: actionItems, align: 'end', iconSize: 'w-3 h-3' } : undefined;
 
   return (
     <GroupedDataTable
@@ -237,6 +295,11 @@ export function TestCaseTable({
       grouped={groupedByModule}
       groupConfig={groupConfig}
       actions={actions}
+      selection={
+        selectedIds && onSelectionChange
+          ? { getRowId: (row) => row.id, selectedIds, onChange: onSelectionChange }
+          : undefined
+      }
       resizable={true}
       emptyMessage="Нет тест-кейсов"
     />

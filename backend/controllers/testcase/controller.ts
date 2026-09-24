@@ -2,7 +2,7 @@ import { testCaseService } from '@/backend/services/testcase/services';
 import { CustomRequest } from '@/backend/utils/interceptor';
 import { NotFoundException, InternalServerException, ValidationException } from '@/backend/utils/exceptions';
 import { TestCaseMessages } from '@/backend/constants/static_messages';
-import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema } from '@/backend/validators';
+import { createTestCaseSchema, updateTestCaseSchema, updateTestStepsSchema, testCaseQuerySchema, linkAttachmentsSchema, moveTestCasesSchema } from '@/backend/validators';
 import { z, ZodError } from 'zod';
 
 export class TestCaseController {
@@ -305,6 +305,23 @@ export class TestCaseController {
   async getProjectTestCaseStats(projectId: string) {
     const stats = await testCaseService.getProjectTestCaseStats(projectId);
     return { data: stats };
+  }
+
+  /**
+   * Move test cases into a folder or to the top level
+   * Access already checked by route wrapper
+   */
+  async moveTestCases(req: CustomRequest, projectId: string) {
+    const validationResult = moveTestCasesSchema.safeParse(await req.json());
+    if (!validationResult.success) {
+      throw new ValidationException('Validation failed', validationResult.error.issues);
+    }
+    const { testCaseIds, moduleId } = validationResult.data;
+    const moved = await testCaseService.moveTestCases(projectId, testCaseIds, moduleId);
+    if (moved === null) {
+      throw new NotFoundException('Папка не найдена');
+    }
+    return { data: { moved } };
   }
 
   /**

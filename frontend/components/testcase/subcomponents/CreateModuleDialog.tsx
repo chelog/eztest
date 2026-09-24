@@ -2,12 +2,19 @@
 
 import { BaseDialog, BaseDialogField, BaseDialogConfig } from '@/frontend/reusable-components/dialogs/BaseDialog';
 import { Module } from '../types';
+import { moduleSelectOptions } from '@/lib/module-tree';
+
+const TOP_LEVEL = '__root__';
 
 export interface CreateModuleDialogProps {
   projectId: string;
   triggerOpen?: boolean;
   onOpenChange: (open: boolean) => void;
   onModuleCreated: (module: Module) => void;
+  /** All folders of the project; enables choosing a parent folder */
+  modules?: Module[];
+  /** Parent preselected when the dialog opens (e.g. "Новая подпапка") */
+  defaultParentId?: string | null;
 }
 
 export function CreateModuleDialog({
@@ -15,8 +22,22 @@ export function CreateModuleDialog({
   triggerOpen,
   onOpenChange,
   onModuleCreated,
+  modules = [],
+  defaultParentId = null,
 }: CreateModuleDialogProps) {
   const fields: BaseDialogField[] = [
+    ...(modules.length > 0
+      ? [
+          {
+            name: 'parentId',
+            label: 'Где создать',
+            type: 'select' as const,
+            defaultValue: defaultParentId ?? TOP_LEVEL,
+            options: [{ value: TOP_LEVEL, label: 'Верхний уровень' }, ...moduleSelectOptions(modules)],
+            cols: 2,
+          },
+        ]
+      : []),
     {
       name: 'name',
       label: 'Название папки',
@@ -45,6 +66,7 @@ export function CreateModuleDialog({
       body: JSON.stringify({
         name: data.name,
         description: data.description || undefined,
+        parentId: data.parentId && data.parentId !== TOP_LEVEL ? data.parentId : null,
       }),
     });
 
@@ -58,7 +80,7 @@ export function CreateModuleDialog({
   };
 
   const config: BaseDialogConfig = {
-    title: 'Создать папку',
+    title: defaultParentId ? 'Новая подпапка' : 'Создать папку',
     description: 'Организуйте тест-кейсы по папкам для удобной структуры и управления.',
     fields,
     submitLabel: 'Создать папку',
@@ -66,6 +88,8 @@ export function CreateModuleDialog({
     triggerOpen,
     onOpenChange,
     onSubmit: handleSubmit,
+    // The parent depends on where the dialog was opened from
+    resetFieldsOnOpen: ['parentId'],
     onSuccess: (module) => {
       if (module && typeof module === 'object') {
         onModuleCreated(module as Module);

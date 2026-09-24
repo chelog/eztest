@@ -446,9 +446,10 @@ export class TestSuiteService {
     if (availableUngroupedTestCases.length > 0) {
       modulesWithAvailableTestCases.push({
         id: 'ungrouped',
-        name: 'Ungrouped Test Cases',
-        description: 'Test cases not assigned to any module',
+        name: 'Без модуля',
+        description: 'Тест-кейсы вне папок',
         projectId: suite.projectId,
+        parentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         order: 9999,

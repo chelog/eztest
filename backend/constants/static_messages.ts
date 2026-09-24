@@ -67,7 +67,7 @@ export class ModuleMessages {
   static NameRequired = 'Укажите название модуля.';
   static NameCannotBeEmpty = 'Название модуля не может быть пустым.';
   static NameAlreadyExists = 'Модуль с таким названием уже есть в проекте.';
-  static ModuleNameAlreadyExists = 'Модуль с таким названием уже есть в проекте.';
+  static ModuleNameAlreadyExists = 'Папка с таким названием уже есть на этом уровне.';
   static InvalidModuleOrder = 'Некорректный порядок модулей.';
   static ModuleContainsTestCases = 'Нельзя удалить модуль, в котором есть тест-кейсы.';
   static CannotDeleteModuleWithTestCases = 'Нельзя удалить модуль, в котором есть тест-кейсы.';
