@@ -9,6 +9,11 @@ import { hasPermission } from '@/lib/rbac';
 export const GET = hasPermission(
   async (request, context) => {
     const { id } = await context!.params;
+    const searchParams = request.nextUrl.searchParams;
+    // Lightweight list for the "add suites to run" picker
+    if (searchParams.get('view') === 'picker') {
+      return testSuiteController.getTestSuitesForPicker(id, searchParams.get('excludeTestRunId') || undefined);
+    }
     return testSuiteController.getProjectTestSuites(id);
   },
   'testsuites',

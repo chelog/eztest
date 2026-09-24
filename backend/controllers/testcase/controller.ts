@@ -10,6 +10,10 @@ export class TestCaseController {
    * Get all test cases for a project
    * Access already checked by route wrapper
    */
+  async getTestCasesForPicker(projectId: string, excludeTestRunId?: string) {
+    return { data: await testCaseService.getTestCasesForPicker(projectId, excludeTestRunId) };
+  }
+
   async getProjectTestCases(
     req: CustomRequest,
     projectId: string

@@ -55,7 +55,7 @@ export function NtAuthScreen({ subtitle, children, footer }: NtAuthScreenProps) 
         <div className="w-full max-w-[400px]">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="flex items-center gap-3">
-              <FlaskConical className="w-9 h-9 text-[var(--nt-accent)]" strokeWidth={2} />
+              <FlaskConical className="w-9 h-9 text-[var(--nt-brand)]" strokeWidth={2} />
               <span
                 className="text-[34px] leading-none font-bold text-white"
                 style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif', letterSpacing: '-0.02em' }}

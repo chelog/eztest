@@ -2,7 +2,7 @@
 
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { Play, Square, Pencil, X, Check, User, Calendar, Clock } from 'lucide-react';
+import { Play, CircleCheckBig, Pencil, X, Check, User, Calendar, Clock } from 'lucide-react';
 import { formatDateTime } from '@/lib/date-utils';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { getDynamicBadgeProps } from '@/lib/badge-color-utils';
@@ -196,7 +196,7 @@ export function TestRunHeader({
             },
             {
               label: 'Завершить',
-              icon: Square,
+              icon: CircleCheckBig,
               onClick: onCompleteTestRun,
               variant: 'primary',
               show: testRun.status === 'IN_PROGRESS',

@@ -877,6 +877,24 @@ export class TestRunService {
     });
   }
 
+  /**
+   * Add test cases to a run in one go (status NOT_RUN); already added ones are skipped.
+   * Only test cases of the run's project are accepted. Returns the number added.
+   */
+  async addTestCasesToRun(testRunId: string, testCaseIds: string[]) {
+    const testRun = await prisma.testRun.findUnique({ where: { id: testRunId }, select: { projectId: true } });
+    if (!testRun) return null;
+    const valid = await prisma.testCase.findMany({
+      where: { id: { in: testCaseIds }, projectId: testRun.projectId },
+      select: { id: true },
+    });
+    const result = await prisma.testResult.createMany({
+      data: valid.map((testCase) => ({ testRunId, testCaseId: testCase.id, status: 'NOT_RUN' })),
+      skipDuplicates: true,
+    });
+    return result.count;
+  }
+
   async bulkUpdateTestResults(
     testRunId: string,
     testCaseIds: string[],
@@ -1571,6 +1589,36 @@ export class TestRunService {
       systemAdminCount,
       projectManagerCount,
       defectAssigneeCount,
+    };
+  }
+
+  /**
+   * Who will get the report email (shown in the send dialog before sending)
+   */
+  async getTestRunReportRecipientsPreview(testRunId: string) {
+    const { isEmailServiceAvailable } = await import('@/lib/email-service');
+    const [{ recipientIds }, emailEnabled] = await Promise.all([
+      this.getTestRunReportRecipients(testRunId),
+      isEmailServiceAvailable(),
+    ]);
+    const users = await prisma.user.findMany({
+      where: { id: { in: recipientIds }, deletedAt: null },
+      select: { id: true, name: true, email: true, role: { select: { name: true } } },
+      orderBy: { name: 'asc' },
+    });
+    return {
+      emailEnabled,
+      recipients: users.map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        reason:
+          user.role?.name === 'ADMIN'
+            ? 'Администратор'
+            : user.role?.name === 'PROJECT_MANAGER'
+              ? 'Менеджер проекта'
+              : 'Исполнитель дефекта',
+      })),
     };
   }
 

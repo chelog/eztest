@@ -5,8 +5,14 @@ export const GET = hasPermission(
   async (request, context) => {
     const { id: projectId } = await context.params;
     
-    // Check if pagination is requested
     const searchParams = request.nextUrl.searchParams;
+
+    // Lightweight list for "add test cases" pickers
+    if (searchParams.get('view') === 'picker') {
+      return testCaseController.getTestCasesForPicker(projectId, searchParams.get('excludeTestRunId') || undefined);
+    }
+
+    // Check if pagination is requested
     const page = searchParams.get('page');
     const limit = searchParams.get('limit');
     

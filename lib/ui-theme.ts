@@ -36,7 +36,7 @@ export function resolveUiTheme(value: string | null | undefined): UiTheme {
 }
 
 /** Accent color of the new theme (user-selectable in the sidebar). */
-export const UI_ACCENTS = ['emerald', 'graphite', 'red', 'blue'] as const;
+export const UI_ACCENTS = ['emerald', 'graphite', 'red', 'blue', 'orange'] as const;
 export type UiAccent = (typeof UI_ACCENTS)[number];
 
 export const DEFAULT_UI_ACCENT: UiAccent = 'emerald';
@@ -47,6 +47,7 @@ export const UI_ACCENT_OPTIONS: Record<UiAccent, { label: string; swatch: string
   graphite: { label: 'Графит', swatch: '#e6e6e6' },
   red: { label: 'Красный', swatch: '#b8332f' },
   blue: { label: 'Синий', swatch: '#3b7ddd' },
+  orange: { label: 'Оранжевый', swatch: '#e07a1f' },
 };
 
 export function resolveUiAccent(value: string | null | undefined): UiAccent {

@@ -7,6 +7,31 @@ export class TestSuiteService {
   /**
    * Get all test suites for a project with hierarchical structure
    */
+  /**
+   * Lightweight suites for pickers: ids of their test cases only.
+   * With excludeTestRunId, test cases already in that run are left out.
+   */
+  async getTestSuitesForPicker(projectId: string, excludeTestRunId?: string) {
+    const suites = await prisma.testSuite.findMany({
+      where: { projectId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        parentId: true,
+        testCaseSuites: {
+          where: excludeTestRunId ? { testCase: { results: { none: { testRunId: excludeTestRunId } } } } : undefined,
+          select: { testCaseId: true },
+        },
+      },
+      orderBy: [{ order: 'asc' }, { name: 'asc' }],
+    });
+    return suites.map(({ testCaseSuites, ...suite }) => ({
+      ...suite,
+      testCaseIds: testCaseSuites.map((link) => link.testCaseId),
+    }));
+  }
+
   async getProjectTestSuites(projectId: string) {
     const suites = await prisma.testSuite.findMany({
       where: {

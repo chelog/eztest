@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { formatDateTime } from '@/lib/date-utils';
+import { getProjectBrand } from '@/lib/project-brand';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { ItemCard } from '@/frontend/reusable-components/cards/ItemCard';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
@@ -41,7 +42,24 @@ export const ProjectCard = ({ project, onNavigate, onDelete, canUpdate = false, 
   // If user can't perform any actions, show simplified card
   const hasActionPermissions = canUpdate || canDelete || canManageMembers;
 
-  const badges = (
+  const brand = getProjectBrand(project.key);
+  const badges = brand ? (
+    // Known projects show their own logo instead of the key badge. The slot is sized like the
+    // badge (fixed box, logo positioned inside) so the title line doesn't grow.
+    <span
+      className="relative inline-block h-5 align-[-3px]"
+      style={{ width: Math.round(brand.height * brand.aspect) }}
+      title={project.key}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={brand.logo}
+        alt={brand.alt}
+        className="absolute left-0 top-1/2 max-w-none"
+        style={{ height: brand.height, transform: `translateY(calc(-50% + ${brand.offsetY ?? 0}px))` }}
+      />
+    </span>
+  ) : (
     <Badge variant="outline" className="font-mono text-xs px-2 py-0.5 border-primary/40 bg-primary/10 text-primary">
       {project.key}
     </Badge>

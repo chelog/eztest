@@ -14,3 +14,16 @@ export const POST = hasPermission(
   'read'
 );
 
+
+/**
+ * GET /api/projects/[id]/testruns/[testrunId]/send-report
+ * Who will receive the report email
+ */
+export const GET = hasPermission(
+  async (request, context) => {
+    const { testrunId } = await context.params;
+    return testRunController.getTestRunReportRecipients(testrunId);
+  },
+  'testruns',
+  'read'
+);
