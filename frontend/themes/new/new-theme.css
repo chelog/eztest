@@ -102,13 +102,6 @@
   --nt-accent-deep-hover: #25426b;
   --nt-on-accent: #ffffff;
 }
-[data-theme="new"][data-accent="orange"] {
-  --nt-accent: #e07a1f;
-  --nt-accent-hover: #f08a2c;
-  --nt-accent-deep: #4a2a10;
-  --nt-accent-deep-hover: #5c3515;
-  --nt-on-accent: #ffffff;
-}
 
 [data-theme="new"] body {
   background: var(--nt-bg);
