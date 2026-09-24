@@ -7,6 +7,8 @@ export interface FloatingAlertMessage {
   type: 'success' | 'error';
   title: string;
   message: string;
+  /** Optional button in the alert, e.g. "Отменить" after a move */
+  action?: { label: string; onClick: () => void };
 }
 
 interface FloatingAlertProps {
@@ -15,6 +17,8 @@ interface FloatingAlertProps {
 }
 
 const AUTO_DISMISS_MS = 5000;
+// Alerts with an action (undo) stay a bit longer so there is time to press it
+const AUTO_DISMISS_WITH_ACTION_MS = 10000;
 
 export const FloatingAlert = ({ alert, onClose }: FloatingAlertProps) => {
   // Callers pass inline handlers; keep the latest one without restarting the timer on every render
@@ -24,11 +28,12 @@ export const FloatingAlert = ({ alert, onClose }: FloatingAlertProps) => {
   // Success messages auto-dismiss; errors stay until closed so they can be read.
   // A new alert object restarts the timer.
   const autoDismiss = alert?.type === 'success';
+  const dismissMs = alert?.action ? AUTO_DISMISS_WITH_ACTION_MS : AUTO_DISMISS_MS;
   useEffect(() => {
     if (!alert || !autoDismiss) return;
-    const timer = setTimeout(() => onCloseRef.current(), AUTO_DISMISS_MS);
+    const timer = setTimeout(() => onCloseRef.current(), dismissMs);
     return () => clearTimeout(timer);
-  }, [alert, autoDismiss]);
+  }, [alert, autoDismiss, dismissMs]);
 
   if (!alert) return null;
 
@@ -68,6 +73,18 @@ export const FloatingAlert = ({ alert, onClose }: FloatingAlertProps) => {
             </div>
           )}
         </div>
+        {alert.action && (
+          <button
+            type="button"
+            onClick={() => {
+              alert.action?.onClick();
+              onClose();
+            }}
+            className="shrink-0 rounded-[8px] bg-white/[0.08] px-3 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-white/[0.14] cursor-pointer"
+          >
+            {alert.action.label}
+          </button>
+        )}
         <button
           onClick={onClose}
           className="flex shrink-0 items-center justify-center text-white/35 transition-colors hover:text-white hover:bg-white/[0.06]"
@@ -81,7 +98,7 @@ export const FloatingAlert = ({ alert, onClose }: FloatingAlertProps) => {
       {autoDismiss && <div
         key={`${alert.title}-${alert.message}`}
         className="absolute bottom-0 left-0 right-0 origin-left"
-        style={{ height: 2, background: tone.color, opacity: 0.7, animation: `nt-toast-timer ${AUTO_DISMISS_MS}ms linear forwards` }}
+        style={{ height: 2, background: tone.color, opacity: 0.7, animation: `nt-toast-timer ${dismissMs}ms linear forwards` }}
       />}
     </div>
   );

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
-import { moduleSelectOptions } from '@/lib/module-tree';
+import { FolderPicker } from '@/frontend/reusable-components/inputs/FolderPicker';
 import { Clock, Paperclip } from 'lucide-react';
 import { TestCase, TestCaseFormData, Module } from '../../types';
 import { useState } from 'react';
@@ -71,7 +71,7 @@ export function TestCaseDetailsCard({
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">
-              Title <span className="text-red-500">*</span>
+              Название <span className="text-red-500">*</span>
             </Label>
             <Input
               id="title"
@@ -139,25 +139,15 @@ export function TestCaseDetailsCard({
             </div>
           </div>
 
-          {/* Module */}
+          {/* Folder */}
           <div className="space-y-2">
-            <Label htmlFor="moduleId">Модуль</Label>
-            <Select
-              value={formData.moduleId || 'none'}
-              onValueChange={(value) => handleFieldChange('moduleId', value === 'none' ? null : value)}
-            >
-              <SelectTrigger variant="glass" id="moduleId">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent variant="glass">
-                <SelectItem value="none">Нет (без модуля)</SelectItem>
-                {moduleSelectOptions(modules ?? []).map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="moduleId">Папка</Label>
+            <FolderPicker
+              id="moduleId"
+              folders={modules ?? []}
+              value={formData.moduleId || null}
+              onChange={(folderId) => handleFieldChange('moduleId', folderId)}
+            />
           </div>
 
           {/* Estimated Time */}

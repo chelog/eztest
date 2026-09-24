@@ -52,7 +52,12 @@ export interface BaseDialogConfig<T = unknown> {
   triggerOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit: (formData: Record<string, string>) => Promise<T>;
-  onSuccess?: (result?: T) => void;
+  onSuccess?: (result?: T, options?: { keepOpen: boolean }) => void;
+  /**
+   * Second submit button that keeps the dialog open for the next item ("Создать и ещё один").
+   * Fields in keepFields keep their values, the rest reset to defaults.
+   */
+  secondarySubmit?: { label: string; keepFields: string[]; buttonName?: string };
   children?: ReactNode; // For custom content before form
   projectId?: string; // For attachment uploads
   /** Unique key for form persistence (auto-generated if not provided) */
@@ -88,6 +93,7 @@ export const BaseDialog = <T = unknown,>({
   resetFieldsOnOpen,
   submitButtonName,
   cancelButtonName,
+  secondarySubmit,
 }: BaseDialogConfig<T>) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -304,8 +310,13 @@ export const BaseDialog = <T = unknown,>({
     }));
   };
 
+  // Which submit button was used (Enter / main button = close, secondary = keep open)
+  const keepOpenRef = useRef(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const keepOpen = keepOpenRef.current;
+    keepOpenRef.current = false;
     setError('');
 
     // Validate all fields before submission
@@ -333,10 +344,19 @@ export const BaseDialog = <T = unknown,>({
         }
       });
       
-      handleOpenChange(false);
+      if (keepOpen && secondarySubmit) {
+        // Ready for the next item: keep chosen fields, reset the rest, focus the first field
+        const kept = Object.fromEntries(secondarySubmit.keepFields.map((name) => [name, formData[name] ?? '']));
+        setFormData({ ...getInitialData(), ...kept });
+        setFieldErrors({});
+        const firstField = fields.find((field) => !secondarySubmit.keepFields.includes(field.name) && field.type !== 'custom');
+        if (firstField) setTimeout(() => document.getElementById(firstField.name)?.focus(), 0);
+      } else {
+        handleOpenChange(false);
+      }
 
       if (onSuccess) {
-        onSuccess(result);
+        onSuccess(result, { keepOpen: keepOpen && Boolean(secondarySubmit) });
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка. Попробуйте еще раз.';
@@ -484,7 +504,19 @@ export const BaseDialog = <T = unknown,>({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5" id="base-dialog-form">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+              id="base-dialog-form"
+              onKeyDown={(e) => {
+                // Ctrl/⌘+Enter submits from any field; with Shift — "and another" when available
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  keepOpenRef.current = e.shiftKey && Boolean(secondarySubmit);
+                  (e.currentTarget as HTMLFormElement).requestSubmit();
+                }
+              }}
+            >
               <div className={hasMultiColumnLayout ? "grid grid-cols-2 gap-4" : "space-y-4"}>
                 {fields.map((field) => (
                   <div
@@ -528,11 +560,31 @@ export const BaseDialog = <T = unknown,>({
           >
             {cancelLabel}
           </Button>
+          {secondarySubmit && (
+            <Button
+              type="submit"
+              form="base-dialog-form"
+              variant="glass"
+              disabled={loading}
+              className="cursor-pointer"
+              title="Ctrl/⌘ + Shift + Enter"
+              onClick={() => {
+                keepOpenRef.current = true;
+              }}
+              data-analytics-button={secondarySubmit.buttonName || `${title} - ${secondarySubmit.label}`}
+            >
+              {secondarySubmit.label}
+            </Button>
+          )}
           <ButtonPrimary
             type="submit"
             form="base-dialog-form"
             disabled={loading}
             className="cursor-pointer"
+            title="Ctrl/⌘ + Enter"
+            onClick={() => {
+              keepOpenRef.current = false;
+            }}
             buttonName={submitButtonName || `${title} - ${submitLabel}`}
           >
             {loading ? 'Сохранение...' : submitLabel}
