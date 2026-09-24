@@ -67,6 +67,10 @@ export const setStepCheckSchema = z.object({
   checked: z.boolean(),
 });
 
+export const addTestCasesToRunSchema = z.object({
+  testCaseIds: z.array(z.string().min(1)).min(1, 'Выберите хотя бы один тест-кейс').max(20000),
+});
+
 export const bulkUpdateTestResultsSchema = z
   .object({
     testCaseIds: z.array(z.string().min(1, 'ID тест-кейса обязателен')).min(1, 'Выберите хотя бы один тест-кейс'),

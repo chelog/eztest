@@ -260,7 +260,7 @@ export function NtSidebar({
       {/* Brand */}
       <div className={cn('flex items-center gap-2 pt-5 pb-4', isCollapsed ? 'px-3 flex-col' : 'px-4')}>
         <Link href="/projects" className="flex items-center gap-2.5 min-w-0 flex-1">
-          <FlaskConical className="w-6 h-6 shrink-0 text-[var(--nt-accent)]" strokeWidth={2} />
+          <FlaskConical className="w-6 h-6 shrink-0 text-[var(--nt-brand)]" strokeWidth={2} />
           {!isCollapsed && <span className="text-lg font-bold text-white truncate">EZTest</span>}
         </Link>
         <button

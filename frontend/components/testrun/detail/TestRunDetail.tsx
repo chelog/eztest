@@ -57,6 +57,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [addingTestCases, setAddingTestCases] = useState(false);
   const [addingTestSuites, setAddingTestSuites] = useState(false);
   const [loadingSuites, setLoadingSuites] = useState(false);
+  const [loadingTestCases, setLoadingTestCases] = useState(false);
+  // Folders of the project for the "add test cases" tree
+  const [pickerModules, setPickerModules] = useState<Array<{ id: string; name: string; parentId?: string | null }>>([]);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useItemsPerPage();
@@ -578,37 +581,43 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
     }
   };
 
+  // Lightweight picker data: only the fields the dialogs show; cases already in the run
+  // are excluded on the server (no need to load the whole run or all test case details)
+  const fetchPickerTestCases = async (): Promise<TestCase[]> => {
+    if (!testRun?.project?.id) return [];
+    const params = new URLSearchParams({ view: 'picker', excludeTestRunId: testRunId });
+    const response = await fetch(`/api/projects/${testRun.project.id}/testcases?${params}`);
+    const data = await response.json();
+    return Array.isArray(data.data) ? data.data : [];
+  };
+
   const fetchAvailableTestCases = async () => {
     if (!testRun || !testRun.project?.id) return;
-
+    setLoadingTestCases(true);
     try {
-      // Fetch latest test run data to get current results
-      let projectId = testRun?.project?.id;
-      if (!projectId && typeof window !== 'undefined') {
-        const pathSegments = window.location.pathname.split('/');
-        const projectIndex = pathSegments.indexOf('projects');
-        if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
-          projectId = pathSegments[projectIndex + 1];
-        }
-      }
-      const testRunResponse = await fetch(`/api/projects/${projectId}/testruns/${testRunId}`);
-      const testRunData = await testRunResponse.json();
-      const currentTestRun = testRunData.data || testRun;
-
-      const response = await fetch(
-        `/api/projects/${testRun.project.id}/testcases`
-      );
-      const data = await response.json();
-
-      if (data.data) {
-        const existingIds = new Set(currentTestRun.results.map((r: { testCaseId: string }) => r.testCaseId));
-        const available = data.data.filter(
-          (tc: TestCase) => !existingIds.has(tc.id)
-        );
-        setAvailableTestCases(available);
-      }
+      const [cases, modulesResponse] = await Promise.all([
+        fetchPickerTestCases(),
+        fetch(`/api/projects/${testRun.project.id}/modules`).then((r) => r.json()),
+      ]);
+      setAvailableTestCases(cases);
+      if (Array.isArray(modulesResponse?.data)) setPickerModules(modulesResponse.data);
     } catch (error) {
       console.error('Error fetching test cases:', error);
+    } finally {
+      setLoadingTestCases(false);
+    }
+  };
+
+  // One request for any number of test cases
+  const addTestCasesToRun = async (testCaseIds: string[]) => {
+    const response = await fetch(`/api/projects/${testRun?.project?.id}/testruns/${testRunId}/results/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || data.error || `Не удалось добавить тест-кейсы (код ${response.status})`);
     }
   };
 
@@ -620,55 +629,18 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
     setAddingTestCases(true);
     try {
-      console.log('Adding test cases:', selectedCaseIds);
-      let projectId = testRun?.project?.id;
-      if (!projectId && typeof window !== 'undefined') {
-        const pathSegments = window.location.pathname.split('/');
-        const projectIndex = pathSegments.indexOf('projects');
-        if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
-          projectId = pathSegments[projectIndex + 1];
-        }
-      }
-      const promises = selectedCaseIds.map(async (testCaseId) => {
-        const payload = {
-          testCaseId,
-          status: 'NOT_RUN',
-        };
-        
-        const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          let errorMessage = `Не удалось добавить тест-кейс (код ${response.status})`;
-          try {
-            const data = await response.json();
-            console.error('API error response:', data);
-            errorMessage = data.message || data.error || errorMessage;
-          } catch {
-            const text = await response.text();
-            console.error('Response text:', text);
-            if (text) errorMessage = text;
-          }
-          throw new Error(errorMessage);
-        }
-
-        return response.json();
-      });
-
-      await Promise.all(promises);
-
+      await addTestCasesToRun(selectedCaseIds);
       setAddCasesDialogOpen(false);
+      setFloatingAlert({ type: 'success', title: 'Добавлено', message: `Тест-кейсов добавлено: ${selectedCaseIds.length}` });
       setSelectedCaseIds([]);
       await fetchTestRun();
-      // Refresh both lists to keep data in sync
-      await fetchAvailableTestCases();
-      await fetchAvailableTestSuites();
     } catch (error) {
       console.error('Error adding test cases:', error);
-      alert(`Не удалось добавить тест-кейсы: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      setFloatingAlert({
+        type: 'error',
+        title: 'Не удалось добавить тест-кейсы',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка',
+      });
     } finally {
       setAddingTestCases(false);
     }
@@ -679,81 +651,36 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
 
     setLoadingSuites(true);
     try {
-      // Fetch latest test run data to get current results
-      let projectId = testRun?.project?.id;
-      if (!projectId && typeof window !== 'undefined') {
-        const pathSegments = window.location.pathname.split('/');
-        const projectIndex = pathSegments.indexOf('projects');
-        if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
-          projectId = pathSegments[projectIndex + 1];
-        }
-      }
-      const testRunResponse = await fetch(`/api/projects/${projectId}/testruns/${testRunId}`);
-      const testRunData = await testRunResponse.json();
-      const currentTestRun = testRunData.data || testRun;
+      const params = new URLSearchParams({ view: 'picker', excludeTestRunId: testRunId });
+      const [suitesData, cases] = await Promise.all([
+        fetch(`/api/projects/${testRun.project.id}/testsuites?${params}`).then((r) => r.json()),
+        fetchPickerTestCases(),
+      ]);
+      const caseById = new Map(cases.map((tc) => [tc.id, tc]));
+      const suites: Array<{ id: string; name: string; description?: string; testCaseIds: string[] }> =
+        Array.isArray(suitesData.data) ? suitesData.data : [];
 
-      // Fetch test suites
-      const suitesResponse = await fetch(
-        `/api/projects/${testRun.project.id}/testsuites`
-      );
-      const suitesData = await suitesResponse.json();
+      const inSuites = new Set<string>();
+      const availableSuites = suites.map((suite) => {
+        const testCases = suite.testCaseIds.map((id) => caseById.get(id)).filter((tc): tc is TestCase => Boolean(tc));
+        testCases.forEach((tc) => inSuites.add(tc.id));
+        return { ...suite, testCases, _count: { testCases: testCases.length } };
+      });
 
-      // Fetch all test cases to get ungrouped ones
-      const testCasesResponse = await fetch(
-        `/api/projects/${testRun.project.id}/testcases`
-      );
-      const testCasesData = await testCasesResponse.json();
-
-      if (suitesData.data) {
-        const existingTestCaseIds = new Set(currentTestRun.results.map((r: { testCaseId: string }) => r.testCaseId));
-        
-        // Collect all test case IDs that belong to any suite
-        const testCaseIdsInSuites = new Set<string>();
-        suitesData.data.forEach((suite: TestSuite) => {
-          (suite.testCases || []).forEach((tc: TestCase) => {
-            testCaseIdsInSuites.add(tc.id);
-          });
+      // Test cases outside of any suite
+      const ungrouped = cases.filter((tc) => !inSuites.has(tc.id));
+      if (ungrouped.length > 0) {
+        availableSuites.push({
+          id: 'ungrouped',
+          name: 'Без сьюта',
+          description: 'Тест-кейсы вне сьютов',
+          testCaseIds: ungrouped.map((tc) => tc.id),
+          testCases: ungrouped,
+          _count: { testCases: ungrouped.length },
         });
-        
-        // Process each suite to include test case details and count new test cases
-        const availableSuites = suitesData.data
-          .map((suite: TestSuite) => {
-            // Filter test cases that are not already in the test run
-            const newTestCases = (suite.testCases || []).filter(
-              (tc: TestCase) => !existingTestCaseIds.has(tc.id)
-            );
-            
-            return {
-              ...suite,
-              testCases: newTestCases,
-              _count: {
-                testCases: newTestCases.length,
-              },
-            };
-          });
-
-        // Find ungrouped test cases (test cases not in any suite)
-        if (testCasesData.data) {
-          const ungroupedTestCases = testCasesData.data
-            .filter((tc: TestCase) => !testCaseIdsInSuites.has(tc.id) && !existingTestCaseIds.has(tc.id));
-
-          // Add ungrouped test cases as a special "suite"
-          if (ungroupedTestCases.length > 0) {
-            availableSuites.push({
-              id: 'ungrouped',
-              name: 'Ungrouped Test Cases',
-              description: 'Тест-кейсы вне сьютов',
-              projectId: testRun.project.id,
-              testCases: ungroupedTestCases,
-              _count: {
-                testCases: ungroupedTestCases.length,
-              },
-            });
-          }
-        }
-
-        setAvailableTestSuites(availableSuites);
       }
+
+      setAvailableTestSuites(availableSuites as unknown as TestSuite[]);
     } catch (error) {
       console.error('Error fetching test suites:', error);
     } finally {
@@ -767,73 +694,33 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
       return;
     }
 
+    // Test cases of the selected suites (the picker already left out ones in the run)
+    const testCaseIds = [
+      ...new Set(
+        selectedSuiteIds.flatMap((suiteId) =>
+          (availableTestSuites.find((s) => s.id === suiteId)?.testCases ?? []).map((tc: TestCase) => tc.id)
+        )
+      ),
+    ];
+    if (testCaseIds.length === 0) {
+      alert('В выбранных тест-сьютах нет новых тест-кейсов для добавления');
+      return;
+    }
+
     setAddingTestSuites(true);
     try {
-      const suiteIds = selectedSuiteIds;
-      const testCaseIds: string[] = [];
-
-      // Collect all test case IDs from selected suites
-      suiteIds.forEach((suiteId) => {
-        const suite = availableTestSuites.find((s) => s.id === suiteId);
-        if (suite && suite.testCases) {
-          suite.testCases.forEach((testCase: TestCase) => {
-            if (!testRun?.results.find((r) => r.testCaseId === testCase.id)) {
-              testCaseIds.push(testCase.id);
-            }
-          });
-        }
-      });
-
-      if (testCaseIds.length === 0) {
-        alert('В выбранных тест-сьютах нет новых тест-кейсов для добавления');
-        return;
-      }
-
-      // Add all test cases from selected suites
-      let projectId = testRun?.project?.id;
-      if (!projectId && typeof window !== 'undefined') {
-        const pathSegments = window.location.pathname.split('/');
-        const projectIndex = pathSegments.indexOf('projects');
-        if (projectIndex !== -1 && projectIndex + 1 < pathSegments.length) {
-          projectId = pathSegments[projectIndex + 1];
-        }
-      }
-      const promises = testCaseIds.map(async (testCaseId) => {
-        const response = await fetch(`/api/projects/${projectId}/testruns/${testRunId}/results`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            testCaseId,
-                status: 'NOT_RUN',
-          }),
-        });
-
-        if (!response.ok) {
-          let errorMessage = `Не удалось добавить тест-кейс (код ${response.status})`;
-          try {
-            const data = await response.json();
-            errorMessage = data.message || data.error || errorMessage;
-          } catch {
-            const text = await response.text();
-            if (text) errorMessage = text;
-          }
-          throw new Error(errorMessage);
-        }
-
-        return response.json();
-      });
-
-      await Promise.all(promises);
-
+      await addTestCasesToRun(testCaseIds);
       setAddSuitesDialogOpen(false);
+      setFloatingAlert({ type: 'success', title: 'Добавлено', message: `Тест-кейсов добавлено: ${testCaseIds.length}` });
       setSelectedSuiteIds([]);
       await fetchTestRun();
-      // Refresh both lists to keep data in sync
-      await fetchAvailableTestSuites();
-      await fetchAvailableTestCases();
     } catch (error) {
       console.error('Error adding test cases from suites:', error);
-      alert(`Не удалось добавить тест-кейсы из сьютов: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      setFloatingAlert({
+        type: 'error',
+        title: 'Не удалось добавить тест-кейсы из сьютов',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка',
+      });
     } finally {
       setAddingTestSuites(false);
     }
@@ -1024,8 +911,9 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           onSelectionChange={(ids) => setSelectedCaseIds(ids)}
           onSubmit={handleAddTestCases}
           context="run"
-          showPriority={false}
           loading={addingTestCases}
+          fetching={loadingTestCases}
+          folders={pickerModules}
         />
 
         <AddTestSuitesDialog
@@ -1068,6 +956,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
           open={sendReportDialogOpen}
           onOpenChange={setSendReportDialogOpen}
           onConfirm={handleSendReportYes}
+          projectId={testRun?.project?.id}
+          testRunId={testRunId}
         />
 
         {/* Export Dialog */}

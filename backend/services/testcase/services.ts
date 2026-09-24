@@ -143,6 +143,21 @@ export class TestCaseService {
   }
 
   /**
+   * Lightweight list for pickers (add to run / suite): only what the picker shows.
+   * With excludeTestRunId, test cases already in that run are left out on the server.
+   */
+  async getTestCasesForPicker(projectId: string, excludeTestRunId?: string) {
+    return prisma.testCase.findMany({
+      where: {
+        projectId,
+        ...(excludeTestRunId ? { results: { none: { testRunId: excludeTestRunId } } } : {}),
+      },
+      select: { id: true, tcId: true, title: true, priority: true, status: true, moduleId: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
    * Get project test cases with pagination and module grouping
    */
   async getProjectTestCasesWithPagination(

@@ -6,6 +6,7 @@ import {
   duplicateTestRunSchema,
   addTestResultSchema,
   bulkUpdateTestResultsSchema,
+  addTestCasesToRunSchema,
   bulkDeleteTestResultsSchema,
   setStepCheckSchema,
 } from '@/backend/validators/testrun.validator';
@@ -237,6 +238,18 @@ export class TestRunController {
     return { data: result, statusCode: 201 };
   }
 
+  async addTestCasesToRun(body: unknown, testRunId: string) {
+    const validationResult = addTestCasesToRunSchema.safeParse(body);
+    if (!validationResult.success) {
+      throw new ValidationException('Validation failed', validationResult.error.issues);
+    }
+    const added = await testRunService.addTestCasesToRun(testRunId, validationResult.data.testCaseIds);
+    if (added === null) {
+      throw new NotFoundException(TestRunMessages.TestRunNotFound);
+    }
+    return { data: { added }, statusCode: 201 };
+  }
+
   async bulkUpdateTestResults(
     body: unknown,
     testRunId: string,
@@ -344,6 +357,17 @@ export class TestRunController {
       data: result,
       statusCode: 200,
     };
+  }
+
+  /**
+   * Recipients of the report email (preview)
+   */
+  async getTestRunReportRecipients(testRunId: string) {
+    const testRun = await testRunService.getTestRunById(testRunId);
+    if (!testRun) {
+      throw new NotFoundException(TestRunMessages.TestRunNotFound);
+    }
+    return { data: await testRunService.getTestRunReportRecipientsPreview(testRunId) };
   }
 
   /**

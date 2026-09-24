@@ -7,6 +7,13 @@ const testSuiteService = new TestSuiteService();
 
 export class TestSuiteController {
   /**
+   * Lightweight suites for the "add to run" picker
+   */
+  async getTestSuitesForPicker(projectId: string, excludeTestRunId?: string) {
+    return NextResponse.json({ data: await testSuiteService.getTestSuitesForPicker(projectId, excludeTestRunId) });
+  }
+
+  /**
    * Get all test suites for a project
    */
   async getProjectTestSuites(projectId: string) {
