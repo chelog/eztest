@@ -1,6 +1,8 @@
 ﻿'use client';
 
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
+import { getProjectBrand } from '@/lib/project-brand';
+import { ProjectBrandIcon } from '@/frontend/reusable-components/project/ProjectBrandIcon';
 import { MetadataDisplay } from '@/frontend/reusable-components/data/MetadataDisplay';
 import { formatDateTime } from '@/lib/date-utils';
 
@@ -23,9 +25,13 @@ export const ProjectHeader = ({ project }: ProjectHeaderProps) => {
   return (
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-2">
-        <Badge variant="outline" className="font-mono border-primary/40 bg-primary/10 text-primary text-xs px-2.5 py-0.5">
-          {project.key}
-        </Badge>
+        {getProjectBrand(project.key) ? (
+          <ProjectBrandIcon projectKey={project.key} size="lg" />
+        ) : (
+          <Badge variant="outline" className="font-mono border-primary/40 bg-primary/10 text-primary text-xs px-2.5 py-0.5">
+            {project.key}
+          </Badge>
+        )}
         <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
       </div>
       {project.description && (

@@ -10,6 +10,8 @@ interface ItemCardProps {
   description?: string;
   descriptionClassName?: string;
   badges?: ReactNode;
+  /** Icon before the title, centered on the title line (e.g. a project brand mark) */
+  titleIcon?: ReactNode;
   /** Render badges on the title line instead of above it */
   inlineBadges?: boolean;
   header?: ReactNode;
@@ -30,6 +32,7 @@ export const ItemCard = ({
   description,
   descriptionClassName,
   badges,
+  titleIcon,
   header,
   content,
   footer,
@@ -64,8 +67,17 @@ export const ItemCard = ({
                   className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-foreground"
                   style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                 >
-                  {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
-                  {title}
+                  {titleIcon ? (
+                    <span className="flex items-center gap-2.5">
+                      {titleIcon}
+                      <span className="min-w-0">{title}</span>
+                    </span>
+                  ) : (
+                    <>
+                      {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
+                      {title}
+                    </>
+                  )}
                 </CardTitle>
                 <CardDescription className={descriptionClassName || "line-clamp-1 text-sm text-muted-foreground min-h-5"}>
                   {description || ''}
@@ -104,8 +116,17 @@ export const ItemCard = ({
                         className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 break-words text-white"
                         style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                       >
-                        {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
-                        {title}
+                        {titleIcon ? (
+                          <span className="flex items-center gap-2.5">
+                            {titleIcon}
+                            <span className="min-w-0">{title}</span>
+                          </span>
+                        ) : (
+                          <>
+                            {inlineBadges && badges && <span className="inline-flex items-center gap-2 mr-2 align-[2px]">{badges}</span>}
+                            {title}
+                          </>
+                        )}
                       </CardTitle>
                       <CardDescription className={descriptionClassName || 'line-clamp-1 text-sm text-white/60 min-h-5'}>
                         {description || ''}
