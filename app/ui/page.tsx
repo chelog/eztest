@@ -93,7 +93,7 @@ interface TableRow {
 
 export default function UIShowcasePage() {
   useEffect(() => {
-    document.title = 'UI Components | EZTest';
+    document.title = 'UI-компоненты | EZTest';
   }, []);
   return (
     <div className="min-h-screen flex flex-col">
