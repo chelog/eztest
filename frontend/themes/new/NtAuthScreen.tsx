@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { Eye, EyeOff, FlaskConical, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { UiThemePicker } from '@/frontend/reusable-components/layout/UiThemePicker';
 
 /**
  * Partner projects shown at the bottom of the auth screen.
@@ -67,9 +66,6 @@ export function NtAuthScreen({ subtitle, children, footer }: NtAuthScreenProps) 
           </div>
           {children}
           {footer && <div className="mt-6 text-center text-sm text-[var(--nt-text-3)]">{footer}</div>}
-          <div className="mt-10 flex justify-center">
-            <UiThemePicker variant="inline" />
-          </div>
         </div>
       </main>
 

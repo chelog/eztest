@@ -20,7 +20,6 @@ import {
 import { cn } from '@/lib/utils';
 import { ENTITY_ICONS } from '@/lib/entity-icons';
 import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
-import { UiThemePicker } from '@/frontend/reusable-components/layout/UiThemePicker';
 import { AccentPicker } from './AccentPicker';
 import type { SidebarItem } from '@/frontend/reusable-components/layout/Sidebar';
 import { setActiveProjectId } from '@/lib/active-project';
@@ -327,10 +326,9 @@ export function NtSidebar({
         )}
       </nav>
 
-      {/* Bottom: theme + profile */}
+      {/* Bottom: accent color + profile */}
       <div className={cn('border-t border-[var(--nt-border)] pt-3 pb-4 space-y-3', isCollapsed ? 'px-2.5 flex flex-col items-center' : 'px-3')}>
         {!isCollapsed && <AccentPicker />}
-        <UiThemePicker compact={isCollapsed} />
         {isCollapsed ? (
           <Link
             href="/settings/profile"
