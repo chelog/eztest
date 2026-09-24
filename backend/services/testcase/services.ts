@@ -193,8 +193,8 @@ export class TestCaseService {
     });
 
     if (groupBy === 'modulePage') {
-      // Page = N categories (modules), each with all of its matching test cases.
-      // Only the test cases of the modules on the current page are loaded.
+      // Page = N top-level folders; each comes with all matching test cases of its whole
+      // subtree (subfolders included). Only the test cases of the page's folders are loaded.
       const hasFilters = Boolean(filters?.search || filters?.priority || filters?.status || filters?.suiteId);
 
       const stats = await prisma.testCase.groupBy({
@@ -205,16 +205,38 @@ export class TestCaseService {
       });
       const statsByModule = new Map(stats.map((row) => [row.moduleId ?? 'no-module', row]));
 
-      const groups = modules
-        .map((module) => {
-          const row = statsByModule.get(module.id);
-          return {
-            id: module.id,
-            isEmpty: !row,
-            mostRecentUpdate: Math.max(new Date(module.updatedAt).getTime(), row?._max.updatedAt?.getTime() ?? 0),
-          };
-        })
-        // With filters, modules without matches would be noise
+      // Resolve every folder to its top-level ancestor
+      const parentOf = new Map(modules.map((m) => [m.id, m.parentId]));
+      const rootOf = (moduleId: string) => {
+        let current = moduleId;
+        const seen = new Set([moduleId]);
+        let parent = parentOf.get(current);
+        while (parent && parentOf.has(parent) && !seen.has(parent)) {
+          seen.add(parent);
+          current = parent;
+          parent = parentOf.get(current);
+        }
+        return current;
+      };
+      const subtreeIds = new Map<string, string[]>();
+      const rootInfo = new Map<string, { mostRecentUpdate: number; hasCases: boolean }>();
+      for (const folder of modules) {
+        const root = rootOf(folder.id);
+        subtreeIds.set(root, [...(subtreeIds.get(root) ?? []), folder.id]);
+        const row = statsByModule.get(folder.id);
+        const info = rootInfo.get(root) ?? { mostRecentUpdate: 0, hasCases: false };
+        info.mostRecentUpdate = Math.max(
+          info.mostRecentUpdate,
+          new Date(folder.updatedAt).getTime(),
+          row?._max.updatedAt?.getTime() ?? 0
+        );
+        info.hasCases = info.hasCases || Boolean(row);
+        rootInfo.set(root, info);
+      }
+
+      const groups = [...rootInfo.entries()]
+        .map(([id, info]) => ({ id, isEmpty: !info.hasCases, mostRecentUpdate: info.mostRecentUpdate }))
+        // With filters, folders without matches would be noise
         .filter((group) => !hasFilters || !group.isEmpty);
 
       const ungrouped = statsByModule.get('no-module');
@@ -222,21 +244,23 @@ export class TestCaseService {
         groups.push({ id: 'no-module', isEmpty: false, mostRecentUpdate: ungrouped._max.updatedAt?.getTime() ?? 0 });
       }
 
-      // Categories with test cases first, most recently updated on top; empty ones last
+      // Folders with test cases first, most recently updated on top; empty ones last
       groups.sort((a, b) => Number(a.isEmpty) - Number(b.isEmpty) || b.mostRecentUpdate - a.mostRecentUpdate);
 
       const totalGroups = groups.length;
       const totalPages = Math.ceil(totalGroups / limit) || 1;
       const pageGroups = groups.slice((page - 1) * limit, page * limit);
       const pageModuleIds = pageGroups.map((group) => group.id);
-      const moduleIdsWithCases = pageGroups.filter((g) => !g.isEmpty && g.id !== 'no-module').map((g) => g.id);
+      const moduleIdsWithCases = pageGroups
+        .filter((g) => !g.isEmpty && g.id !== 'no-module')
+        .flatMap((g) => subtreeIds.get(g.id) ?? [g.id]);
       const includesUngrouped = pageModuleIds.includes('no-module');
 
       const moduleScope: Record<string, unknown>[] = [];
       if (moduleIdsWithCases.length > 0) moduleScope.push({ moduleId: { in: moduleIdsWithCases } });
       if (includesUngrouped) moduleScope.push({ moduleId: null });
 
-      const pageTestCases = moduleScope.length === 0
+      const testCases = moduleScope.length === 0
         ? []
         : await prisma.testCase.findMany({
             where: { AND: [where, { OR: moduleScope }] },
@@ -255,12 +279,6 @@ export class TestCaseService {
             },
             orderBy: { updatedAt: 'desc' },
           });
-
-      // Keep the category order of the page (the table groups rows in order of appearance)
-      const groupIndex = new Map(pageModuleIds.map((id, index) => [id, index]));
-      const testCases = [...pageTestCases].sort(
-        (a, b) => (groupIndex.get(a.moduleId ?? 'no-module') ?? 0) - (groupIndex.get(b.moduleId ?? 'no-module') ?? 0)
-      );
 
       return {
         testCases,
@@ -1097,6 +1115,22 @@ export class TestCaseService {
         return acc;
       }, {} as Record<string, number>),
     };
+  }
+
+  /**
+   * Move test cases into a folder (moduleId) or out of all folders (null).
+   * Returns the number of moved test cases, or null when the folder is not in the project.
+   */
+  async moveTestCases(projectId: string, testCaseIds: string[], moduleId: string | null) {
+    if (moduleId) {
+      const target = await prisma.module.findFirst({ where: { id: moduleId, projectId }, select: { id: true } });
+      if (!target) return null;
+    }
+    const result = await prisma.testCase.updateMany({
+      where: { projectId, id: { in: testCaseIds } },
+      data: { moduleId },
+    });
+    return result.count;
   }
 
   /**

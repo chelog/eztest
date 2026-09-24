@@ -15,6 +15,7 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { FileUploadModal } from '@/frontend/reusable-components/uploads/FileUploadModal';
 import { Plus, Trash2 } from 'lucide-react';
+import { moduleSelectOptions } from '@/lib/module-tree';
 
 interface CreateTestCaseDialogProps {
   projectId: string;
@@ -82,10 +83,8 @@ export function CreateTestCaseDialog({
     };
   }, [projectId, open]);
 
-  const moduleOptions = modules.map(module => ({
-    value: module.id,
-    label: module.name,
-  }));
+  // Nested folders are shown with their full path
+  const moduleOptions = moduleSelectOptions(modules);
 
   const fields: BaseDialogField[] = [
     {

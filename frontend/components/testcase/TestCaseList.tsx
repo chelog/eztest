@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, FolderPlus, Import, Upload, ChevronDown } from 'lucide-react';
+import { Plus, FolderPlus, Import, Upload, ChevronDown, FolderInput, FolderOpen, MoreHorizontal, Trash2, X } from 'lucide-react';
+import { BaseConfirmDialog } from '@/frontend/reusable-components/dialogs/BaseConfirmDialog';
 import { Navbar } from '@/frontend/reusable-components/layout/Navbar';
 import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
@@ -27,6 +28,8 @@ import { DeleteTestCaseDialog } from './subcomponents/DeleteTestCaseDialog';
 import { TestCaseFilters } from './subcomponents/TestCaseFilters';
 import { EmptyTestCaseState } from './subcomponents/EmptyTestCaseState';
 import { usePermissions } from '@/hooks/usePermissions';
+import { MoveToFolderDialog } from './module/MoveToFolderDialog';
+import { flattenModuleTree, getDescendantIds, getModuleAncestors, getModulePath } from '@/lib/module-tree';
 import { FileImportDialog } from '@/frontend/reusable-components/dialogs/FileImportDialog';
 import { FileExportDialog } from '@/frontend/reusable-components/dialogs/FileExportDialog';
 
@@ -47,6 +50,18 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const [mounted, setMounted] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createModuleDialogOpen, setCreateModuleDialogOpen] = useState(false);
+  // Parent preselected in the "new folder" dialog (null = top level)
+  const [newFolderParentId, setNewFolderParentId] = useState<string | null>(null);
+  // What the folder picker is moving
+  const [moveSubject, setMoveSubject] = useState<
+    | { kind: 'testcase'; testCase: TestCase }
+    | { kind: 'folder'; module: Module }
+    | { kind: 'selection'; ids: string[] }
+    | null
+  >(null);
+  // Bulk selection (ids of test cases on the current page)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -126,6 +141,12 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       
       if (data.data) {
         setTestCases(data.data);
+        // Keep only selected test cases that are still on the page
+        const onPage = new Set((data.data as TestCase[]).map((tc) => tc.id));
+        setSelectedIds((prev) => {
+          const kept = [...prev].filter((id) => onPage.has(id));
+          return kept.length === prev.size ? prev : new Set(kept);
+        });
       }
       
       if (data.modules) {
@@ -168,11 +189,114 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setCurrentPage(1); // Reset to first page when items per page changes
   };
 
-  // Categories of the current page, in server order
-  const modulesById = new Map(modules.map((module) => [module.id, module]));
-  const modulesForTable = pageModuleIds
-    .map((id) => modulesById.get(id))
-    .filter((module): module is Module => Boolean(module));
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [currentPage, itemsPerPage, searchQuery, priorityFilter, statusFilter]);
+
+  // Folders of the current page: its top-level folders (server order) with all their subfolders
+  const modulesForTable = useMemo(() => {
+    const flat = flattenModuleTree(modules);
+    const rootOf = new Map(
+      flat.map(({ folder }) => [folder.id, getModuleAncestors(folder.id, modules)[0]?.id ?? folder.id])
+    );
+    return pageModuleIds.flatMap((rootId) =>
+      flat.filter(({ folder }) => rootOf.get(folder.id) === rootId).map(({ folder }) => folder)
+    );
+  }, [modules, pageModuleIds]);
+
+  const folderLabel = (moduleId: string | null) =>
+    moduleId ? `«${getModulePath(moduleId, modules)}»` : 'корень (без папки)';
+
+  const moveTestCases = async (testCaseIds: string[], moduleId: string | null) => {
+    const response = await fetch(`/api/projects/${projectId}/testcases/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testCaseIds, moduleId }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || data.message || 'Не удалось переместить тест-кейс');
+    }
+  };
+
+  const moveFolder = async (moduleId: string, parentId: string | null) => {
+    const response = await fetch(`/api/projects/${projectId}/modules/${moduleId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentId }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || data.message || 'Не удалось переместить папку');
+    }
+  };
+
+  // Drag & drop moves apply right away and report the result
+  const runMove = async (action: () => Promise<void>, success: string) => {
+    try {
+      await action();
+      setAlert({ type: 'success', title: 'Перемещено', message: success });
+      fetchTestCases();
+    } catch (error) {
+      setAlert({
+        type: 'error',
+        title: 'Не удалось переместить',
+        message: error instanceof Error ? error.message : 'Попробуйте ещё раз',
+      });
+    }
+  };
+
+  // Dragging one of the selected test cases moves the whole selection
+  const handleDropTestCase = (testCase: TestCase, targetModuleId: string | null) => {
+    if (selectedIds.has(testCase.id) && selectedIds.size > 1) {
+      const ids = [...selectedIds];
+      return runMove(async () => {
+        await moveTestCases(ids, targetModuleId);
+        setSelectedIds(new Set());
+      }, `${ids.length} тест-кейс(ов) → ${folderLabel(targetModuleId)}`);
+    }
+    return runMove(
+      () => moveTestCases([testCase.id], targetModuleId),
+      `«${testCase.title}» → ${folderLabel(targetModuleId)}`
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds];
+    let failed = 0;
+    // One by one through the regular endpoint (it checks access and cleans up attachments)
+    for (const id of ids) {
+      const response = await fetch(`/api/projects/${projectId}/testcases/${id}`, { method: 'DELETE' }).catch(() => null);
+      if (!response?.ok) failed++;
+    }
+    setSelectedIds(new Set());
+    setBulkDeleteOpen(false);
+    setAlert(
+      failed === 0
+        ? { type: 'success', title: 'Удалено', message: `Удалено тест-кейсов: ${ids.length}` }
+        : { type: 'error', title: 'Удалено не всё', message: `Удалено ${ids.length - failed} из ${ids.length}` }
+    );
+    fetchTestCases();
+  };
+
+  // Common folder of the selected test cases (undefined when they are in different folders)
+  const selectionFolderId = (() => {
+    const folders = new Set(testCases.filter((tc) => selectedIds.has(tc.id)).map((tc) => tc.moduleId ?? null));
+    return folders.size === 1 ? [...folders][0] : undefined;
+  })();
+
+  const handleDropFolder = (moduleId: string, targetParentId: string | null) => {
+    const name = modules.find((m) => m.id === moduleId)?.name ?? 'Папка';
+    return runMove(
+      () => moveFolder(moduleId, targetParentId),
+      targetParentId ? `Папка «${name}» → ${folderLabel(targetParentId)}` : `Папка «${name}» вынесена на верхний уровень`
+    );
+  };
+
+  const openNewFolderDialog = (parentId: string | null) => {
+    setNewFolderParentId(parentId);
+    setCreateModuleDialogOpen(true);
+  };
 
   const handleTestCaseCreated = (newTestCase: TestCase) => {
     setAlert({
@@ -244,6 +368,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   // Check permissions before early returns
   const canCreateTestCase = hasPermissionCheck('testcases:create');
   const canDeleteTestCase = hasPermissionCheck('testcases:delete');
+  const canUpdateTestCase = hasPermissionCheck('testcases:update');
   const canImport = ['ADMIN', 'PROJECT_MANAGER', 'TESTER'].includes(role);
 
   const navbarActions = useMemo(() => {
@@ -261,7 +386,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
               </ButtonSecondary>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setCreateModuleDialogOpen(true)}>
+              <DropdownMenuItem onClick={() => openNewFolderDialog(null)}>
                 <FolderPlus className="w-4 h-4" />
                 Новая папка
               </DropdownMenuItem>
@@ -372,15 +497,88 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
           />
         ) : (
           <>
+            {selectedIds.size > 0 && (
+              <div className="sticky top-2 z-30 mb-3 flex flex-wrap items-center gap-2 rounded-[14px] border border-white/[0.08] bg-[#1b1b1c]/95 px-3 py-2 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.9)] backdrop-blur-md">
+                <span className="px-1 text-sm font-semibold text-white">
+                  Выбрано: <span className="tabular-nums">{selectedIds.size}</span>
+                </span>
+                <span className="mx-1 h-5 w-px bg-white/10" aria-hidden="true" />
+                {canUpdateTestCase && (
+                  <ButtonSecondary
+                    size="sm"
+                    onClick={() => setMoveSubject({ kind: 'selection', ids: [...selectedIds] })}
+                  >
+                    <FolderInput className="w-4 h-4 mr-1.5" />
+                    Переместить в папку
+                  </ButtonSecondary>
+                )}
+                {canDeleteTestCase && (
+                  <ButtonSecondary size="sm" onClick={() => setBulkDeleteOpen(true)} className="hover:text-red-300">
+                    <Trash2 className="w-4 h-4 mr-1.5" />
+                    Удалить
+                  </ButtonSecondary>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="ml-auto flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-white/50 transition-colors hover:text-white cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                  Снять выделение
+                </button>
+              </div>
+            )}
+
             <TestCaseTable
               testCases={testCases}
               groupedByModule={true}
+              nested={true}
+              selectedIds={canUpdateTestCase || canDeleteTestCase ? selectedIds : undefined}
+              onSelectionChange={canUpdateTestCase || canDeleteTestCase ? setSelectedIds : undefined}
               modules={modulesForTable}
               onDelete={handleDeleteClick}
               onClick={handleCardClick}
               canDelete={canDeleteTestCase}
               projectId={projectId}
               enableModuleLink={true}
+              onMoveRequest={canUpdateTestCase ? (testCase) => setMoveSubject({ kind: 'testcase', testCase }) : undefined}
+              onMoveTestCase={canUpdateTestCase ? handleDropTestCase : undefined}
+              onMoveFolder={canUpdateTestCase ? handleDropFolder : undefined}
+              renderFolderActions={(moduleId) => {
+                const folder = modules.find((m) => m.id === moduleId);
+                if (!folder) return null;
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-white/40 opacity-0 transition group-hover/header:opacity-100 hover:bg-white/10 hover:text-white data-[state=open]:opacity-100 cursor-pointer"
+                        aria-label={`Действия с папкой ${folder.name}`}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => router.push(`/projects/${projectId}/modules/${moduleId}`)}>
+                        <FolderOpen className="w-4 h-4 mr-2" />
+                        Открыть папку
+                      </DropdownMenuItem>
+                      {canCreateTestCase && (
+                        <DropdownMenuItem onClick={() => openNewFolderDialog(moduleId)}>
+                          <FolderPlus className="w-4 h-4 mr-2" />
+                          Новая подпапка
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdateTestCase && (
+                        <DropdownMenuItem onClick={() => setMoveSubject({ kind: 'folder', module: folder })}>
+                          <FolderInput className="w-4 h-4 mr-2" />
+                          Переместить папку
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              }}
             />
 
             {/* Pagination */}
@@ -412,10 +610,83 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
         {/* Create Module Dialog */}
         <CreateModuleDialog
+          modules={modules}
+          defaultParentId={newFolderParentId}
           projectId={projectId}
           triggerOpen={createModuleDialogOpen}
           onOpenChange={setCreateModuleDialogOpen}
           onModuleCreated={handleModuleCreated}
+        />
+
+        {/* Move test case / folder */}
+        <MoveToFolderDialog
+          open={moveSubject !== null}
+          onOpenChange={(open) => !open && setMoveSubject(null)}
+          title={
+            moveSubject?.kind === 'folder'
+              ? `Переместить папку «${moveSubject.module.name}»`
+              : moveSubject?.kind === 'selection'
+                ? `Переместить выбранные (${moveSubject.ids.length})`
+                : `Переместить «${moveSubject?.testCase.title ?? ''}»`
+          }
+          description={
+            moveSubject?.kind === 'folder'
+              ? 'Папка переедет вместе со всеми подпапками и тест-кейсами.'
+              : moveSubject?.kind === 'selection'
+                ? 'Все выбранные тест-кейсы переедут в одну папку.'
+                : 'Выберите папку для тест-кейса.'
+          }
+          modules={modules}
+          currentFolderId={
+            moveSubject?.kind === 'folder'
+              ? moveSubject.module.parentId ?? null
+              : moveSubject?.kind === 'selection'
+                ? selectionFolderId
+                : moveSubject?.testCase.moduleId ?? null
+          }
+          disabledIds={moveSubject?.kind === 'folder' ? getDescendantIds(moveSubject.module.id, modules) : undefined}
+          rootLabel={moveSubject?.kind === 'folder' ? 'Верхний уровень' : 'Без папки'}
+          onConfirm={async (target) => {
+            if (!moveSubject) return;
+            if (moveSubject.kind === 'selection') {
+              await moveTestCases(moveSubject.ids, target);
+              setSelectedIds(new Set());
+              setAlert({
+                type: 'success',
+                title: 'Перемещено',
+                message: `${moveSubject.ids.length} тест-кейс(ов) → ${folderLabel(target)}`,
+              });
+            } else if (moveSubject.kind === 'folder') {
+              await moveFolder(moveSubject.module.id, target);
+              setAlert({
+                type: 'success',
+                title: 'Перемещено',
+                message: target
+                  ? `Папка «${moveSubject.module.name}» → ${folderLabel(target)}`
+                  : `Папка «${moveSubject.module.name}» вынесена на верхний уровень`,
+              });
+            } else {
+              await moveTestCases([moveSubject.testCase.id], target);
+              setAlert({
+                type: 'success',
+                title: 'Перемещено',
+                message: `«${moveSubject.testCase.title}» → ${folderLabel(target)}`,
+              });
+            }
+            fetchTestCases();
+          }}
+        />
+
+        <BaseConfirmDialog
+          title="Удалить выбранные тест-кейсы"
+          description={`Будет удалено тест-кейсов: ${selectedIds.size}. Это действие нельзя отменить.`}
+          submitLabel="Удалить"
+          cancelLabel="Отмена"
+          triggerOpen={bulkDeleteOpen}
+          onOpenChange={setBulkDeleteOpen}
+          onSubmit={handleBulkDelete}
+          destructive
+          dialogName="Bulk Delete Test Cases"
         />
 
         {/* Delete Dialog */}

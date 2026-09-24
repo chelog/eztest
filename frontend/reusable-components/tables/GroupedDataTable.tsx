@@ -3,6 +3,7 @@
 import { useState, useRef, ReactNode } from 'react';
 import Link from 'next/link';
 import { ActionMenu } from '@/frontend/reusable-components/menus/ActionMenu';
+import { Checkbox } from '@/frontend/reusable-elements/checkboxes/Checkbox';
 import { ChevronDown, LucideIcon, Settings, Eye, EyeOff } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,7 +33,20 @@ export interface GroupConfig<T> {
   getGroupHref?: (groupId: string) => string | undefined;
   renderGroupHeader?: (groupId: string, groupName: string, count: number) => ReactNode;
   emptyGroups?: Array<{ id: string; name: string; count?: number }>;
+  /** Enables nested groups (folders in folders): parent group id, or null for top level */
+  getParentGroupId?: (groupId: string) => string | null;
+  /** Extra controls on the right side of a group header (e.g. a folder menu) */
+  renderGroupActions?: (groupId: string) => ReactNode;
+  /** Drag & drop: row dropped on a group header, or on the top-level zone (null) */
+  onRowDrop?: (row: T, targetGroupId: string | null) => void;
+  /** Drag & drop: group dropped on another group header, or on the top-level zone (null) */
+  onGroupDrop?: (groupId: string, targetGroupId: string | null) => void;
+  /** Groups that are not real folders: can't be dragged and don't accept groups */
+  isVirtualGroup?: (groupId: string) => boolean;
 }
+
+type DragPayload<T> = { kind: 'row'; row: T; groupId: string } | { kind: 'group'; groupId: string };
+const ROOT_DROP_ZONE = '__root__';
 
 export interface ActionConfig<T> {
   items: Array<{
@@ -48,8 +62,16 @@ export interface ActionConfig<T> {
   iconSize?: string;
 }
 
+export interface RowSelectionConfig<T> {
+  getRowId: (row: T) => string;
+  selectedIds: Set<string>;
+  onChange: (selectedIds: Set<string>) => void;
+}
+
 export interface GroupedDataTableProps<T> {
   data: T[];
+  /** Checkboxes on rows and group headers (a group checkbox selects everything inside it) */
+  selection?: RowSelectionConfig<T>;
   columns: ColumnDef<T>[];
   onRowClick?: (row: T) => void;
   getRowHref?: (row: T) => string | undefined;
@@ -104,8 +126,13 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   emptyMessage = 'Нет данных',
   gridTemplateColumns,
   resizable = false,
+  selection,
 }: GroupedDataTableProps<T>) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const dragRef = useRef<DragPayload<T> | null>(null);
+  const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dragKind, setDragKind] = useState<DragPayload<T>['kind'] | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   const [colWidths, setColWidths] = useState<Record<number, number>>({});
   const resizingRef = useRef<{ colIdx: number; startX: number; startWidth: number } | null>(null);
@@ -130,6 +157,79 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     });
   };
 
+  const isVirtual = (groupId: string) => groupConfig?.isVirtualGroup?.(groupId) ?? false;
+
+  // true when `groupId` is `ancestorId` or lies inside it
+  const isInside = (groupId: string, ancestorId: string) => {
+    const seen = new Set<string>();
+    for (let current: string | null = groupId; current && !seen.has(current); current = groupConfig?.getParentGroupId?.(current) ?? null) {
+      if (current === ancestorId) return true;
+      seen.add(current);
+    }
+    return false;
+  };
+
+  const canDropOn = (target: string) => {
+    const payload = dragRef.current;
+    if (!payload) return false;
+    if (payload.kind === 'row') {
+      if (!groupConfig?.onRowDrop) return false;
+      // Dropping a row where it already is does nothing
+      return target === ROOT_DROP_ZONE ? payload.groupId !== ROOT_DROP_ZONE : target !== payload.groupId;
+    }
+    if (!groupConfig?.onGroupDrop) return false;
+    if (target === ROOT_DROP_ZONE) return (groupConfig.getParentGroupId?.(payload.groupId) ?? null) !== null;
+    return !isVirtual(target) && !isInside(target, payload.groupId) && groupConfig.getParentGroupId?.(payload.groupId) !== target;
+  };
+
+  const startDrag = (event: React.DragEvent, payload: DragPayload<T>) => {
+    event.stopPropagation();
+    dragRef.current = payload;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', payload.kind);
+    setDragKind(payload.kind);
+  };
+
+  const endDrag = () => {
+    dragRef.current = null;
+    setDragKind(null);
+    setDropTarget(null);
+    if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
+  };
+
+  const dropHandlers = (target: string) => ({
+    onDragOver: (event: React.DragEvent) => {
+      if (!canDropOn(target)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      if (dropTarget !== target) {
+        setDropTarget(target);
+        // Hovering a collapsed folder while dragging opens it
+        if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
+        if (target !== ROOT_DROP_ZONE && !expandedGroups.has(target)) {
+          expandTimerRef.current = setTimeout(() => {
+            setExpandedGroups((prev) => new Set(prev).add(target));
+          }, 700);
+        }
+      }
+    },
+    onDragLeave: (event: React.DragEvent) => {
+      if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+      if (dropTarget === target) setDropTarget(null);
+      if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
+    },
+    onDrop: (event: React.DragEvent) => {
+      event.preventDefault();
+      const payload = dragRef.current;
+      const allowed = canDropOn(target);
+      endDrag();
+      if (!payload || !allowed) return;
+      const targetId = target === ROOT_DROP_ZONE ? null : target;
+      if (payload.kind === 'row') groupConfig?.onRowDrop?.(payload.row, targetId);
+      else groupConfig?.onGroupDrop?.(payload.groupId, targetId);
+    },
+  });
+
   const toggleColumnVisibility = (colKey: string) => {
     setHiddenColumns((prev) => {
       const next = new Set(prev);
@@ -148,7 +248,8 @@ export function GroupedDataTable<T = Record<string, unknown>>({
 
     const headerCells = headerRef.current?.children;
     if (!headerCells) return;
-    const cellWidth = (headerCells[visibleIdx] as HTMLElement).offsetWidth;
+    // The selection checkbox occupies the first header cell
+    const cellWidth = (headerCells[visibleIdx + (selection ? 1 : 0)] as HTMLElement).offsetWidth;
     const originalIdx = visibleColumnIndices[visibleIdx];
 
     resizingRef.current = { colIdx: originalIdx, startX: e.clientX, startWidth: cellWidth };
@@ -171,6 +272,29 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     document.addEventListener('mouseup', onMouseUp);
   };
 
+  // Checkbox for a set of rows: checked when all are selected, dash when some are
+  const renderCheckbox = (rowIds: string[], label: string) => {
+    if (!selection) return null;
+    const selectedCount = rowIds.filter((id) => selection.selectedIds.has(id)).length;
+    const state: boolean | 'indeterminate' =
+      rowIds.length > 0 && selectedCount === rowIds.length ? true : selectedCount > 0 ? 'indeterminate' : false;
+    return (
+      <Checkbox
+        checked={state}
+        disabled={rowIds.length === 0}
+        aria-label={label}
+        className="size-4"
+        onClick={(event) => event.stopPropagation()}
+        onCheckedChange={() => {
+          const next = new Set(selection.selectedIds);
+          if (state === true) rowIds.forEach((id) => next.delete(id));
+          else rowIds.forEach((id) => next.add(id));
+          selection.onChange(next);
+        }}
+      />
+    );
+  };
+
   // Calculate grid template columns
   const getGridColumns = () => {
     if (gridTemplateColumns && !resizable && hiddenColumns.size === 0) return gridTemplateColumns;
@@ -181,7 +305,8 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       return col.width || '1fr';
     });
     const actionColumn = actions ? '50px' : '';
-    return [...columnWidths, actionColumn].filter(Boolean).join(' ');
+    const selectColumn = selection ? '20px' : '';
+    return [selectColumn, ...columnWidths, actionColumn].filter(Boolean).join(' ');
   };
 
   // Group data if grouping is enabled
@@ -227,6 +352,38 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       })()
     : null;
 
+  // Group nesting (tree mode): children lists and top-level groups, in emptyGroups order
+  const groupTree = (() => {
+    if (!groupedData || !groupConfig?.getParentGroupId) return null;
+    const childrenOf = new Map<string, string[]>();
+    const roots: string[] = [];
+    Object.keys(groupedData).forEach((groupId) => {
+      const parentId = groupConfig.getParentGroupId?.(groupId) ?? null;
+      if (parentId && parentId !== groupId && groupedData[parentId]) {
+        childrenOf.set(parentId, [...(childrenOf.get(parentId) ?? []), groupId]);
+      } else {
+        roots.push(groupId);
+      }
+    });
+    // Keep the order given by emptyGroups (tree order); unknown groups go last
+    const position = new Map((groupConfig.emptyGroups ?? []).map((g, index) => [g.id, index]));
+    const byPosition = (a: string, b: string) =>
+      (position.get(a) ?? Number.MAX_SAFE_INTEGER) - (position.get(b) ?? Number.MAX_SAFE_INTEGER);
+    roots.sort(byPosition);
+    childrenOf.forEach((list) => list.sort(byPosition));
+    return { childrenOf, roots };
+  })();
+
+  // Row ids of a group including its sub-groups (for the group checkbox)
+  const groupRowIds = (groupId: string, seen = new Set<string>()): string[] => {
+    if (!selection || !groupedData?.[groupId] || seen.has(groupId)) return [];
+    seen.add(groupId);
+    return [
+      ...groupedData[groupId].items.map((row) => selection.getRowId(row)),
+      ...(groupTree?.childrenOf.get(groupId) ?? []).flatMap((childId) => groupRowIds(childId, seen)),
+    ];
+  };
+
   // Render header row
   const renderHeader = () => (
     <div
@@ -234,6 +391,14 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       className={`grid gap-3 px-3 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10 ${headerClassName}`}
       style={{ gridTemplateColumns: getGridColumns() }}
     >
+      {selection && (
+        <div className="flex items-center">
+          {renderCheckbox(
+            data.map((row) => selection.getRowId(row)),
+            'Выделить все'
+          )}
+        </div>
+      )}
       {visibleColumns.map((col, visibleIdx) => {
         const isLastCol = visibleIdx === visibleColumns.length - 1 && !actions;
         return (
@@ -256,7 +421,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   );
 
   // Render a single row
-  const renderRow = (row: T, index: number) => {
+  const renderRow = (row: T, index: number, depth = 0, groupId = ROOT_DROP_ZONE) => {
     const actionItems = actions?.items.filter((item) => {
       if (item.show === false) return false;
       if (typeof item.show === 'function') return item.show(row);
@@ -267,12 +432,25 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     const rowClass = `grid gap-3 px-3 py-1.5 cursor-pointer transition-colors items-center text-sm rounded-sm hover:bg-accent/20 ${
       index % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
     } ${rowClassName}`;
+    const selectedClass = 'bg-[color-mix(in_srgb,var(--nt-accent,#10b981)_10%,transparent)]';
 
     // Data cells only — no ActionMenu inside; used for both Link and div variants
-    const dataCells = visibleColumns.map((col) => (
+    const rowId = selection?.getRowId(row);
+    const isSelected = rowId !== undefined && selection!.selectedIds.has(rowId);
+    // Checkbox sits outside the row link (absolute), over this empty first grid cell
+    const selectCell = selection ? <div aria-hidden="true" /> : null;
+    const rowCheckbox = selection && rowId !== undefined ? (
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex">
+        {renderCheckbox([rowId], 'Выделить')}
+      </div>
+    ) : null;
+
+    const dataCells = visibleColumns.map((col, colIdx) => (
       <div
         key={col.key}
         className={`${col.className || ''} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}
+        // Nested rows are indented under their folder
+        style={colIdx === 0 && depth > 0 ? { paddingLeft: depth * 18 } : undefined}
       >
         {col.render ? col.render(row, index) : String((row as Record<string, unknown>)[col.key] || '')}
       </div>
@@ -289,19 +467,30 @@ export function GroupedDataTable<T = Record<string, unknown>>({
         : item.buttonName || item.label,
     }));
 
+    const dragProps = groupConfig?.onRowDrop
+      ? {
+          draggable: true,
+          onDragStart: (event: React.DragEvent) => startDrag(event, { kind: 'row', row, groupId }),
+          onDragEnd: endDrag,
+        }
+      : {};
+
     if (rowHref) {
       return (
         <div key={index} className="relative">
           {/* Link contains only data cells — no buttons inside <a> */}
           <Link
             href={rowHref}
-            className={rowClass}
+            className={`${rowClass} ${isSelected ? selectedClass : ''}`}
             style={{ gridTemplateColumns: getGridColumns() }}
+            {...dragProps}
           >
+            {selectCell}
             {dataCells}
             {/* Empty placeholder preserves action column width in the grid */}
             {actions && <div aria-hidden="true" />}
           </Link>
+          {rowCheckbox}
           {/* ActionMenu rendered outside the Link as an absolute sibling */}
           {actionItems.length > 0 && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
@@ -317,12 +506,14 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     }
 
     return (
+      <div key={index} className="relative">
       <div
-        key={index}
-        className={rowClass}
+        className={`${rowClass} ${isSelected ? selectedClass : ''}`}
         style={{ gridTemplateColumns: getGridColumns() }}
         onClick={() => onRowClick?.(row)}
+        {...dragProps}
       >
+        {selectCell}
         {dataCells}
         {actions && (
           <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
@@ -336,11 +527,13 @@ export function GroupedDataTable<T = Record<string, unknown>>({
           </div>
         )}
       </div>
+      {rowCheckbox}
+      </div>
     );
   };
 
   // Render group header
-  const renderGroupHeader = (groupId: string, groupName: string, count: number, groupIndex: number = 0) => {
+  const renderGroupHeader = (groupId: string, groupName: string, count: number, groupIndex: number = 0, depth = 0) => {
     const isExpanded = expandedGroups.has(groupId);
     const displayCount = count;
 
@@ -348,10 +541,25 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       return groupConfig.renderGroupHeader(groupId, groupName, displayCount);
     }
 
+    const draggableGroup = Boolean(groupConfig?.onGroupDrop) && !isVirtual(groupId);
+    const isDropTarget = dropTarget === groupId;
+
     return (
-      <div className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/20 rounded transition-colors overflow-hidden ${
-        groupIndex % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
-      }`}>
+      <div
+        className={`group/header w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/20 rounded transition-colors overflow-hidden ${
+          groupIndex % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
+        } ${isDropTarget ? 'ring-1 ring-inset ring-[var(--nt-accent,#10b981)] bg-[color-mix(in_srgb,var(--nt-accent,#10b981)_12%,transparent)]' : ''}`}
+        style={depth > 0 ? { paddingLeft: 12 + depth * 18 } : undefined}
+        draggable={draggableGroup}
+        onDragStart={draggableGroup ? (event) => startDrag(event, { kind: 'group', groupId }) : undefined}
+        onDragEnd={draggableGroup ? endDrag : undefined}
+        {...dropHandlers(groupId)}
+      >
+        {selection && (
+          <span className="flex flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            {renderCheckbox(groupRowIds(groupId), `Выделить всё в ${groupName}`)}
+          </span>
+        )}
         {/* Toggle button — only the chevron icon; no Link inside */}
         <button
           onClick={() => toggleGroup(groupId)}
@@ -365,7 +573,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
           />
         </button>
         {/* Group name — sibling of the toggle button, not nested inside it */}
-        <span className="min-w-0 flex-1 overflow-hidden max-w-[200px]">
+        <span className="min-w-0 flex-1 overflow-hidden max-w-[360px]">
           {(() => {
             const groupHref = groupConfig?.getGroupHref?.(groupId);
             if (groupHref) {
@@ -401,6 +609,35 @@ export function GroupedDataTable<T = Record<string, unknown>>({
         <span className="text-xs text-white/50 flex-shrink-0 whitespace-nowrap tabular-nums px-1.5 py-0.5 rounded-md bg-white/[0.06]">
           {displayCount}
         </span>
+        {groupConfig?.renderGroupActions && (
+          <span className="ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            {groupConfig.renderGroupActions(groupId)}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // Nested (tree) rendering: sub-groups first, then the group's own rows
+  const renderGroupTree = (
+    groups: Record<string, { items: T[]; name: string; count?: number }>,
+    childrenOf: Map<string, string[]>,
+    groupId: string,
+    groupIndex: number,
+    depth: number
+  ): ReactNode => {
+    const { items, name, count } = groups[groupId];
+    const isExpanded = expandedGroups.has(groupId);
+    const childIds = childrenOf.get(groupId) ?? [];
+    return (
+      <div key={groupId} className="space-y-0">
+        {renderGroupHeader(groupId, name, count !== undefined ? count : items.length, groupIndex, depth)}
+        {isExpanded && (
+          <div className="space-y-0">
+            {childIds.map((childId, childIndex) => renderGroupTree(groups, childrenOf, childId, childIndex + 1, depth + 1))}
+            {items.map((row, index) => renderRow(row, index, depth + 1, groupId))}
+          </div>
+        )}
       </div>
     );
   };
@@ -467,7 +704,25 @@ export function GroupedDataTable<T = Record<string, unknown>>({
 
       {renderHeader()}
 
-      {groupedData ? (
+      {dragKind && (groupConfig?.onGroupDrop || groupConfig?.onRowDrop) && (
+        <div
+          {...dropHandlers(ROOT_DROP_ZONE)}
+          className={`my-1 flex items-center justify-center rounded-md border border-dashed px-3 py-2 text-xs transition-colors ${
+            dropTarget === ROOT_DROP_ZONE
+              ? 'border-[var(--nt-accent,#10b981)] text-white bg-white/[0.04]'
+              : 'border-white/15 text-white/45'
+          }`}
+        >
+          {dragKind === 'group' ? 'Отпустите здесь, чтобы вынести папку на верхний уровень' : 'Отпустите здесь, чтобы убрать из папки'}
+        </div>
+      )}
+
+      {groupedData && groupTree ? (
+        // Tree view: top-level groups, their sub-groups nested inside
+        groupTree.roots.map((groupId, groupIndex) =>
+          renderGroupTree(groupedData, groupTree.childrenOf, groupId, groupIndex, 0)
+        )
+      ) : groupedData ? (
         // Grouped view
         Object.entries(groupedData).map(([groupId, { items, name, count }], groupIndex) => {
           const isExpanded = expandedGroups.has(groupId);
@@ -478,7 +733,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
               {renderGroupHeader(groupId, name, displayCount, groupIndex)}
               {isExpanded && items.length > 0 && (
                 <div className="space-y-0">
-                  {items.map((row, index) => renderRow(row, index))}
+                  {items.map((row, index) => renderRow(row, index, 0, groupId))}
                 </div>
               )}
             </div>

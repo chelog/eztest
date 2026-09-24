@@ -320,8 +320,9 @@ export class ImportService {
           moduleValue.toString().trim()
         ) {
           const moduleName = moduleValue.toString().trim();
+          // Imported modules are top-level folders (subfolders may share names)
           let foundModule = project.modules.find(
-            (m) => m.name.toLowerCase() === moduleName.toLowerCase(),
+            (m) => !m.parentId && m.name.toLowerCase() === moduleName.toLowerCase(),
           );
 
           if (!foundModule) {

@@ -7,7 +7,7 @@ import { Breadcrumbs } from '@/frontend/reusable-components/layout/Breadcrumbs';
 import { ButtonDestructive } from '@/frontend/reusable-elements/buttons/ButtonDestructive';
 import { Loader } from '@/frontend/reusable-elements/loaders/Loader';
 import { ActionButtonGroup } from '@/frontend/reusable-components/layout/ActionButtonGroup';
-import { Folder, FileCheck } from 'lucide-react';
+import { Folder, FileCheck, FolderInput, FolderPlus } from 'lucide-react';
 import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-components/alerts/FloatingAlert';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Module, TestCase } from '../types';
@@ -21,6 +21,13 @@ import { ModuleTestCasesCard } from './subcomponents/ModuleTestCasesCard';
 import { ModuleInfoCard } from './subcomponents/ModuleInfoCard';
 import { ModuleStatisticsCard } from './subcomponents/ModuleStatisticsCard';
 import { clearAllPersistedForms } from '@/hooks/useFormPersistence';
+import { ModuleSubfoldersCard, type SubfolderItem } from './subcomponents/ModuleSubfoldersCard';
+import { MoveToFolderDialog } from './MoveToFolderDialog';
+import { CreateModuleDialog } from '../subcomponents/CreateModuleDialog';
+import { getDescendantIds, getModulePath } from '@/lib/module-tree';
+
+// Folder page data: the folder with its path (ancestors, top first) and direct subfolders
+type FolderDetail = Module & { path?: Array<{ id: string; name: string }>; children?: SubfolderItem[] };
 
 interface ModuleDetailProps {
   projectId: string;
@@ -32,7 +39,11 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
   const { hasPermission: hasPermissionCheck } = usePermissions();
 
   const [project, setProject] = useState<{ id: string; name: string; key: string } | null>(null);
-  const [module, setModule] = useState<Module | null>(null);
+  const [module, setModule] = useState<FolderDetail | null>(null);
+  // All folders of the project (for moving and creating subfolders)
+  const [allModules, setAllModules] = useState<Module[]>([]);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [createSubfolderOpen, setCreateSubfolderOpen] = useState(false);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -63,11 +74,12 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
     fetchProject();
     fetchModule();
     fetchTestCases();
+    fetchAllModules();
   }, [projectId, moduleId]);
 
   useEffect(() => {
     if (module) {
-      document.title = `${module.name} - Module | EZTest`;
+      document.title = `${module.name} - Папка | EZTest`;
       setFormData({
         name: module.name,
         description: module.description || '',
@@ -116,16 +128,27 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
     }
   };
 
+  const fetchAllModules = async () => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/modules`, { cache: 'no-store' });
+      const data = await response.json();
+      if (Array.isArray(data.data)) setAllModules(data.data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
+
   const fetchTestCases = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/projects/${projectId}/testcases`, {
+      // Only this folder's test cases (subfolders are listed separately)
+      const params = new URLSearchParams({ moduleId, groupBy: 'none', page: '1', limit: '10000' });
+      const response = await fetch(`/api/projects/${projectId}/testcases?${params}`, {
         cache: 'no-store'
       });
       const data = await response.json();
       if (data.data) {
-        const moduleTestCases = data.data.filter((tc: TestCase) => tc.moduleId === moduleId);
-        setTestCases(moduleTestCases);
+        setTestCases(data.data);
       }
     } catch (error) {
       console.error('Error fetching test cases:', error);
@@ -163,7 +186,7 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
         setAlert({
           type: 'error',
           title: 'Ошибка',
-          message: data.error || 'Не удалось обновить модуль',
+          message: data.error || data.message || 'Не удалось обновить папку',
         });
       }
     } catch (error) {
@@ -174,6 +197,27 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
         message: 'Не удалось обновить модуль',
       });
     }
+  };
+
+  const handleMoveFolder = async (targetParentId: string | null) => {
+    const response = await fetch(`/api/projects/${projectId}/modules/${moduleId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentId: targetParentId }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'Не удалось переместить папку');
+    }
+    setAlert({
+      type: 'success',
+      title: 'Перемещено',
+      message: targetParentId
+        ? `Папка перемещена в «${getModulePath(targetParentId, allModules)}»`
+        : 'Папка вынесена на верхний уровень',
+    });
+    fetchModule();
+    fetchAllModules();
   };
 
   const handleTestCaseClick = (testCaseId: string) => {
@@ -258,7 +302,7 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
       }, 1000);
     } else {
       const data = await response.json();
-      throw new Error(data.error || 'Не удалось удалить модуль');
+      throw new Error(data.error || data.message || 'Не удалось удалить папку');
     }
   };
 
@@ -283,6 +327,10 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
               { label: 'Проекты', href: '/projects' },
               { label: project.name, href: `/projects/${projectId}` },
               { label: 'Тест-кейсы', href: `/projects/${projectId}/testcases` },
+              ...(module.path ?? []).map((folder) => ({
+                label: folder.name,
+                href: `/projects/${projectId}/modules/${folder.id}`,
+              })),
               { label: module.name, href: `/projects/${projectId}/modules/${module.id}` },
             ]}
           />
@@ -329,6 +377,24 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
               variant: 'secondary',
               buttonName: 'Module Detail - View All Test Suites',
             },
+            ...(canCreateTestCase
+              ? [{
+                  label: 'Новая подпапка',
+                  icon: FolderPlus,
+                  onClick: () => setCreateSubfolderOpen(true),
+                  variant: 'secondary' as const,
+                  buttonName: 'Module Detail - New Subfolder',
+                }]
+              : []),
+            ...(canUpdateModule
+              ? [{
+                  label: 'Переместить папку',
+                  icon: FolderInput,
+                  onClick: () => setMoveDialogOpen(true),
+                  variant: 'secondary' as const,
+                  buttonName: 'Module Detail - Move Folder',
+                }]
+              : []),
           ]}
           className="mb-6"
         />
@@ -340,6 +406,13 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
               isEditing={isEditing}
               formData={formData}
               onFormChange={setFormData}
+            />
+
+            <ModuleSubfoldersCard
+              projectId={projectId}
+              subfolders={module.children ?? []}
+              canCreate={canCreateTestCase}
+              onCreateClick={() => setCreateSubfolderOpen(true)}
             />
 
             <ModuleTestCasesCard
@@ -388,6 +461,34 @@ export default function ModuleDetail({ projectId, moduleId }: ModuleDetailProps)
             module={module}
             testCaseCount={testCases.length}
             onConfirm={handleDeleteModule}
+          />
+        )}
+
+        <MoveToFolderDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          title={`Переместить папку «${module.name}»`}
+          description="Папка переедет вместе со всеми подпапками и тест-кейсами."
+          modules={allModules}
+          currentFolderId={module.parentId ?? null}
+          disabledIds={getDescendantIds(module.id, allModules)}
+          rootLabel="Верхний уровень"
+          onConfirm={handleMoveFolder}
+        />
+
+        {canCreateTestCase && (
+          <CreateModuleDialog
+            projectId={projectId}
+            modules={allModules}
+            defaultParentId={moduleId}
+            triggerOpen={createSubfolderOpen}
+            onOpenChange={setCreateSubfolderOpen}
+            onModuleCreated={(created) => {
+              setCreateSubfolderOpen(false);
+              setAlert({ type: 'success', title: 'Успешно', message: `Подпапка «${created.name}» создана` });
+              fetchModule();
+              fetchAllModules();
+            }}
           />
         )}
 

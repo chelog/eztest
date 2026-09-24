@@ -1,4 +1,4 @@
-import { moduleService } from '@/backend/services/module/services';
+import { moduleService, ModuleRuleError } from '@/backend/services/module/services';
 import { CustomRequest } from '@/backend/utils/interceptor';
 import { NotFoundException, InternalServerException, ValidationException } from '@/backend/utils/exceptions';
 import { createModuleSchema, updateModuleSchema, reorderModulesSchema } from '@/backend/validators';
@@ -56,10 +56,14 @@ export class ModuleController {
         name: validationResult.data.name,
         description: validationResult.data.description,
         order: validationResult.data.order,
+        parentId: validationResult.data.parentId,
       });
 
       return { data: mod, statusCode: 201 };
     } catch (error) {
+      if (error instanceof ModuleRuleError) {
+        throw new ValidationException(error.message, []);
+      }
       if (error instanceof Error && error.message.includes('already exists')) {
         throw new ValidationException(ModuleMessages.ModuleNameAlreadyExists, []);
       }
@@ -87,6 +91,9 @@ export class ModuleController {
       const mod = await moduleService.updateModule(moduleId, projectId, validationResult.data);
       return { data: mod };
     } catch (error) {
+      if (error instanceof ModuleRuleError) {
+        throw new ValidationException(error.message, []);
+      }
       if (error instanceof Error && error.message.includes('not found')) {
         throw new NotFoundException(ModuleMessages.ModuleNotFound);
       }
@@ -106,6 +113,9 @@ export class ModuleController {
       await moduleService.deleteModule(moduleId, projectId);
       return { message: ModuleMessages.ModuleDeletedSuccessfully };
     } catch (error) {
+      if (error instanceof ModuleRuleError) {
+        throw new ValidationException(error.message, []);
+      }
       if (error instanceof Error && error.message.includes('not found')) {
         throw new NotFoundException(ModuleMessages.ModuleNotFound);
       }

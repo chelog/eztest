@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
+import { moduleSelectOptions } from '@/lib/module-tree';
 import { Clock, Paperclip } from 'lucide-react';
 import { TestCase, TestCaseFormData, Module } from '../../types';
 import { useState } from 'react';
@@ -150,9 +151,9 @@ export function TestCaseDetailsCard({
               </SelectTrigger>
               <SelectContent variant="glass">
                 <SelectItem value="none">Нет (без модуля)</SelectItem>
-                {modules?.map((module) => (
-                  <SelectItem key={module.id} value={module.id}>
-                    {module.name}
+                {moduleSelectOptions(modules ?? []).map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -86,6 +86,8 @@ export const testCaseQuerySchema = z.object({
   priority: z.string().optional(),
   status: z.string().optional(),
   search: z.string().optional(),
+  /** Only test cases directly in this folder */
+  moduleId: z.string().min(1).optional(),
 });
 
 /**
@@ -96,3 +98,11 @@ export type CreateTestCaseInput = z.infer<typeof createTestCaseSchema>;
 export type UpdateTestCaseInput = z.infer<typeof updateTestCaseSchema>;
 export type UpdateTestStepsInput = z.infer<typeof updateTestStepsSchema>;
 export type TestCaseQueryParams = z.infer<typeof testCaseQuerySchema>;
+
+/**
+ * Move test cases into a folder (or to the top level with moduleId = null)
+ */
+export const moveTestCasesSchema = z.object({
+  testCaseIds: z.array(z.string().min(1)).min(1, 'Не выбраны тест-кейсы').max(5000),
+  moduleId: z.string().min(1).nullable(),
+});

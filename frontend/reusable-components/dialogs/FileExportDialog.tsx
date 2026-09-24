@@ -20,6 +20,7 @@ import {
 } from '@/frontend/reusable-elements/selects/Select';
 import { FileSpreadsheet, FileText, FileType2, Upload, AlertCircle, Loader2, type LucideIcon } from 'lucide-react';
 import { exportData, ExportOptions } from '@/frontend/lib/export-utils';
+import { moduleSelectOptions } from '@/lib/module-tree';
 
 type ExportFormat = ExportOptions['format'];
 
@@ -141,8 +142,8 @@ export function FileExportDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_all">Все модули</SelectItem>
-                      {modules.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      {moduleSelectOptions(modules).map((m) => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
