@@ -138,8 +138,8 @@ export function CreateTestCaseDialog({
       label: 'Описание',
       type: 'textarea',
       placeholder: 'Введите описание тест-кейса',
-      rows: 3,
-      cols: 1,
+      rows: 4,
+      cols: 2,
     },
     {
       name: 'preconditions',
@@ -147,7 +147,7 @@ export function CreateTestCaseDialog({
       type: 'textarea',
       placeholder: 'Введите предусловия',
       rows: 3,
-      cols: 1,
+      cols: 2,
     },
     {
       name: 'postconditions',
@@ -155,7 +155,7 @@ export function CreateTestCaseDialog({
       type: 'textarea',
       placeholder: 'Введите постусловия',
       rows: 3,
-      cols: 1,
+      cols: 2,
     },
     {
       name: 'testData',
@@ -163,7 +163,7 @@ export function CreateTestCaseDialog({
       type: 'textarea',
       placeholder: 'Введите тестовые данные',
       rows: 3,
-      cols: 1,
+      cols: 2,
     },
     {
       name: 'attachments',
