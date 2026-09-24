@@ -312,7 +312,7 @@ export async function sendPasswordResetEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <h2 style="color: #1f2937; font-size: 20px; margin: 0 0 20px 0;">Запрос на сброс пароля</h2>
@@ -367,7 +367,7 @@ ${resetLink}
 Ссылка действует 1 час. Если вы не запрашивали сброс пароля, проигнорируйте это письмо или свяжитесь с поддержкой.
 
 ---
-EZTest - Self-hosted платформа управления тестированием
+EZTest - Платформа управления тестированием
   `;
 
   return sendEmail({
@@ -464,7 +464,7 @@ export async function sendDefectCreationEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -607,7 +607,7 @@ export async function sendDefectAssignmentEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -728,7 +728,7 @@ ${data.defectDescription ? `Описание: ${data.defectDescription}` : ''}
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -786,7 +786,7 @@ export async function sendDefectWatcherAddedEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #eef2ff; border-left: 4px solid #4f46e5; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -938,7 +938,7 @@ export async function sendDefectUpdateEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1041,7 +1041,7 @@ export async function sendTestRunReportEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1162,7 +1162,7 @@ export async function sendDefectCommentEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #ecf0ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1257,7 +1257,7 @@ export async function sendProjectMemberEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1345,7 +1345,7 @@ export async function sendRemoveProjectMemberEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1430,14 +1430,14 @@ export async function sendOtpEmail(
   data: OtpEmailData
 ): Promise<boolean> {
   const actionType = data.type === 'login' ? 'Вход' : 'Регистрация';
-  const subject = `🔐 OTP-код EZTest для ${actionType}`;
+  const subject = `🔐 Код подтверждения EZTest: ${actionType}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px; border-radius: 8px;">
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1519,7 +1519,7 @@ export async function sendUserInvitationEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1631,7 +1631,7 @@ export async function sendUserUpdateEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
@@ -1725,7 +1725,7 @@ export async function sendUserDeleteEmail(
       <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="color: #033977; margin: 0; font-size: 28px;">EZTest</h1>
-          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Self-hosted платформа управления тестированием</p>
+          <p style="color: #656c79; margin: 5px 0 0 0; font-size: 14px;">Платформа управления тестированием</p>
         </div>
 
         <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
