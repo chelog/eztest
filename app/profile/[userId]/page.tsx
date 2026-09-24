@@ -45,7 +45,7 @@ export default function UserProfilePage() {
         }
         const data = await response.json();
         setUser(data.data);
-        document.title = `${data.data.name} - Profile | EZTest`;
+        document.title = `${data.data.name} — Профиль | EZTest`;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Не удалось загрузить профиль');
       } finally {

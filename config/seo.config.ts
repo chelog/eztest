@@ -9,10 +9,10 @@ export const SITE_URL = process.env.NEXTAUTH_URL ?? 'https://eztest.houseoffoss.
 
 /** Core brand / site-wide SEO constants */
 export const SITE_NAME = 'EZTest';
-export const SITE_TITLE_DEFAULT = 'EZTest - Open Source Test Management for Modern QA Teams';
+export const SITE_TITLE_DEFAULT = 'EZTest';
 export const SITE_TITLE_TEMPLATE = '%s | EZTest';
 export const SITE_DESCRIPTION =
-  'EZTest is a lightweight, open-source, self-hosted test management platform. Organize test cases, suites, runs, and defects in one transparent platform built for modern QA and engineering teams.';
+  'EZTest — управление тестированием: тест-кейсы, тест-сьюты, тест-раны, дефекты и статистика.';
 
 export const SITE_KEYWORDS = [
   'test management',
@@ -41,8 +41,8 @@ export const SITE_KEYWORDS = [
 export const OG_IMAGE_PATH = '/screenshots/TestCase_List_Page1.png';
 export const OG_IMAGE_WIDTH = 1920;
 export const OG_IMAGE_HEIGHT = 1080;
-export const OG_IMAGE_ALT = 'EZTest - Open Source Test Management Platform Dashboard';
-export const OG_LOCALE = 'en_US';
+export const OG_IMAGE_ALT = 'EZTest — управление тестированием';
+export const OG_LOCALE = 'ru_RU';
 export const OG_TYPE = 'website';
 
 /** Twitter card defaults */

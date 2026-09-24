@@ -4,7 +4,7 @@ import { SITE_URL, SITE_NAME } from '@/config/seo.config';
 
 export const metadata: Metadata = {
   title: 'Политика конфиденциальности',
-  description: 'Privacy Policy for EZTest - Learn how we collect, use, and protect your data in our self-hosted test management platform.',
+  description: 'Политика конфиденциальности EZTest: какие данные мы собираем и как их защищаем.',
   alternates: {
     canonical: '/privacy',
   },

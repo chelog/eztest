@@ -62,6 +62,7 @@ export default function UserDetailsContent({ userId }: UserDetailsContentProps) 
 
       if (response.ok && data.data) {
         setUser(data.data);
+        document.title = `${data.data.name} — Пользователь | EZTest`;
       } else {
         router.push('/admin/users');
       }
