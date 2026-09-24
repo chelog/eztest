@@ -5,7 +5,8 @@ import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimar
 import { ButtonSecondary } from '@/frontend/reusable-elements/buttons/ButtonSecondary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/frontend/reusable-elements/cards/Card';
 import { Alert, AlertDescription } from '@/frontend/reusable-elements/alerts/Alert';
-import { Mail } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
+import { useIsNewTheme } from '@/frontend/context/UiThemeContext';
 
 interface OtpVerificationProps {
   email: string;
@@ -15,6 +16,7 @@ interface OtpVerificationProps {
 }
 
 export function OtpVerification({ email, type, onVerified, onCancel }: OtpVerificationProps) {
+  const isNewTheme = useIsNewTheme();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -143,7 +145,7 @@ export function OtpVerification({ email, type, onVerified, onCancel }: OtpVerifi
           onVerified();
         }, 500);
       } else {
-        setError(data.message || 'Invalid OTP. Please try again.');
+        setError(data.message || 'Неверный код. Попробуйте ещё раз.');
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
@@ -174,14 +176,14 @@ export function OtpVerification({ email, type, onVerified, onCancel }: OtpVerifi
       const data = await response.json();
 
       if (data.success) {
-        setSuccess('New OTP sent to your email!');
+        setSuccess('Новый код отправлен на почту');
         setOtp(['', '', '', '', '', '']);
         setTimeLeft(600); // Reset timer
         setResendCooldown(60); // 1 minute cooldown
         setCanResend(false);
         inputRefs.current[0]?.focus();
       } else {
-        setError(data.message || 'Failed to resend OTP');
+        setError(data.message || 'Не удалось отправить код повторно');
       }
     } catch {
       setError('Не удалось отправить код повторно. Попробуйте снова.');
@@ -189,6 +191,103 @@ export function OtpVerification({ email, type, onVerified, onCancel }: OtpVerifi
       setIsResending(false);
     }
   };
+
+  const resendLabel = isResending
+    ? 'Отправка...'
+    : canResend
+      ? 'Отправить код повторно'
+      : `Отправить повторно через ${resendCooldown} с`;
+
+  // New theme: rendered inside the auth screen (logo, pattern background come from it),
+  // so no own page background or card here
+  if (isNewTheme) {
+    return (
+      <div className="space-y-5">
+        <div className="flex flex-col items-center text-center">
+          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--nt-surface-2)]">
+            <Mail className="h-5 w-5 text-[var(--nt-accent)]" />
+          </span>
+          <p className="text-sm text-[var(--nt-text-2)]">Мы отправили 6-значный код на</p>
+          <p className="mt-0.5 break-all text-sm font-semibold text-white">{email}</p>
+        </div>
+
+        <div className="grid grid-cols-6 gap-2" onPaste={handlePaste}>
+          {otp.map((digit, index) => (
+            <input
+              key={index}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
+              type="text"
+              inputMode="numeric"
+              autoComplete={index === 0 ? 'one-time-code' : 'off'}
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              aria-label={`Цифра ${index + 1}`}
+              className="h-14 w-full rounded-[12px] border border-transparent bg-[var(--nt-surface-2)] text-center text-2xl font-bold text-white outline-none transition-colors focus:border-[var(--nt-border-strong)] disabled:opacity-50"
+              disabled={isVerifying || timeLeft === 0}
+            />
+          ))}
+        </div>
+
+        <p className="text-center text-sm text-[var(--nt-text-3)]">
+          {timeLeft > 0 ? (
+            <>
+              Код действует ещё{' '}
+              <span className={`font-mono font-semibold tabular-nums ${timeLeft < 60 ? 'text-red-400' : 'text-white'}`}>
+                {formatTime(timeLeft)}
+              </span>
+            </>
+          ) : (
+            <span className="text-red-400">Срок действия кода истёк — запросите новый</span>
+          )}
+        </p>
+
+        {error && <div className="rounded-[12px] bg-red-500/10 px-4 py-3 text-center text-sm text-red-300">{error}</div>}
+        {success && (
+          <div className="rounded-[12px] bg-emerald-500/10 px-4 py-3 text-center text-sm text-emerald-300">{success}</div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isVerifying}
+            className="h-12 rounded-[12px] bg-[var(--nt-surface-2)] text-[15px] font-semibold text-white transition-colors hover:bg-[var(--nt-surface-4)] disabled:opacity-50 cursor-pointer"
+          >
+            Назад
+          </button>
+          <button
+            type="button"
+            onClick={() => handleVerify()}
+            disabled={isVerifying || otp.some((digit) => !digit) || timeLeft === 0}
+            className="flex h-12 items-center justify-center gap-2 rounded-[12px] bg-[var(--nt-accent-deep)] text-[15px] font-semibold text-white transition-colors hover:bg-[var(--nt-accent)] hover:text-[var(--nt-on-accent)] disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+          >
+            {isVerifying && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isVerifying ? 'Проверка...' : 'Подтвердить'}
+          </button>
+        </div>
+
+        <p className="text-center text-sm text-[var(--nt-text-3)]">
+          Не пришёл код?{' '}
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={!canResend || isResending}
+            className={
+              canResend && !isResending
+                ? 'text-white transition-colors hover:text-[var(--nt-accent)] cursor-pointer'
+                : 'cursor-not-allowed text-[var(--nt-text-3)]'
+            }
+          >
+            {resendLabel}
+          </button>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050608] flex items-center justify-center px-4">

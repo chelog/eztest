@@ -145,7 +145,7 @@ export class OtpService {
 
       return {
         success: true,
-        message: `OTP sent successfully to ${email}`,
+        message: `Код отправлен на ${email}`,
       };
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -218,7 +218,7 @@ export class OtpService {
         const remainingAttempts = 5 - (otpRecord.attempts + 1);
         return {
           success: false,
-          message: `Invalid OTP. ${remainingAttempts} attempts remaining.`,
+          message: `Неверный код. Осталось попыток: ${remainingAttempts}.`,
         };
       }
 
