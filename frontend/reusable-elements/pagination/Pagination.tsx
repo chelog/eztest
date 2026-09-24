@@ -100,7 +100,15 @@ export function Pagination({
       );
 
     return (
-      <div data-ui="nt-pagination" className={cn('flex flex-col sm:flex-row items-center justify-between gap-4 py-2', className)}>
+      // Sticks to the bottom of the viewport so paging stays reachable on long lists
+      <div
+        data-ui="nt-pagination"
+        className={cn(
+          'sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-4 py-3',
+          'bg-[var(--nt-bg)] shadow-[0_-12px_24px_-12px_rgba(0,0,0,0.9)] border-t border-white/[0.06]',
+          className
+        )}
+      >
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--nt-text-3)]">
           <span>
             <span className="text-white font-semibold tabular-nums">
@@ -162,7 +170,7 @@ export function Pagination({
   return (
     <div
       className={cn(
-        'flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/10 bg-white/5 backdrop-blur-xl',
+        'sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-white/10 bg-[#0b0b0d]/90 backdrop-blur-xl',
         className
       )}
     >

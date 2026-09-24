@@ -274,7 +274,7 @@ export default function TestSuiteList({ projectId }: TestSuiteListProps) {
 
         {/* Pagination */}
         {rootSuites.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-6 sticky bottom-0 z-20">
             <Pagination
               currentPage={safePage}
               totalPages={totalPages}

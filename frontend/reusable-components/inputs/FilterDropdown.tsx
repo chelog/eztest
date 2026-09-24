@@ -8,6 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/frontend/reusable-elements/selects/Select';
+import { OptionMarker, hasOptionMarker } from '@/frontend/reusable-elements/selects/OptionMarker';
 
 export interface FilterOption {
   value: string;
@@ -38,7 +39,8 @@ export function FilterDropdown({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger data-ui="filter-dropdown" className={cn('min-w-0 overflow-hidden', className)}>
-        {icon}
+        {/* Chosen value shows its own colored icon; "all" keeps the filter icon */}
+        {value !== 'all' && hasOptionMarker(value) ? <OptionMarker value={value} className="mr-2" /> : icon}
         <span className="flex-1 text-left truncate min-w-0 block">{displayValue}</span>
       </SelectTrigger>
       <SelectContent>

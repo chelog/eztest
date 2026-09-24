@@ -59,6 +59,14 @@ export const addTestResultSchema = z.object({
   stackTrace: z.string().optional(),
 });
 
+/**
+ * Mark / unmark a test step as done in a test run
+ */
+export const setStepCheckSchema = z.object({
+  testStepId: z.string().min(1, 'Не указан шаг'),
+  checked: z.boolean(),
+});
+
 export const bulkUpdateTestResultsSchema = z
   .object({
     testCaseIds: z.array(z.string().min(1, 'ID тест-кейса обязателен')).min(1, 'Выберите хотя бы один тест-кейс'),

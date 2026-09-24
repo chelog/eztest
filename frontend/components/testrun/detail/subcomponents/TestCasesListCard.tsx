@@ -743,7 +743,7 @@ export function TestCasesListCard({
             onSort={onSortChange}
           />
 
-          <div className="mt-6">
+          <div className="mt-6 sticky bottom-0 z-20">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

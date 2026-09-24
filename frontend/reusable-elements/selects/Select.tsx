@@ -5,6 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { OptionMarker } from "./OptionMarker"
 
 function Select({
   ...props
@@ -118,8 +119,12 @@ function SelectLabel({
 function SelectItem({
   className,
   children,
+  hideMarker = false,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> & {
+  /** Don't show the colored icon for well-known values (statuses, priorities…) */
+  hideMarker?: boolean
+}) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -135,6 +140,7 @@ function SelectItem({
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText className="truncate whitespace-nowrap max-w-full">
+        {!hideMarker && <OptionMarker value={props.value} />}
         {children}
       </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>

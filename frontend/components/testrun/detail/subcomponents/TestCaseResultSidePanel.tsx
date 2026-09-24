@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ExternalLink, X, UserCheck, Paperclip, Upload } from 'lucide-react';
+import { Check, ExternalLink, X, UserCheck, Paperclip, Upload } from 'lucide-react';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
@@ -27,6 +27,10 @@ interface TestCaseResultSidePanelProps {
   executedBy?: { id?: string; name: string } | null;
   members?: Member[];
   attachments?: Attachment[];
+  /** Steps marked as done in this test run */
+  checkedStepIds?: Set<string>;
+  /** Omit to show the marks read-only (no update permission) */
+  onToggleStep?: (stepId: string, checked: boolean) => void;
   onClose: () => void;
   onFormChange: (data: Partial<ResultFormData>) => void;
   onSave: () => void;
@@ -92,6 +96,8 @@ export function TestCaseResultSidePanel({
   executedBy,
   members = [],
   attachments = [],
+  checkedStepIds,
+  onToggleStep,
   onClose,
   onFormChange,
   onSave,
@@ -197,26 +203,74 @@ export function TestCaseResultSidePanel({
             </div>
           )}
 
-          {testCase.steps && testCase.steps.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-white/40">Шаги</h4>
-              <ol className="mt-2 space-y-1.5">
-                {testCase.steps.map((step) => (
-                  <li key={step.id} className="flex gap-3 rounded-[10px] bg-white/[0.03] px-3 py-2.5">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[11px] font-semibold text-white/70">
-                      {step.stepNumber}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm text-white/85 whitespace-pre-wrap">{step.action}</p>
-                      {step.expectedResult && (
-                        <p className="mt-1 text-xs text-white/50 whitespace-pre-wrap">→ {step.expectedResult}</p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
+          {testCase.steps && testCase.steps.length > 0 && (() => {
+            const steps = testCase.steps;
+            const doneCount = steps.filter((step) => checkedStepIds?.has(step.id)).length;
+            const allDone = doneCount === steps.length;
+            return (
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-white/40">Шаги</h4>
+                  <span className={`text-xs tabular-nums ${allDone ? 'text-emerald-400' : 'text-white/45'}`}>
+                    {doneCount} / {steps.length}
+                  </span>
+                </div>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+                    style={{ width: `${(doneCount / steps.length) * 100}%` }}
+                  />
+                </div>
+                <ol className="mt-3 space-y-1.5">
+                  {steps.map((step) => {
+                    const done = checkedStepIds?.has(step.id) ?? false;
+                    const content = (
+                      <>
+                        <span
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] text-[11px] font-semibold transition-colors ${
+                            done ? 'bg-emerald-500 text-white' : 'bg-white/[0.08] text-white/70'
+                          }`}
+                        >
+                          {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : step.stepNumber}
+                        </span>
+                        <div className="min-w-0">
+                          <p className={`text-sm whitespace-pre-wrap transition-colors ${done ? 'text-white/45 line-through decoration-white/25' : 'text-white/85'}`}>
+                            {step.action}
+                          </p>
+                          {step.expectedResult && (
+                            <p className={`mt-1 text-xs whitespace-pre-wrap ${done ? 'text-white/30' : 'text-white/50'}`}>
+                              → {step.expectedResult}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    );
+                    return (
+                      <li key={step.id}>
+                        {onToggleStep ? (
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={done}
+                            onClick={() => onToggleStep(step.id, !done)}
+                            className={`flex w-full gap-3 rounded-[10px] px-3 py-2.5 text-left transition-colors cursor-pointer ${
+                              done ? 'bg-emerald-500/[0.06] hover:bg-emerald-500/[0.1]' : 'bg-white/[0.03] hover:bg-white/[0.06]'
+                            }`}
+                          >
+                            {content}
+                          </button>
+                        ) : (
+                          <div className={`flex gap-3 rounded-[10px] px-3 py-2.5 ${done ? 'bg-emerald-500/[0.06]' : 'bg-white/[0.03]'}`}>
+                            {content}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            );
+          })()}
 
           {/* Attachments */}
           <div className="space-y-2">

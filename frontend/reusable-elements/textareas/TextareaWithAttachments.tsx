@@ -304,7 +304,7 @@ function TextareaWithAttachments({
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-1.5">
       <div className="relative overflow-visible">
         <textarea
           data-slot="textarea"
@@ -327,21 +327,15 @@ function TextareaWithAttachments({
       
       {/* Attachment Display and Button - Below textarea */}
       {shouldShowAttachments && (
-        <div className="flex items-center justify-between w-full px-3 py-2 rounded-[10px] bg-[#0f0f12]/70 border border-white/20 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
-          {/* Left side - Attachment count display (non-clickable) */}
-          <span className="text-white/60">{attachments.length} Attachment{attachments.length !== 1 ? 's' : ''}</span>
-          
-          {/* Right side - Clickable button with paperclip icon */}
-          <button
-            type="button"
-            onClick={() => setFileModalOpen(true)}
-            disabled={uploading}
-            className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white/60 hover:text-white/80"
-            title={attachments.length > 0 ? `Manage ${attachments.length} file${attachments.length !== 1 ? 's' : ''}` : 'Attach Files'}
-          >
-            <Paperclip className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setFileModalOpen(true)}
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 rounded-md px-1 text-xs text-white/45 transition-colors hover:text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <Paperclip className="w-3.5 h-3.5" />
+          {attachments.length > 0 ? `Вложения: ${attachments.length}` : 'Прикрепить файл'}
+        </button>
       )}
       
       {showCharCount && maxLength && (

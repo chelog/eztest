@@ -7,6 +7,7 @@ import {
   addTestResultSchema,
   bulkUpdateTestResultsSchema,
   bulkDeleteTestResultsSchema,
+  setStepCheckSchema,
 } from '@/backend/validators/testrun.validator';
 import { CustomRequest } from '@/backend/utils/interceptor';
 import { NotFoundException, ValidationException } from '@/backend/utils/exceptions';
@@ -364,6 +365,31 @@ export class TestRunController {
       appUrl
     );
 
+    return { data: result };
+  }
+
+  /**
+   * Get ids of steps marked as done in a test run
+   */
+  async getStepChecks(testRunId: string) {
+    const stepIds = await testRunService.getStepChecks(testRunId);
+    return { data: stepIds };
+  }
+
+  /**
+   * Mark / unmark a step as done in a test run
+   */
+  async setStepCheck(body: unknown, testRunId: string, userId: string) {
+    const validationResult = setStepCheckSchema.safeParse(body);
+    if (!validationResult.success) {
+      throw new ValidationException('Validation failed', validationResult.error.issues);
+    }
+
+    const { testStepId, checked } = validationResult.data;
+    const result = await testRunService.setStepCheck(testRunId, testStepId, checked, userId);
+    if (!result) {
+      throw new NotFoundException('Тест-ран или шаг не найден');
+    }
     return { data: result };
   }
 }
