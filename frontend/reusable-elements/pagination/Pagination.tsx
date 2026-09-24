@@ -31,6 +31,22 @@ export function Pagination({
   className,
 }: PaginationProps) {
   const isNewTheme = useIsNewTheme();
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = React.useState(false);
+
+  // Callers wrap the bar in a sticky container; it gets a backdrop only while it is
+  // actually pinned to the bottom edge, otherwise it blends into its card
+  React.useEffect(() => {
+    const target = rootRef.current?.parentElement;
+    if (!target || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStuck(entry.intersectionRatio < 1 && entry.boundingClientRect.bottom >= window.innerHeight - 1),
+      { rootMargin: '0px 0px -1px 0px', threshold: [1] }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+    // Re-attach when the bar appears (it renders nothing for short lists)
+  }, [isNewTheme, totalItems]);
 
   // Everything fits on the smallest page — pagination would be empty chrome
   const smallestPageSize = Math.min(...itemsPerPageOptions);
@@ -100,12 +116,13 @@ export function Pagination({
       );
 
     return (
-      // Sticks to the bottom of the viewport so paging stays reachable on long lists
       <div
+        ref={rootRef}
         data-ui="nt-pagination"
         className={cn(
-          'sticky bottom-0 z-20 flex flex-col sm:flex-row items-center justify-between gap-4 py-3',
-          'bg-[var(--nt-bg)] shadow-[0_-12px_24px_-12px_rgba(0,0,0,0.9)] border-t border-white/[0.06]',
+          'flex flex-col sm:flex-row items-center justify-between gap-4 py-2 transition-[background-color,box-shadow,padding] duration-150',
+          stuck &&
+            'py-3 px-4 -mx-4 rounded-t-[14px] bg-[#161617]/95 backdrop-blur-md shadow-[0_-16px_32px_-16px_rgba(0,0,0,0.9)]',
           className
         )}
       >
