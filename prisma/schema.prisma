@@ -38,6 +38,7 @@ model User {
   assignedTestRuns TestRun[]
   createdTestRuns TestRun[] @relation("TestRunCreator")
   testResults   TestResult[]
+  stepChecks    TestRunStepCheck[]
   comments      Comment[]
   createdProjects Project[] @relation("CreatedBy")
   passwordResetTokens PasswordResetToken[]
@@ -259,6 +260,7 @@ model TestStep {
 
   testCase    TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
   attachments Attachment[]
+  runChecks   TestRunStepCheck[]
 
   @@unique([testCaseId, stepNumber])
   @@index([testCaseId])
@@ -285,6 +287,7 @@ model TestRun {
   results     TestResult[]
   suites      TestRunSuite[]
   defects     Defect[]
+  stepChecks  TestRunStepCheck[]
 
   @@index([projectId])
   @@index([assignedToId])
@@ -292,6 +295,23 @@ model TestRun {
   @@index([status])
   @@index([environment])
   @@index([executionType])
+}
+
+// Step marked as done while executing a test case inside a test run
+model TestRunStepCheck {
+  id          String   @id @default(cuid())
+  testRunId   String
+  testStepId  String
+  checkedById String?
+  checkedAt   DateTime @default(now())
+
+  testRun     TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  testStep    TestStep @relation(fields: [testStepId], references: [id], onDelete: Cascade)
+  checkedBy   User?    @relation(fields: [checkedById], references: [id], onDelete: SetNull)
+
+  @@unique([testRunId, testStepId])
+  @@index([testRunId])
+  @@index([testStepId])
 }
 
 model TestRunSuite {

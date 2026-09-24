@@ -7,9 +7,8 @@ import { FloatingAlert, type FloatingAlertMessage } from '@/frontend/reusable-co
 import { type Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
-import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
+import { DialogAttachmentsList } from '@/frontend/reusable-components/attachments/DialogAttachmentsList';
 import { FileUploadModal } from '@/frontend/reusable-components/uploads/FileUploadModal';
-import { Paperclip } from 'lucide-react';
 
 interface Defect {
   id: string;
@@ -206,41 +205,11 @@ export function CreateDefectDialog({
       type: 'custom',
       cols: 2,
       customRender: () => (
-        <DetailCard
-          title="Вложения"
-          contentClassName="space-y-3"
-          headerAction={
-            <button
-              type="button"
-              onClick={() => setAttachmentModalOpen(true)}
-              className="text-white/60 hover:text-white p-1 rounded transition-colors"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-          }
-        >
-          {commonAttachments.length > 0 ? (
-            <div className="space-y-1">
-              {commonAttachments.map((att) => (
-                <div key={att.id} className="flex items-center gap-2 text-sm text-white/80 py-1 px-2 bg-white/5 rounded">
-                  <Paperclip className="w-3 h-3 shrink-0 text-white/40" />
-                  <span className="truncate flex-1">{att.originalName}</span>
-                  {att.size && (
-                    <span className="text-white/40 text-xs shrink-0">
-                      {(att.size / 1024).toFixed(1)} KB
-                    </span>
-                  )}
-                  {att.id.startsWith('pending-') && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
-                      Ожидает
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-white/40 py-2">Вложений пока нет</p>
-          )}
+        <>
+          <DialogAttachmentsList
+            attachments={commonAttachments}
+            onAddClick={() => setAttachmentModalOpen(true)}
+          />
           <FileUploadModal
             isOpen={attachmentModalOpen}
             onClose={() => setAttachmentModalOpen(false)}
@@ -251,7 +220,7 @@ export function CreateDefectDialog({
             projectId={projectId}
             title="Вложения дефекта"
           />
-        </DetailCard>
+        </>
       ),
     },
   ];

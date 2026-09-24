@@ -8,13 +8,13 @@ import type { Attachment } from '@/lib/s3';
 import { uploadFileToS3 } from '@/lib/s3';
 import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { TestStep } from '../detail/types';
-import { DetailCard } from '@/frontend/reusable-components/cards/DetailCard';
+import { DialogAttachmentsList } from '@/frontend/reusable-components/attachments/DialogAttachmentsList';
 import { TextareaWithAttachments } from '@/frontend/reusable-elements/textareas/TextareaWithAttachments';
 import { Label } from '@/frontend/reusable-elements/labels/Label';
 import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { FileUploadModal } from '@/frontend/reusable-components/uploads/FileUploadModal';
-import { Plus, Trash2, Paperclip } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface CreateTestCaseDialogProps {
   projectId: string;
@@ -171,44 +171,11 @@ export function CreateTestCaseDialog({
       type: 'custom',
       cols: 2,
       customRender: () => (
-        <DetailCard
-          title="Вложения"
-          contentClassName="space-y-3"
-          headerAction={
-            <button
-              type="button"
-              onClick={() => setAttachmentModalOpen(true)}
-              className="text-white/60 hover:text-white p-1 rounded transition-colors"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-          }
-        >
-          <div className="space-y-2">
-            {commonAttachments.length === 0 ? (
-              <p className="text-white/60 text-center py-4">
-                Вложений пока нет. Нажмите на скрепку, чтобы добавить файлы.
-              </p>
-            ) : (
-              <div className="max-h-48 overflow-y-auto space-y-1">
-                {commonAttachments.map((att) => (
-                  <div key={att.id} className="flex items-center gap-2 text-sm text-white/80 py-2 px-3 rounded-lg bg-white/5 border border-white/10">
-                    <Paperclip className="w-3 h-3 shrink-0 text-white/40" />
-                    <span className="truncate flex-1">{att.originalName}</span>
-                    {att.size && (
-                      <span className="text-white/40 text-xs shrink-0">
-                        {(att.size / 1024).toFixed(1)} KB
-                      </span>
-                    )}
-                    {att.id.startsWith('pending-') && (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 shrink-0">
-                        Ожидает
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+        <>
+          <DialogAttachmentsList
+            attachments={commonAttachments}
+            onAddClick={() => setAttachmentModalOpen(true)}
+          />
             <FileUploadModal
               isOpen={attachmentModalOpen}
               onClose={() => setAttachmentModalOpen(false)}
@@ -219,8 +186,7 @@ export function CreateTestCaseDialog({
               projectId={projectId}
               title="Вложения тест-кейса"
             />
-          </div>
-        </DetailCard>
+        </>
       ),
     },
     {
@@ -229,24 +195,20 @@ export function CreateTestCaseDialog({
       type: 'custom',
       cols: 2,
       customRender: () => (
-        <DetailCard
-          title="Шаги"
-          contentClassName="space-y-3"
-        >
           <div className="space-y-3">
             {steps.length === 0 ? (
-              <p className="text-white/60 text-center py-4">
-                Шагов пока нет. Добавьте шаги тест-кейса.
+              <p className="text-sm text-white/40">
+                Шагов пока нет — заполните действие и ожидаемый результат ниже.
               </p>
             ) : (
               steps.map((step: TestStep) => (
                 <div
                   key={step.stepNumber}
-                  className="border border-white/10 rounded-lg p-4 space-y-2"
+                  className="rounded-[12px] bg-white/[0.03] p-4 space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 flex-1">
-                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-sm font-semibold text-blue-500">
+                      <div className="w-6 h-6 shrink-0 rounded-full bg-white/[0.08] flex items-center justify-center text-xs font-semibold text-white/70">
                         {step.stepNumber}
                       </div>
                       <div className="flex-1 space-y-3">
@@ -336,7 +298,7 @@ export function CreateTestCaseDialog({
               ))
             )}
 
-            <div className="border border-blue-500/50 rounded-lg p-4 space-y-3 bg-blue-500/5">
+            <div className="rounded-[12px] border border-dashed border-white/15 p-4 space-y-3">
               <div className="space-y-2">
                 <Label>Действие</Label>
                 <TextareaWithAttachments
@@ -388,7 +350,6 @@ export function CreateTestCaseDialog({
               </div>
             </div>
           </div>
-        </DetailCard>
       ),
     },
   ];

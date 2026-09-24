@@ -45,6 +45,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   const [selectedResultExecutedBy, setSelectedResultExecutedBy] = useState<{ id?: string; name: string } | null>(null);
   const [projectMembers, setProjectMembers] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedTestCaseAttachments, setSelectedTestCaseAttachments] = useState<Attachment[]>([]);
+  // Steps marked as done in this run (shared progress, stored on the server)
+  const [checkedStepIds, setCheckedStepIds] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [availableTestCases, setAvailableTestCases] = useState<TestCase[]>([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
@@ -189,6 +191,48 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
   }, []);
 
 
+
+  // Reload on opening a case so marks made by teammates show up
+  const selectedTestCaseId = selectedTestCase?.id;
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/testruns/${testRunId}/step-checks`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => {
+        if (!cancelled && Array.isArray(body?.data)) setCheckedStepIds(new Set(body.data));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [testRunId, selectedTestCaseId]);
+
+  const handleToggleStep = useCallback(async (stepId: string, checked: boolean) => {
+    const apply = (value: boolean) =>
+      setCheckedStepIds((prev) => {
+        const next = new Set(prev);
+        if (value) next.add(stepId);
+        else next.delete(stepId);
+        return next;
+      });
+
+    apply(checked);
+    try {
+      const response = await fetch(`/api/testruns/${testRunId}/step-checks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testStepId: stepId, checked }),
+      });
+      if (!response.ok) throw new Error();
+    } catch {
+      apply(!checked);
+      setFloatingAlert({
+        type: 'error',
+        title: 'Не удалось сохранить шаг',
+        message: 'Отметка не сохранилась, попробуйте ещё раз.',
+      });
+    }
+  }, [testRunId]);
 
   useEffect(() => {
     if (testRun) {
@@ -1053,6 +1097,8 @@ export default function TestRunDetail({ testRunId }: TestRunDetailProps) {
         executedBy={selectedResultExecutedBy}
         members={projectMembers}
         attachments={selectedTestCaseAttachments}
+        checkedStepIds={checkedStepIds}
+        onToggleStep={canUpdateTestRun ? handleToggleStep : undefined}
         onClose={() => {
           setResultDialogOpen(false);
           setSelectedTestCase(null);

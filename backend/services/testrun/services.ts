@@ -1770,6 +1770,45 @@ export class TestRunService {
       invalidRecipients: invalidRecipients.length > 0 ? invalidRecipients : [],
     };
   }
+
+  /**
+   * Steps marked as done in a test run (progress of manual execution)
+   */
+  async getStepChecks(testRunId: string) {
+    const checks = await prisma.testRunStepCheck.findMany({
+      where: { testRunId },
+      select: { testStepId: true },
+    });
+    return checks.map((check) => check.testStepId);
+  }
+
+  /**
+   * Mark / unmark a step of a test case as done within a test run.
+   * Returns null when the run or the step does not exist, or the step belongs to another project.
+   */
+  async setStepCheck(testRunId: string, testStepId: string, checked: boolean, userId: string) {
+    const [testRun, step] = await Promise.all([
+      prisma.testRun.findUnique({ where: { id: testRunId }, select: { projectId: true } }),
+      prisma.testStep.findUnique({
+        where: { id: testStepId },
+        select: { testCase: { select: { projectId: true } } },
+      }),
+    ]);
+    if (!testRun || !step || step.testCase.projectId !== testRun.projectId) {
+      return null;
+    }
+
+    if (checked) {
+      await prisma.testRunStepCheck.upsert({
+        where: { testRunId_testStepId: { testRunId, testStepId } },
+        update: {},
+        create: { testRunId, testStepId, checkedById: userId },
+      });
+    } else {
+      await prisma.testRunStepCheck.deleteMany({ where: { testRunId, testStepId } });
+    }
+    return { testStepId, checked };
+  }
 }
 
 export const testRunService = new TestRunService();

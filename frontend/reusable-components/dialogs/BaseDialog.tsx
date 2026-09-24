@@ -187,7 +187,9 @@ export const BaseDialog = <T = unknown,>({
 
   // Handle field blur for validation
   const handleFieldBlur = (field: BaseDialogField) => {
-    const error = validateField(field, formData[field.name] || '', formData);
+    const value = formData[field.name] || '';
+    // Leaving an empty field is not an error yet: required fields are checked on submit
+    const error = value.trim() ? validateField(field, value, formData) : undefined;
     setFieldErrors((prev) => {
       const newErrors = { ...prev };
       if (error) {

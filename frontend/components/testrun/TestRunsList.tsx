@@ -397,7 +397,7 @@ export default function TestRunsList({ projectId }: TestRunsListProps) {
 
         {/* Pagination */}
         {filteredTestRuns.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-6 sticky bottom-0 z-20">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
