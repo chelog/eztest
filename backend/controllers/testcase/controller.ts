@@ -85,6 +85,7 @@ export class TestCaseController {
     return {
       data: result.testCases,
       modules: result.modules,
+      ...('pageModuleIds' in result ? { pageModuleIds: result.pageModuleIds } : {}),
       pagination: {
         currentPage: result.pagination.currentPage,
         totalPages: result.pagination.totalPages,

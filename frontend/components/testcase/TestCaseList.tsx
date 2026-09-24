@@ -41,6 +41,8 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
+  // Categories shown on the current page (pagination counts categories, not test cases)
+  const [pageModuleIds, setPageModuleIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -112,7 +114,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
-        groupBy: 'module',
+        groupBy: 'modulePage',
       });
       
       if (searchQuery) params.append('search', searchQuery);
@@ -129,6 +131,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
       if (data.modules) {
         setModules(data.modules);
       }
+      setPageModuleIds(Array.isArray(data.pageModuleIds) ? data.pageModuleIds : []);
       
       if (data.pagination) {
         setTotalPagesCount(data.pagination.totalPages);
@@ -165,19 +168,11 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
     setCurrentPage(1); // Reset to first page when items per page changes
   };
 
-  // Show modules that have test cases in the current page OR are truly empty (on last page only)
-  const modulesForTable = testCases.length === 0 
-    ? modules 
-    : modules.filter(module => {
-        // Include if module has test cases in current page
-        const hasTestCasesInPage = testCases.some(tc => tc.moduleId === module.id);
-        if (hasTestCasesInPage) return true;
-        
-        // Include if module is truly empty AND we're on the last page
-        const isTrulyEmpty = module._count?.testCases === 0;
-        const isLastPage = currentPage === totalPagesCount;
-        return isTrulyEmpty && isLastPage;
-      });
+  // Categories of the current page, in server order
+  const modulesById = new Map(modules.map((module) => [module.id, module]));
+  const modulesForTable = pageModuleIds
+    .map((id) => modulesById.get(id))
+    .filter((module): module is Module => Boolean(module));
 
   const handleTestCaseCreated = (newTestCase: TestCase) => {
     setAlert({
@@ -390,7 +385,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
 
             {/* Pagination */}
             {totalItems > 0 && (
-              <div className="mt-6 sticky bottom-0 z-20">
+              <div className="mt-6">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPagesCount}
@@ -400,6 +395,7 @@ export default function TestCaseList({ projectId }: TestCaseListProps) {
                   onItemsPerPageChange={handleItemsPerPageChange}
                   itemsPerPageOptions={PAGE_SIZE_OPTIONS}
                   showItemsPerPage={true}
+                  totalLabel="категорий"
                 />
               </div>
             )}
