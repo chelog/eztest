@@ -37,6 +37,11 @@ interface TestCaseTableProps {
   /** Checkboxes for bulk actions (ids of selected test cases) */
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
+  /** Folders selected as a whole (checked folder checkbox) */
+  selectedFolderIds?: Set<string>;
+  onFolderSelectionChange?: (ids: Set<string>) => void;
+  /** Bulk actions shown in the table toolbar while something is selected */
+  selectionToolbar?: React.ReactNode;
 }
 
 /**
@@ -79,6 +84,9 @@ export function TestCaseTable({
   renderFolderActions,
   selectedIds,
   onSelectionChange,
+  selectedFolderIds,
+  onFolderSelectionChange,
+  selectionToolbar,
 }: TestCaseTableProps) {
   const router = useRouter();
   const { options: priorityOptions } = useDropdownOptions('TestCase', 'priority');
@@ -297,7 +305,14 @@ export function TestCaseTable({
       actions={actions}
       selection={
         selectedIds && onSelectionChange
-          ? { getRowId: (row) => row.id, selectedIds, onChange: onSelectionChange }
+          ? {
+              getRowId: (row) => row.id,
+              selectedIds,
+              onChange: onSelectionChange,
+              selectedGroupIds: selectedFolderIds,
+              onGroupsChange: onFolderSelectionChange,
+              toolbar: selectionToolbar,
+            }
           : undefined
       }
       resizable={true}

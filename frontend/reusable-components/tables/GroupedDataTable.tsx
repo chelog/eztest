@@ -66,6 +66,14 @@ export interface RowSelectionConfig<T> {
   getRowId: (row: T) => string;
   selectedIds: Set<string>;
   onChange: (selectedIds: Set<string>) => void;
+  /**
+   * Selected groups (folders) — a checked group is selected as a whole, not just its rows,
+   * so actions can move the folder itself. Virtual groups are never selected as groups.
+   */
+  selectedGroupIds?: Set<string>;
+  onGroupsChange?: (selectedGroupIds: Set<string>) => void;
+  /** Shown in the toolbar row (instead of the column count) while something is selected */
+  toolbar?: ReactNode;
 }
 
 export interface GroupedDataTableProps<T> {
@@ -273,23 +281,54 @@ export function GroupedDataTable<T = Record<string, unknown>>({
   };
 
   // Checkbox for a set of rows: checked when all are selected, dash when some are
-  const renderCheckbox = (rowIds: string[], label: string) => {
+  // Group and its ancestors (nearest first)
+  const groupChain = (groupId: string): string[] => {
+    const chain: string[] = [];
+    for (let current: string | null = groupId; current && !chain.includes(current); current = groupConfig?.getParentGroupId?.(current) ?? null) {
+      chain.push(current);
+    }
+    return chain;
+  };
+  const isGroupSelected = (groupId: string) =>
+    Boolean(selection?.selectedGroupIds) && groupChain(groupId).some((id) => selection!.selectedGroupIds!.has(id));
+
+  // Checkbox for rows (and optionally a whole group): checked when all are selected, dash when some are
+  const renderCheckbox = (rowIds: string[], label: string, groupId?: string, rowGroupId?: string) => {
     if (!selection) return null;
+    const groupMode = groupId !== undefined && Boolean(selection.onGroupsChange) && !isVirtual(groupId);
     const selectedCount = rowIds.filter((id) => selection.selectedIds.has(id)).length;
     const state: boolean | 'indeterminate' =
-      rowIds.length > 0 && selectedCount === rowIds.length ? true : selectedCount > 0 ? 'indeterminate' : false;
+      groupMode && isGroupSelected(groupId!)
+        ? true
+        : rowIds.length > 0 && selectedCount === rowIds.length
+          ? true
+          : selectedCount > 0
+            ? 'indeterminate'
+            : false;
     return (
       <Checkbox
         checked={state}
-        disabled={rowIds.length === 0}
+        disabled={rowIds.length === 0 && !groupMode}
         aria-label={label}
         className="size-4"
         onClick={(event) => event.stopPropagation()}
         onCheckedChange={() => {
+          const selecting = state !== true;
           const next = new Set(selection.selectedIds);
-          if (state === true) rowIds.forEach((id) => next.delete(id));
-          else rowIds.forEach((id) => next.add(id));
+          rowIds.forEach((id) => (selecting ? next.add(id) : next.delete(id)));
           selection.onChange(next);
+
+          if (!selection.onGroupsChange || !selection.selectedGroupIds) return;
+          const groups = new Set(selection.selectedGroupIds);
+          if (groupMode) {
+            if (selecting) groups.add(groupId!);
+            // Unchecking a folder also drops folders that contained it (they are no longer whole)
+            else groupChain(groupId!).forEach((id) => groups.delete(id));
+          } else if (!selecting && rowGroupId) {
+            // A row was unchecked: its folders are no longer selected as a whole
+            groupChain(rowGroupId).forEach((id) => groups.delete(id));
+          }
+          selection.onGroupsChange(groups);
         }}
       />
     );
@@ -441,7 +480,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     const selectCell = selection ? <div aria-hidden="true" /> : null;
     const rowCheckbox = selection && rowId !== undefined ? (
       <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex">
-        {renderCheckbox([rowId], 'Выделить')}
+        {renderCheckbox([rowId], 'Выделить', undefined, groupId)}
       </div>
     ) : null;
 
@@ -548,7 +587,9 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       <div
         className={`group/header w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/20 rounded transition-colors overflow-hidden ${
           groupIndex % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.04] border-b border-white/10'
-        } ${isDropTarget ? 'ring-1 ring-inset ring-[var(--nt-accent,#10b981)] bg-[color-mix(in_srgb,var(--nt-accent,#10b981)_12%,transparent)]' : ''}`}
+        } ${isDropTarget ? 'ring-1 ring-inset ring-[var(--nt-accent,#10b981)] bg-[color-mix(in_srgb,var(--nt-accent,#10b981)_12%,transparent)]' : ''} ${
+          !isDropTarget && isGroupSelected(groupId) ? 'bg-[color-mix(in_srgb,var(--nt-accent,#10b981)_10%,transparent)]' : ''
+        }`}
         style={depth > 0 ? { paddingLeft: 12 + depth * 18 } : undefined}
         draggable={draggableGroup}
         onDragStart={draggableGroup ? (event) => startDrag(event, { kind: 'group', groupId }) : undefined}
@@ -557,7 +598,7 @@ export function GroupedDataTable<T = Record<string, unknown>>({
       >
         {selection && (
           <span className="flex flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-            {renderCheckbox(groupRowIds(groupId), `Выделить всё в ${groupName}`)}
+            {renderCheckbox(groupRowIds(groupId), `Выделить всё в ${groupName}`, groupId)}
           </span>
         )}
         {/* Toggle button — only the chevron icon; no Link inside */}
@@ -654,10 +695,16 @@ export function GroupedDataTable<T = Record<string, unknown>>({
     <div className="space-y-0">
       {/* Column visibility toolbar */}
       {hideableColumns.length > 0 && (
-        <div className="flex items-center justify-between px-3 py-2 mb-1">
-          <div className="text-xs font-semibold text-white/60">
-            {visibleColumns.length} видимых столбцов
-          </div>
+        // Fixed height: the selection actions replace the column count without shifting the table
+        <div className="flex h-12 items-center justify-between gap-3 px-3 mb-1">
+          {selection?.toolbar &&
+          (selection.selectedIds.size > 0 || (selection.selectedGroupIds?.size ?? 0) > 0) ? (
+            <div className="flex min-w-0 flex-1 items-center">{selection.toolbar}</div>
+          ) : (
+            <div className="text-xs font-semibold text-white/60">
+              {visibleColumns.length} видимых столбцов
+            </div>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-1.5 hover:bg-white/10 rounded transition-colors" title="Показать/скрыть столбцы">

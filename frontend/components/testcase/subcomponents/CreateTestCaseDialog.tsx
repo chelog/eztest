@@ -15,7 +15,17 @@ import { Button } from '@/frontend/reusable-elements/buttons/Button';
 import { ButtonPrimary } from '@/frontend/reusable-elements/buttons/ButtonPrimary';
 import { FileUploadModal } from '@/frontend/reusable-components/uploads/FileUploadModal';
 import { Plus, Trash2 } from 'lucide-react';
-import { moduleSelectOptions } from '@/lib/module-tree';
+import { FolderPicker } from '@/frontend/reusable-components/inputs/FolderPicker';
+
+// Last folder a test case was created in (per project), preselected next time
+const lastFolderKey = (projectId: string) => `eztest-last-folder-${projectId}`;
+const readLastFolder = (projectId: string) => {
+  try {
+    return window.localStorage.getItem(lastFolderKey(projectId));
+  } catch {
+    return null;
+  }
+};
 
 interface CreateTestCaseDialogProps {
   projectId: string;
@@ -83,10 +93,28 @@ export function CreateTestCaseDialog({
     };
   }, [projectId, open]);
 
-  // Nested folders are shown with their full path
-  const moduleOptions = moduleSelectOptions(modules);
+
+  // Folder: the one we were opened from, otherwise the last used one (if it still exists)
+  const lastFolder = typeof window !== 'undefined' ? readLastFolder(projectId) : null;
+  const initialFolder =
+    defaultModuleId || (lastFolder && modules.some((m) => m.id === lastFolder) ? lastFolder : 'none');
 
   const fields: BaseDialogField[] = [
+    {
+      name: 'moduleId',
+      label: 'Папка',
+      type: 'custom',
+      defaultValue: initialFolder,
+      cols: 2,
+      customRender: (value, onChange) => (
+        <FolderPicker
+          id="moduleId"
+          folders={modules}
+          value={value && value !== 'none' ? value : null}
+          onChange={(folderId) => onChange(folderId ?? 'none')}
+        />
+      ),
+    },
     {
       name: 'title',
       label: 'Название',
@@ -111,18 +139,6 @@ export function CreateTestCaseDialog({
       type: 'select',
       defaultValue: 'DRAFT',
       options: statusOptions.map(opt => ({ value: opt.value, label: opt.label })),
-      cols: 1,
-    },
-    {
-      name: 'moduleId',
-      label: 'Модуль',
-      type: 'select',
-      placeholder: 'Выберите модуль',
-      defaultValue: defaultModuleId || 'none',
-      options: [
-        { value: 'none', label: 'Без модуля' },
-        ...moduleOptions,
-      ],
       cols: 1,
     },
     {
@@ -651,17 +667,34 @@ export function CreateTestCaseDialog({
     },
     onSubmit: handleSubmit,
     projectId,
-    onSuccess: (testCase) => {
+    onSuccess: (testCase, options) => {
       if (testCase) {
         onTestCaseCreated(testCase);
+        try {
+          window.localStorage.setItem(lastFolderKey(projectId), testCase.moduleId ?? 'none');
+        } catch {
+          // storage unavailable — just no remembered folder
+        }
         // Clear all attachments after successful creation
         attachmentStorage.clearAllAttachments();
-        attachmentStorage.clearContext();
         setCommonAttachments([]);
         setStepAttachments({});
         setNewStepActionAttachments([]);
         setNewStepExpectedResultAttachments([]);
+        if (options?.keepOpen) {
+          // "Создать и ещё один": fresh steps, same folder / priority / status
+          setSteps([]);
+          setNewStep({ action: '', expectedResult: '' });
+          attachmentStorage.setContext({ entityType: 'testcase', projectId });
+        } else {
+          attachmentStorage.clearContext();
+        }
       }
+    },
+    secondarySubmit: {
+      label: 'Создать и ещё один',
+      keepFields: ['moduleId', 'priority', 'status'],
+      buttonName: 'Create Test Case Dialog - Create And Add Another',
     },
     // moduleId is context-dependent (driven by which folder the user is in).
     // Exclude it from sessionStorage so it always reflects the current defaultModuleId prop.
