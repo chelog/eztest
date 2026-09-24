@@ -3,6 +3,8 @@
 import * as React from 'react';
 import { Badge } from '@/frontend/reusable-elements/badges/Badge';
 import { cn } from '@/lib/utils';
+import { getProjectBrand } from '@/lib/project-brand';
+import { ProjectBrandIcon } from '@/frontend/reusable-components/project/ProjectBrandIcon';
 
 export interface PageHeaderWithBadgeProps {
   badge?: string;
@@ -26,7 +28,10 @@ export function PageHeaderWithBadge({
   return (
     <div className={cn('shrink-0', className)}>
       <div className="flex items-center gap-3 mb-2">
-        {badge && (
+        {badge && getProjectBrand(badge) ? (
+          // Project key of a known project: show its brand mark
+          <ProjectBrandIcon projectKey={badge} size="lg" />
+        ) : badge && (
           <Badge
             variant="outline"
             className={cn(

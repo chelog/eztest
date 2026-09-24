@@ -24,6 +24,8 @@ import { UiThemePicker } from '@/frontend/reusable-components/layout/UiThemePick
 import { AccentPicker } from './AccentPicker';
 import type { SidebarItem } from '@/frontend/reusable-components/layout/Sidebar';
 import { setActiveProjectId } from '@/lib/active-project';
+import { getProjectBrand } from '@/lib/project-brand';
+import { ProjectBrandIcon } from '@/frontend/reusable-components/project/ProjectBrandIcon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +54,13 @@ function ProjectSwitcher({ projectId, projectName }: { projectId?: string; proje
       .catch(() => setProjects([]));
   };
 
+  // The trigger shows the current project's brand mark, so the list is needed right away
+  React.useEffect(() => {
+    if (projectId) loadProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+  const currentKey = projects?.find((p) => p.id === projectId)?.key;
+
   const choose = (project: ProjectOption) => {
     setActiveProjectId(session?.user?.email, project.id);
     router.push(`/projects/${project.id}`);
@@ -65,7 +74,11 @@ function ProjectSwitcher({ projectId, projectName }: { projectId?: string; proje
           className="w-full flex items-center gap-2.5 px-3 h-10 rounded-[12px] border border-[var(--nt-border)] hover:bg-[var(--nt-surface-2)] transition-colors cursor-pointer text-left"
           title="Сменить проект"
         >
-          <span className={cn('w-2 h-2 rounded-full shrink-0', projectId ? 'bg-[var(--nt-accent)]' : 'bg-white/25')} />
+          {getProjectBrand(currentKey) ? (
+            <ProjectBrandIcon projectKey={currentKey} size="sm" />
+          ) : (
+            <span className={cn('w-2 h-2 rounded-full shrink-0', projectId ? 'bg-[var(--nt-accent)]' : 'bg-white/25')} />
+          )}
           <span className={cn('flex-1 text-sm font-semibold truncate', projectId ? 'text-white' : 'text-[var(--nt-text-3)]')}>
             {projectId ? projectName ?? '…' : 'Выбрать проект'}
           </span>
@@ -81,7 +94,13 @@ function ProjectSwitcher({ projectId, projectName }: { projectId?: string; proje
         ) : (
           projects.map((project) => (
             <DropdownMenuItem key={project.id} onSelect={() => choose(project)} className="gap-2 cursor-pointer">
-              <span className="text-[11px] font-bold text-white/40 w-10 shrink-0 truncate">{project.key}</span>
+              {getProjectBrand(project.key) ? (
+                <span className="w-10 shrink-0">
+                  <ProjectBrandIcon projectKey={project.key} size="sm" />
+                </span>
+              ) : (
+                <span className="text-[11px] font-bold text-white/40 w-10 shrink-0 truncate">{project.key}</span>
+              )}
               <span className="flex-1 truncate">{project.name}</span>
               {project.id === projectId && <Check className="w-4 h-4 text-[var(--nt-accent)]" />}
             </DropdownMenuItem>
