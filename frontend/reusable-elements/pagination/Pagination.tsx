@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '../buttons/Button';
 import { cn } from '@/lib/utils';
@@ -16,8 +17,13 @@ export interface PaginationProps {
   onItemsPerPageChange?: (itemsPerPage: number) => void;
   itemsPerPageOptions?: number[];
   showItemsPerPage?: boolean;
+  /** Word after the total, e.g. "категорий" when a page holds groups instead of rows */
+  totalLabel?: string;
   className?: string;
 }
+
+// Gap between the pinned bar and the bottom edge of the window
+const PINNED_BOTTOM_GAP = 12;
 
 export function Pagination({
   currentPage,
@@ -28,25 +34,43 @@ export function Pagination({
   onItemsPerPageChange,
   itemsPerPageOptions = PAGE_SIZE_OPTIONS,
   showItemsPerPage = true,
+  totalLabel,
   className,
 }: PaginationProps) {
   const isNewTheme = useIsNewTheme();
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const [stuck, setStuck] = React.useState(false);
+  // New theme: the bar is always pinned to the bottom of the window, aligned with the
+  // content column. It is portalled to <body> because cards with backdrop-filter would
+  // otherwise become the containing block of `position: fixed`. An in-flow placeholder
+  // keeps its space in the page and tells where the column is.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const anchorRef = React.useRef<HTMLDivElement>(null);
+  const barRef = React.useRef<HTMLDivElement>(null);
+  const [frame, setFrame] = React.useState<{ left: number; width: number; height: number } | null>(null);
 
-  // Callers wrap the bar in a sticky container; it gets a backdrop only while it is
-  // actually pinned to the bottom edge, otherwise it blends into its card
   React.useEffect(() => {
-    const target = rootRef.current?.parentElement;
-    if (!target || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setStuck(entry.intersectionRatio < 1 && entry.boundingClientRect.bottom >= window.innerHeight - 1),
-      { rootMargin: '0px 0px -1px 0px', threshold: [1] }
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
+    const anchor = anchorRef.current;
+    const bar = barRef.current;
+    if (!anchor || !bar || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      const rect = anchor.getBoundingClientRect();
+      const next = { left: rect.left, width: rect.width, height: bar.offsetHeight };
+      setFrame((prev) =>
+        prev && prev.left === next.left && prev.width === next.width && prev.height === next.height ? prev : next
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(anchor);
+    observer.observe(bar);
+    observer.observe(document.body);
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
     // Re-attach when the bar appears (it renders nothing for short lists)
-  }, [isNewTheme, totalItems]);
+  }, [isNewTheme, totalItems, mounted]);
 
   // Everything fits on the smallest page — pagination would be empty chrome
   const smallestPageSize = Math.min(...itemsPerPageOptions);
@@ -116,15 +140,23 @@ export function Pagination({
       );
 
     return (
+      <>
+      <div ref={anchorRef} aria-hidden="true" style={{ height: frame ? frame.height + PINNED_BOTTOM_GAP : 0 }} />
+      {mounted && createPortal(
       <div
-        ref={rootRef}
+        ref={barRef}
         data-ui="nt-pagination"
         className={cn(
-          'flex flex-col sm:flex-row items-center justify-between gap-4 py-2 transition-[background-color,box-shadow,padding] duration-150',
-          stuck &&
-            'py-3 px-4 -mx-4 rounded-t-[14px] bg-[#161617]/95 backdrop-blur-md shadow-[0_-16px_32px_-16px_rgba(0,0,0,0.9)]',
+          'fixed z-30 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 rounded-[16px]',
+          'border border-white/[0.06] bg-[#161617]/95 backdrop-blur-md shadow-[0_-16px_40px_-12px_rgba(0,0,0,0.9)]',
           className
         )}
+        style={{
+          left: frame?.left ?? 0,
+          width: frame?.width,
+          bottom: PINNED_BOTTOM_GAP,
+          visibility: frame ? 'visible' : 'hidden',
+        }}
       >
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[var(--nt-text-3)]">
           <span>
@@ -132,6 +164,7 @@ export function Pagination({
               {startItem}–{endItem}
             </span>{' '}
             из <span className="tabular-nums">{totalItems}</span>
+            {totalLabel && ` ${totalLabel}`}
           </span>
           {showItemsPerPage && onItemsPerPageChange && (
             <div className="flex items-center gap-2">
@@ -180,7 +213,10 @@ export function Pagination({
             </button>
           </div>
         )}
-      </div>
+      </div>,
+      document.body
+      )}
+      </>
     );
   }
 

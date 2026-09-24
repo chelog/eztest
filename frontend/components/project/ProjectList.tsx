@@ -220,7 +220,7 @@ export default function ProjectList() {
 
         {/* Pagination */}
         {projects.length > 0 && (
-          <div className="mt-6 sticky bottom-0 z-20">
+          <div className="mt-6">
             <Pagination
               currentPage={safePage}
               totalPages={totalPages}

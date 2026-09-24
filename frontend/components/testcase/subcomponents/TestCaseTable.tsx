@@ -184,9 +184,9 @@ export function TestCaseTable({
     ? {
         getGroupId: (row) => row.moduleId || 'no-module',
         getGroupName: (groupId) => {
-          if (groupId === 'no-module') return 'Ungrouped';
+          if (groupId === 'no-module') return 'Без модуля';
           const moduleItem = modules.find((m) => m.id === groupId);
-          return moduleItem?.name || 'Ungrouped';
+          return moduleItem?.name || 'Без модуля';
         },
         getGroupCount: (groupId) => {
           const moduleItem = modules.find((m) => m.id === groupId);

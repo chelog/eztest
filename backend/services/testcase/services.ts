@@ -192,6 +192,91 @@ export class TestCaseService {
       orderBy: { updatedAt: 'desc' }
     });
 
+    if (groupBy === 'modulePage') {
+      // Page = N categories (modules), each with all of its matching test cases.
+      // Only the test cases of the modules on the current page are loaded.
+      const hasFilters = Boolean(filters?.search || filters?.priority || filters?.status || filters?.suiteId);
+
+      const stats = await prisma.testCase.groupBy({
+        by: ['moduleId'],
+        where,
+        _count: { _all: true },
+        _max: { updatedAt: true },
+      });
+      const statsByModule = new Map(stats.map((row) => [row.moduleId ?? 'no-module', row]));
+
+      const groups = modules
+        .map((module) => {
+          const row = statsByModule.get(module.id);
+          return {
+            id: module.id,
+            isEmpty: !row,
+            mostRecentUpdate: Math.max(new Date(module.updatedAt).getTime(), row?._max.updatedAt?.getTime() ?? 0),
+          };
+        })
+        // With filters, modules without matches would be noise
+        .filter((group) => !hasFilters || !group.isEmpty);
+
+      const ungrouped = statsByModule.get('no-module');
+      if (ungrouped) {
+        groups.push({ id: 'no-module', isEmpty: false, mostRecentUpdate: ungrouped._max.updatedAt?.getTime() ?? 0 });
+      }
+
+      // Categories with test cases first, most recently updated on top; empty ones last
+      groups.sort((a, b) => Number(a.isEmpty) - Number(b.isEmpty) || b.mostRecentUpdate - a.mostRecentUpdate);
+
+      const totalGroups = groups.length;
+      const totalPages = Math.ceil(totalGroups / limit) || 1;
+      const pageGroups = groups.slice((page - 1) * limit, page * limit);
+      const pageModuleIds = pageGroups.map((group) => group.id);
+      const moduleIdsWithCases = pageGroups.filter((g) => !g.isEmpty && g.id !== 'no-module').map((g) => g.id);
+      const includesUngrouped = pageModuleIds.includes('no-module');
+
+      const moduleScope: Record<string, unknown>[] = [];
+      if (moduleIdsWithCases.length > 0) moduleScope.push({ moduleId: { in: moduleIdsWithCases } });
+      if (includesUngrouped) moduleScope.push({ moduleId: null });
+
+      const pageTestCases = moduleScope.length === 0
+        ? []
+        : await prisma.testCase.findMany({
+            where: { AND: [where, { OR: moduleScope }] },
+            include: {
+              module: { select: { id: true, name: true, updatedAt: true } },
+              suite: { select: { id: true, name: true } },
+              createdBy: { select: { id: true, name: true, email: true, avatar: true } },
+              _count: {
+                select: {
+                  steps: true,
+                  results: true,
+                  requirements: true,
+                  defects: { where: { defect: { status: { not: 'CLOSED' } } } },
+                },
+              },
+            },
+            orderBy: { updatedAt: 'desc' },
+          });
+
+      // Keep the category order of the page (the table groups rows in order of appearance)
+      const groupIndex = new Map(pageModuleIds.map((id, index) => [id, index]));
+      const testCases = [...pageTestCases].sort(
+        (a, b) => (groupIndex.get(a.moduleId ?? 'no-module') ?? 0) - (groupIndex.get(b.moduleId ?? 'no-module') ?? 0)
+      );
+
+      return {
+        testCases,
+        modules,
+        pageModuleIds,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: totalGroups,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        }
+      };
+    }
+
     if (groupBy === 'module') {
       // Module-based pagination with proper handling of large modules
       // Strategy: Flatten test cases while maintaining module order, then paginate
